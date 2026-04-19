@@ -1161,56 +1161,23 @@
     return s;
   }
 
-  /* ===== SSE 流式解析 ===== */
+  /* ===== SSE 流式解析 (OpenAI Chat Completions 格式) =====
+     无论是否 BYOK 都走 worker, worker 端会决定用哪把 key 调上游.
+     这样既保证 CORS, 又用统一的协议格式 (OpenAI). */
   async function streamFromGemini(text, contextStr, onChunk) {
     const userKey = (localStorage.getItem(STORAGE_KEYS.byokKey) || "").trim();
-    const useDirect = userKey && /^AIza[\w-]{20,}$/.test(userKey);
+    const useByok = userKey && /^sk-[\w-]{20,}$/.test(userKey);
 
     const ctrl = new AbortController();
     explainState.abortCtrl = ctrl;
 
-    let url, body, headers;
-    if (useDirect) {
-      // BYOK: 浏览器直接调 Google
-      const model = "gemini-3.1-flash-lite-preview-thinking-low";
-      url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-        model
-      )}:streamGenerateContent?alt=sse&key=${encodeURIComponent(userKey)}`;
-      headers = { "Content-Type": "application/json" };
-      body = JSON.stringify({
-        systemInstruction: {
-          parts: [
-            {
-              text:
-                "你是这本电子书的划词解释助手。读者从书中划选了一段文字，请用 1–3 段中文清楚解释这个概念/术语/句子。≤ 250 字，简洁有判断，不要重复原文，不要写'以下是解释'这种废话。可用 markdown 但不要 H1/H2/H3。",
-            },
-          ],
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: contextStr
-                  ? `【所在章节】${contextStr.slice(0, 600)}\n\n【读者划选的文字】\n${text}`
-                  : `【读者划选的文字】\n${text}`,
-              },
-            ],
-          },
-        ],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 800, topP: 0.9 },
-      });
-    } else {
-      // 走代理
-      url = WORKER_URL;
-      headers = { "Content-Type": "application/json" };
-      body = JSON.stringify({ text, context: contextStr });
-    }
+    const headers = { "Content-Type": "application/json" };
+    if (useByok) headers["X-User-Key"] = userKey;
 
-    const resp = await fetch(url, {
+    const resp = await fetch(WORKER_URL, {
       method: "POST",
       headers,
-      body,
+      body: JSON.stringify({ text, context: contextStr }),
       signal: ctrl.signal,
     });
 
@@ -1218,7 +1185,7 @@
       let detail = "";
       try {
         const j = await resp.json();
-        detail = j.error?.message || j.error || JSON.stringify(j);
+        detail = j.error?.message || j.error || j.detail || JSON.stringify(j);
       } catch {
         detail = await resp.text().catch(() => "");
       }
@@ -1236,19 +1203,21 @@
       if (done) break;
       buf += decoder.decode(value, { stream: true });
       let idx;
-      // SSE: 多行以 "\n\n" 分隔, 每行以 "data: " 开头
+      // SSE: 事件以 "\n\n" 分隔, 每行以 "data: " 开头
       while ((idx = buf.indexOf("\n\n")) >= 0) {
         const chunk = buf.slice(0, idx);
         buf = buf.slice(idx + 2);
         for (const line of chunk.split("\n")) {
           if (!line.startsWith("data:")) continue;
           const payload = line.slice(5).trim();
-          if (!payload || payload === "[DONE]") continue;
+          if (!payload) continue;
+          if (payload === "[DONE]") return full;
           try {
             const obj = JSON.parse(payload);
+            // OpenAI 兼容格式: choices[0].delta.content
             const part =
-              obj.candidates?.[0]?.content?.parts?.[0]?.text ||
-              obj.error?.message ||
+              obj.choices?.[0]?.delta?.content ||
+              obj.choices?.[0]?.message?.content ||
               "";
             if (part) {
               full += part;
@@ -1383,9 +1352,9 @@
     div.className = "menu__byok";
     div.innerHTML = `
       <div class="menu__title">AI 解释 · BYOK <span class="menu__opt">可选</span></div>
-      <p class="menu__hint">贴你自己的 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio key</a> 后, 划词解释将不再消耗站点额度。Key 只存在你浏览器 localStorage 里。</p>
+      <p class="menu__hint">贴你自己的 OpenAI 兼容 key (以 <code>sk-</code> 开头) 后, 划词解释将不再消耗站点额度。Key 只存在你浏览器 localStorage 里, 通过站点的代理转发到上游。</p>
       <div class="menu__byok-row">
-        <input id="byokInput" class="menu__byok-input" type="password" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+        <input id="byokInput" class="menu__byok-input" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
         <button class="menu__pill menu__byok-btn" type="button" id="byokSave">保存</button>
         <button class="menu__pill menu__byok-btn menu__byok-btn--clear" type="button" id="byokClear" aria-label="清除">×</button>
       </div>
@@ -1397,11 +1366,11 @@
     const status = $("#byokStatus", div);
     function renderStatus() {
       const k = (localStorage.getItem(STORAGE_KEYS.byokKey) || "").trim();
-      if (k && /^AIza[\w-]{20,}$/.test(k)) {
+      if (k && /^sk-[\w-]{20,}$/.test(k)) {
         status.innerHTML = `✅ 已启用 BYOK · <code>${k.slice(0, 6)}…${k.slice(-4)}</code>`;
         status.dataset.ok = "true";
       } else if (k) {
-        status.innerHTML = "⚠️ 格式不像 Gemini key (AIza 开头)";
+        status.innerHTML = "⚠️ 格式不对 (应该 sk- 开头)";
         status.dataset.ok = "false";
       } else {
         status.innerHTML = "未启用 (使用站点默认代理)";

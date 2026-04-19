@@ -120,11 +120,12 @@ npx serve .
 - **回到顶部按钮**：滚动一定距离后淡入。
 - **段落锚点复制**：鼠标停留在标题旁边可一键复制本节锚点链接。
 
-### 🤖 AI 划词解释（Gemini · 可选 BYOK）
-- **划词即解释**：选中正文任意 2–1500 字 → 屏幕浮出"AI 解释"小气泡 → 点击或按 `⌘ / Ctrl + J` → 右侧（手机底部）滑出面板，Gemini 流式生成解释
-- **API key 完全不在前端**：本仓库只调一个无名的 Cloudflare Worker 代理，作者自己的 Gemini key 存在 Worker 的加密 secret 里，仓库源码与浏览器请求里都看不到
-- **4 层防护**：Origin 白名单 + 每 IP 每天 50 次 + 全站 5000 次 / 天闸刀 + 输入 1500 字上限，详见 [`worker/README.md`](./worker/README.md)
-- **BYOK（Bring Your Own Key）**：fork 这个项目的人可以在站点设置里贴上自己的 Gemini key（仅存浏览器 localStorage），之后的请求绕过代理直连 Google，不消耗作者的额度
+### 🤖 AI 划词解释（OpenAI 兼容协议 · 可选 BYOK）
+- **划词即解释**：选中正文任意 2–1500 字 → 屏幕浮出"AI 解释"小气泡 → 点击或按 `⌘ / Ctrl + J` → 右侧（手机底部）滑出面板，AI 流式生成解释
+- **API key 完全不在前端**：本仓库只调一个无名的 Cloudflare Worker 代理，作者的 key 存在 Worker 的加密 secret 里，仓库源码与浏览器请求里都看不到
+- **OpenAI 兼容协议**：上游 endpoint 配置即可换供应商（OpenAI / Azure / OpenRouter / 国内 t8star / 自部署 vLLM 都行），见 [`worker/README.md`](./worker/README.md)
+- **4 层防护**：Origin 白名单 + 每 IP 每天 50 次 + 全站 5000 次 / 天闸刀 + 输入 1500 字上限
+- **BYOK（Bring Your Own Key）**：fork 这个项目的人可以在站点设置里贴上自己的 `sk-` key（仅存浏览器 localStorage），仍走作者的 worker 中转但用你自己的 key 计费
 - **结果缓存 + 复制 + 重问**：同一段文字第二次划选立即出结果，面板内一键复制 / 重新生成
 
 ### 🛠 工程与可维护性

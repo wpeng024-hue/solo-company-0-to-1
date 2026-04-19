@@ -1,20 +1,30 @@
 /**
- * AI 划词解释代理 (Cloudflare Worker)
+ * AI 划词解释代理 (Cloudflare Worker · OpenAI Chat Completions 兼容协议)
  *
- * 接收前端发来的 { text, context? }, 加 system prompt, 转发到 Gemini, 用 SSE
- * 把流式响应原样返回浏览器。
+ * 接收前端发来的 { text, context? }, 加 system prompt, 转发到上游 OpenAI 兼容
+ * 端点 (env.API_BASE), 用 SSE 把流式响应原样回传浏览器.
  *
  * 安全 4 层:
- *   ① Origin 白名单           (env.ALLOWED_ORIGINS)
- *   ② 每 IP 每天调用上限      (env.DAILY_BUDGET_PER_IP, KV 计数)
- *   ③ 全局每天调用上限闸刀    (env.DAILY_BUDGET_GLOBAL)
+ *   ① Origin 白名单            (env.ALLOWED_ORIGINS)
+ *   ② 每 IP 每天调用上限        (env.DAILY_BUDGET_PER_IP, KV 计数)
+ *   ③ 全局每天调用上限闸刀      (env.DAILY_BUDGET_GLOBAL)
  *   ④ 输入字符数 + 输出 token 上限
  *
- * BYOK: 浏览器若在 X-User-Key header 里带了用户自己的 Gemini key,
- *       绕过代理的限额, 直接转发. 这样别人 fork 也能用, 不消耗你的预算.
+ * BYOK: 浏览器若在 X-User-Key header 里带了用户自己的 key, 绕过限额计数,
+ *       直接用用户的 key 转发, 这样别人 fork 也能用, 不消耗你的预算.
+ *
+ * Secrets:
+ *   - API_KEY  (wrangler secret put API_KEY)  必填, 上游平台的密钥
+ *
+ * Vars (wrangler.toml [vars]):
+ *   - API_BASE              上游兼容 OpenAI 的 endpoint
+ *   - MODEL                 默认模型名
+ *   - ALLOWED_ORIGINS       允许的 Origin (逗号分隔)
+ *   - DAILY_BUDGET_PER_IP   每 IP 每天上限
+ *   - DAILY_BUDGET_GLOBAL   全站每天上限
+ *   - MAX_INPUT_CHARS       单次 text 最长字符
+ *   - MAX_OUTPUT_TOKENS     单次最大输出 token
  */
-
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 const SYSTEM_PROMPT = `你是这本电子书的"划词解释助手"。读者会从书中划选一段文字，请用 1–3 段中文做出清晰、有判断的解释。
 
@@ -36,7 +46,12 @@ export default {
     // ----- 健康检查 -----
     if (request.method === "GET") {
       return json(
-        { ok: true, model: env.MODEL || "(unset)", time: new Date().toISOString() },
+        {
+          ok: true,
+          model: env.MODEL || "(unset)",
+          api_base: env.API_BASE || "(unset)",
+          time: new Date().toISOString(),
+        },
         200,
         request,
         env
@@ -84,11 +99,11 @@ export default {
 
     // ----- BYOK: 用户自带 key 走快速通道 -----
     const userKey = (request.headers.get("X-User-Key") || "").trim();
-    const useUserKey = userKey && /^AIza[\w-]{20,}$/.test(userKey);
-    const apiKey = useUserKey ? userKey : env.GEMINI_API_KEY;
+    const useUserKey = userKey && /^sk-[\w-]{20,}$/.test(userKey);
+    const apiKey = useUserKey ? userKey : env.API_KEY;
     if (!apiKey) {
       return json(
-        { error: "server misconfigured: GEMINI_API_KEY not set" },
+        { error: "server misconfigured: API_KEY not set" },
         500,
         request,
         env
@@ -118,7 +133,7 @@ export default {
           return json(
             {
               error: "daily quota reached for your IP",
-              hint: "可在「设置 → BYOK」里贴上你自己的 Gemini key 继续使用，或明天再来",
+              hint: "可在「设置 → BYOK」里贴上你自己的 key 继续使用，或明天再来",
               limit: perIp,
             },
             429,
@@ -148,33 +163,38 @@ export default {
       }
     }
 
-    // ----- ④ 调用 Gemini (流式) -----
-    const model = env.MODEL || "gemini-3.1-flash-lite-preview-thinking-low";
+    // ----- ④ 调用上游 (OpenAI Chat Completions 兼容协议) -----
+    const apiBase = (env.API_BASE || "").replace(/\/+$/, "");
+    if (!apiBase) {
+      return json(
+        { error: "server misconfigured: API_BASE not set" },
+        500,
+        request,
+        env
+      );
+    }
+    const model = env.MODEL || "gpt-4o-mini";
     const maxOut = parseInt(env.MAX_OUTPUT_TOKENS || "800", 10);
     const userPrompt = context
       ? `【所在章节】${context.slice(0, 600)}\n\n【读者划选的文字】\n${text}`
       : `【读者划选的文字】\n${text}`;
 
-    const url = `${GEMINI_BASE}/${encodeURIComponent(
-      model
-    )}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
-
-    const upstream = await fetch(url, {
+    const upstream = await fetch(apiBase, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        Accept: "text/event-stream",
+      },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: maxOut,
-          topP: 0.9,
-        },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+        model,
+        stream: true,
+        temperature: 0.4,
+        top_p: 0.9,
+        max_tokens: maxOut,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
         ],
       }),
     });
@@ -185,7 +205,7 @@ export default {
         {
           error: "upstream error",
           status: upstream.status,
-          detail: errText.slice(0, 400),
+          detail: errText.slice(0, 600),
         },
         502,
         request,
@@ -221,7 +241,7 @@ function corsHeaders(request, env) {
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-User-Key",
+    "Access-Control-Allow-Headers": "Content-Type, X-User-Key, Authorization",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
