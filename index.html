@@ -2510,6 +2510,197 @@
 <h3 id="cursor_1">应用构思：如何把 Cursor 风格工作流真正放进你的项目</h3>
 <p>假设你正在做一个面向设计师的 AI 文档和原型协作产品。传统做法下，你可能自己来回切换：先写 PRD，再画页面，再搭认证，再做数据库，再接调用模型的 API，再写部署脚本。按本章的方法，你应把这个工作流改写成更适合单人与 AI 协作的结构。首先，你要建立项目规则文件，明确目录结构、命名约定、常用命令、测试入口与代码风格。然后，你把产品拆成可验证任务，例如“先完成登录与组织空间的最小闭环”“再完成文档创建与保存”“再接入 AI 生成与异步任务队列”。每次只让代理在一个边界内工作，并要求它在提交改动前给出 diff、测试结果和未解决风险列表。</p>
 <p>当你这样做时，你会发现 AI 真正帮助你的，并不是“替你完成一切”，而是帮你把独立开发中最耗神的上下文切换和重复执行动作吸走。你仍然要做决定，但你不再需要把每一个机械动作都亲手完成。对想走一人开发路线的读者而言，这种差异将决定你是在高频疲劳中熄火，还是能稳定进入长期构建状态。</p>
+<h3 id="ai-editor-pick">实操升级 · AI 编辑器选型对照表 v1.0（2026 年初）</h3>
+
+<p>市面上每过 3 个月就出现一个"会颠覆 Cursor"的编辑器，但单人开发者最稀缺的资源不是工具数量，而是<strong>把同一种工作流练熟的时间</strong>。下面这张表不是排名，而是按"你目前正在做什么"反向倒推选型，请按你最像哪一类来选，而不是按"哪个最酷"来选。</p>
+
+<table>
+<thead>
+<tr>
+<th>编辑器</th>
+<th>核心定位</th>
+<th>上下文工程能力</th>
+<th>Agent / 长任务能力</th>
+<th>价格档位 (个人)</th>
+<th>最适合 / 不适合</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cursor</strong></td>
+<td>主力 IDE，AI-native VS Code fork</td>
+<td>最强：项目级 Rules、@-召回、MCP、自动 codebase index</td>
+<td>Composer / Background Agent，可托管多步任务</td>
+<td>$20/月 Pro，约 $40/月 Max</td>
+<td>✅ 一人开发主战场<br/>❌ 完全不写代码、纯 prompt 流的人</td>
+</tr>
+<tr>
+<td><strong>Claude Code</strong> (CLI)</td>
+<td>终端里的 Agent，重型任务执行</td>
+<td>读项目结构、长上下文（200K）</td>
+<td>极强：可整库重构、跑测试、改文件</td>
+<td>按 token 计费，重度用户约 $50–200/月</td>
+<td>✅ 重型重构、批量改动、CI 编排<br/>❌ 不熟悉终端的初学者</td>
+</tr>
+<tr>
+<td><strong>GitHub Copilot</strong></td>
+<td>VS Code / JetBrains 内嵌补全</td>
+<td>中：基于打开文件 + 部分检索</td>
+<td>Agent 模式追赶中</td>
+<td>$10/月 个人，$19/月 商业</td>
+<td>✅ 已有大型团队 / 需要 SOC2 合规<br/>❌ 单人想做架构级改造</td>
+</tr>
+<tr>
+<td><strong>Windsurf</strong> (Cascade)</td>
+<td>Cursor 的最强直接竞品</td>
+<td>很强：Cascade 流 + Memory</td>
+<td>Cascade Write 可多文件长任务</td>
+<td>$15/月 Pro，约 $60/月 Ultimate</td>
+<td>✅ 想要稍便宜的 Cursor 替代<br/>❌ 已经投资 Cursor 工作流的人</td>
+</tr>
+<tr>
+<td><strong>Continue</strong> / <strong>Cline</strong></td>
+<td>开源 VS Code 插件，自带 BYO-Key</td>
+<td>取决于你接的模型</td>
+<td>Cline 有 Plan/Act 双模式</td>
+<td>免费（你付模型 API 费）</td>
+<td>✅ 想完全自控成本 / 偏开源 / 用本地模型<br/>❌ 不想折腾配置</td>
+</tr>
+<tr>
+<td><strong>Zed</strong></td>
+<td>Rust 写的极致快编辑器</td>
+<td>中：上下文范围较窄</td>
+<td>Agent 较新，能力追赶中</td>
+<td>免费 + 模型用量付费</td>
+<td>✅ 对响应速度极敏感、偏好极简<br/>❌ 重度依赖 VS Code 生态插件</td>
+</tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">!</div>
+<div class="callout__body"><strong>一人开发者的现实组合（2026 上半年我个人在用的）：</strong> Cursor 当主 IDE 处理日常 + 项目级思考；Claude Code 在终端处理"我懒得逐文件指挥"的批量改动 / 大重构；两者共用同一份 <code>.cursorrules</code> + <code>CLAUDE.md</code> 作为单一上下文真源。</div>
+</div>
+
+<h3 id="context-engineering">实操升级 · 上下文工程实操手册</h3>
+
+<p>AI 原生开发里 80% 的"AI 表现差"问题，其实不是模型差，是<strong>上下文工程做得差</strong>：要么没给到关键信息，要么给了一堆无关信息把模型呛住。这里给你一套可直接套用的最小实操。</p>
+
+<h4 id="cursorrules-template">一份可以直接用的 <code>.cursorrules</code> / <code>CLAUDE.md</code> 模板</h4>
+
+<p>把这个文件放在仓库根目录，AI 每次会话都会自动读到。**它不应该是"项目说明"，而应该是"AI 在这个项目里要遵守的工作纪律"**：</p>
+
+<pre><code># Project Rules (read me FIRST)
+
+## 这个项目是什么
+一个 [面向 X 用户、解决 Y 问题] 的 [SaaS / Agent / CLI]，技术栈：
+- Frontend: Next.js 15 App Router + TypeScript + Tailwind
+- Backend: Vercel Edge Functions + Supabase Postgres
+- Auth: Better-Auth   Payments: Stripe   Email: Resend
+
+## 改动纪律 (Critical)
+1. 任何新功能必须先在 PR 里贴出"5 行人话需求"和"会被改到的文件清单"
+2. 不要新建依赖，除非你能解释为什么 stdlib / 现有依赖做不到
+3. 永远不修改 db schema / migrations 而不写 rollback
+4. 不要"顺手优化"无关代码，拒绝 scope creep
+
+## 决策记忆 (我们已经讨论过、不要再问)
+- 我们不会上 Kubernetes，永远不要建议。理由：单人维护成本不允许。
+- 我们用 Supabase RLS 而不是写 middleware 鉴权
+- 测试只写 happy path + 1 个关键失败路径，不追求 100% 覆盖
+
+## 提问纪律
+- 不确定时直接问我，不要假设
+- 有多种实现方案时，列出 2-3 种，并明确推荐一个，给出理由
+</code></pre>
+
+<h4 id="context-recall">上下文召回三阀门（按"信号 / 噪声"递减选）</h4>
+
+<table>
+<thead>
+<tr>
+<th>阀门</th>
+<th>怎么用</th>
+<th>什么时候开</th>
+<th>什么时候关</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 文件级 (@file)</strong></td>
+<td>显式 <code>@filename</code> 把单个或几个文件拽进 prompt</td>
+<td>你心里清楚关键改动只涉及哪几个文件</td>
+<td>不知道改哪儿时</td>
+</tr>
+<tr>
+<td><strong>② 项目级 (@codebase)</strong></td>
+<td>让 AI 检索整个仓库 + index 出最相关片段</td>
+<td>探索阶段、不知道相关文件在哪</td>
+<td>已知精确范围时（信噪比下降）</td>
+</tr>
+<tr>
+<td><strong>③ 跨库级 (MCP / @docs)</strong></td>
+<td>通过 MCP 接 Linear / GitHub / Postgres / 浏览器</td>
+<td>真正需要外部数据/上下文的会话</td>
+<td><strong>常态化全开 = 把垃圾灌进 token，质量直线下降</strong></td>
+</tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">!</div>
+<div class="callout__body"><strong>MCP 的反直觉真相</strong>：装的越多，AI 越笨。MCP 是有"上下文成本"的——每个启用的服务器都会塞一组工具说明进每次 prompt。一人开发者的 sweet spot 是同时启用 ≤2 个 MCP，按会话主题动态切换。</div>
+</div>
+
+<h3 id="peng-lessons-13">作者亲历 · 5 条价值不菲的 vibe coding 教训</h3>
+
+<p>这一节不讲方法论，只讲我自己掏过的学费。每一条后面都跟着一个"如果时光倒流我会怎么做"的规则——你可以直接拿走，省下我交过的钱、时间和焦虑。</p>
+
+<aside class="lesson-card" data-band="6" style="--card-band: var(--band-6);">
+  <div class="lesson-card__head">
+    <span class="lesson-card__num">教训 01</span>
+    <span class="lesson-card__title">用 Composer 一周拼出"全栈 demo"，上线 3 天爆了 5 个我从没看过的 bug</span>
+  </div>
+  <p class="lesson-card__scene">Cursor Composer 一次能改十几个文件，给你一种"我做了一周的事情"的爽感。但所有那些被一笔带过的 diff 里，藏着我没读过、没想过、没验证过的逻辑。第一次正式上线的产品，3 天内崩了 5 次，每一次都源自我"以为 AI 写得差不多就 merge 了"的某个文件。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>永远不让任何一个"我没有逐行看过"的 AI 改动进入 main 分支。哪怕这意味着 Composer 的速度优势从 10× 退到 3×——3× 仍然是巨大的，而 10× 在你修线上 bug 的那个晚上会还回去 50×。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-2);">
+  <div class="lesson-card__head">
+    <span class="lesson-card__num">教训 02</span>
+    <span class="lesson-card__title">让 AI "顺手重构"一段我看不懂的旧代码，业务规则被默默改写</span>
+  </div>
+  <p class="lesson-card__scene">"这段代码看起来很乱，能不能帮我整理一下？"——这是我说过最贵的一句话之一。AI 不知道哪些是丑陋但正确、哪些是丑陋但错误，于是它"清理"的过程中悄悄改了几条业务判断逻辑。两周后客服开始报告数据异常，我花了三天才定位到那个 commit。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>refactor 永远要有"行为不变"的合约测试 (contract test) 在前。如果一段代码没有测试覆盖，那么先写测试，再让 AI 重构。否则你不是在重构，是在<em>祈祷</em>。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-5);">
+  <div class="lesson-card__head">
+    <span class="lesson-card__num">教训 03</span>
+    <span class="lesson-card__title">塞了一个超长 prompt 让 AI "想清整个迭代"，得到一份漂亮但全错的方案</span>
+  </div>
+  <p class="lesson-card__scene">某次我把整个产品需求 + 现有代码摘要 + 我对未来三个月的设想全部塞进一个 prompt，期望 AI 给我"一份能看清全局的设计"。它给了——一份逻辑自洽、表面专业、但每一个细节都和我现有代码对不上的方案。我花了两天判断它"哪里对哪里错"，最终结论是：这两天本可以用来做三个真实任务。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>上下文要<b>小、明确、相关</b>。AI 不是替你思考"全局"的工具，它是替你把"已经定义清楚的小问题"快速做完的工具。一个 prompt 解决一个问题——这条边界比你以为的更重要。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-3);">
+  <div class="lesson-card__head">
+    <span class="lesson-card__num">教训 04</span>
+    <span class="lesson-card__title">装了 5 个 MCP 觉得自己很 pro，实际让 AI 输出质量直线下降</span>
+  </div>
+  <p class="lesson-card__scene">我曾在两周内连装 GitHub、Linear、Notion、Slack、Browser 五个 MCP，自以为给 AI 装上了"全感官接入"。结果是 Cursor 每次都在 prompt 里灌入一大堆我用不上的工具说明，回答开始离题、token 成本暴涨、响应延迟肉眼可见地变慢。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>MCP 是"按会话启用"的工具，不是常驻军。常态：开 0–1 个；用到时手动 enable，用完即关。你的 AI 越"清爽"，回答越准。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-4);">
+  <div class="lesson-card__head">
+    <span class="lesson-card__num">教训 05</span>
+    <span class="lesson-card__title">依赖 AI 写的单测都过了就上线，最后栽在它根本没想到的边界条件上</span>
+  </div>
+  <p class="lesson-card__scene">让 AI 帮我把功能 + 单测一起写完，跑通绿色，部署上线。一周后用户报告："为什么我退款显示成功，但钱没退？" 真相是：AI 只写了"我想到的情况"的测试——它没测试 Stripe 异步 webhook 在 3 秒后才到达的情况，因为我的代码里也没体现这个时序。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>AI 写的测试只能保护"AI 想到的情况"。你必须额外补充<strong>"用户实际会做、但 AI 不会想到"</strong>的边界——尤其是涉及外部 API、异步、并发、和"用户在错误的时间点点错按钮"的场景。</div></div>
+</aside>
+
 <h3 id="ai_7">小结：第十三章的核心，是把 AI 原生开发理解为一种新的工程组织方式</h3>
 <p>本章真正希望你带走的，不是某个工具的功能列表，而是一种新的工程观。AI 原生开发不是“更快写代码”，而是重新组织探索、规划、实现与验证，让单人开发者第一次在许多局部任务上拥有接近小团队的执行能力。但这项能力只有在三个条件下才成立：你能管理上下文，你能切分任务，你能坚持验证。离开这三点，AI 会把优势转成返工；具备这三点，AI 才可能成为一人开发与一人公司的底层放大器。</p>
 <hr />
@@ -2606,6 +2797,247 @@
 <h3 id="saas">应用构思：一个单人 SaaS 的完整工作流样板</h3>
 <p>假设你要做一个“AI 把销售电话整理为 CRM 可执行行动项”的产品。你可以这样设计一人开发流水线。周一只做需求证据汇总，更新最小闭环清单。周二让 AI 读取现有仓库、生成本周迭代计划，并按“上传录音—转录—总结—导出—升级订阅”拆成子任务。周三至周四推进实现，每次只处理一个子任务，所有改动必须带测试或截图。周五做预览验证、生产发布、日志检查与规则文件更新。下一周再根据用户反馈调整优先级。</p>
 <p>这个样板的关键，并不是某一天做了多少功能，而是你是否形成了稳定节律：问题先行，规划前置，AI 执行，人做验证，发布可回滚，知识被沉淀。只要这条流水线形成，一人开发就不再只是拼意志力，而开始具备工程系统性。</p>
+<h3 id="solo-stack">实操升级 · 一人开发工具栈 v1.0（2026 年初）</h3>
+
+<p>下面是我（PENG）在 2026 年初真实在用的栈。它<strong>不是"最好"</strong>——最好的栈不存在；它是<strong>"对一个人来说，单位时间产出 / 单位维护成本最高"</strong>的一个具体快照。你完全可以替换其中任意一个，但请按下面"为什么是它"的判据来替换，而不是按"我听说 X 也不错"。</p>
+
+<div class="stack-grid">
+  <div class="stack-card" data-band="2">
+    <div class="stack-card__role">主力 IDE</div>
+    <div class="stack-card__name">Cursor</div>
+    <p class="stack-card__why">单人能用的 AI-native IDE 里上下文工程能力最强、生态最厚。</p>
+    <div class="stack-card__alt"><b>替代：</b>Windsurf · Claude Code (终端) · Continue (开源)</div>
+  </div>
+  <div class="stack-card" data-band="2">
+    <div class="stack-card__role">前端框架</div>
+    <div class="stack-card__name">Next.js 15 (App Router)</div>
+    <p class="stack-card__why">SSR + RSC + Server Actions 让一个人也能做出"以前需要前后端两人"的产品。</p>
+    <div class="stack-card__alt"><b>替代：</b>Astro (内容站) · Remix · SvelteKit</div>
+  </div>
+  <div class="stack-card" data-band="3">
+    <div class="stack-card__role">UI 组件</div>
+    <div class="stack-card__name">shadcn/ui + Tailwind</div>
+    <p class="stack-card__why">"Copy-paste 而不是 npm install"——你拥有所有组件代码、可以让 AI 直接改它们。</p>
+    <div class="stack-card__alt"><b>替代：</b>HeroUI · Radix Themes · Mantine</div>
+  </div>
+  <div class="stack-card" data-band="3">
+    <div class="stack-card__role">部署 / Hosting</div>
+    <div class="stack-card__name">Vercel</div>
+    <p class="stack-card__why">git push 即上线、preview deployment、Edge Functions 全自动。一人开发的回滚成本最低。</p>
+    <div class="stack-card__alt"><b>替代：</b>Cloudflare Pages + Workers · Netlify · Railway</div>
+  </div>
+  <div class="stack-card" data-band="4">
+    <div class="stack-card__role">数据库 + 认证</div>
+    <div class="stack-card__name">Supabase</div>
+    <p class="stack-card__why">Postgres + Auth + Storage + Realtime + RLS 一站式，少一个供应商少一个故障面。</p>
+    <div class="stack-card__alt"><b>替代：</b>Neon + Clerk · Turso + Better-Auth · Convex</div>
+  </div>
+  <div class="stack-card" data-band="4">
+    <div class="stack-card__role">支付</div>
+    <div class="stack-card__name">Stripe</div>
+    <p class="stack-card__why">订阅、按量、计费、发票、税务、退款——一个人能想到的边角全有现成方案。</p>
+    <div class="stack-card__alt"><b>替代：</b>Lemon Squeezy (税务托管) · Paddle · Polar.sh</div>
+  </div>
+  <div class="stack-card" data-band="5">
+    <div class="stack-card__role">事务邮件</div>
+    <div class="stack-card__name">Resend + React Email</div>
+    <p class="stack-card__why">JSX 写邮件、API 简单、送达率好；最重要的是它<em>不让你折腾</em>。</p>
+    <div class="stack-card__alt"><b>替代：</b>Postmark · Loops (含 marketing)</div>
+  </div>
+  <div class="stack-card" data-band="5">
+    <div class="stack-card__role">异步任务 / Cron</div>
+    <div class="stack-card__name">Trigger.dev</div>
+    <p class="stack-card__why">写 TypeScript 函数当 background job，自带重试 / 可观测 / 长时任务支持。</p>
+    <div class="stack-card__alt"><b>替代：</b>Inngest · QStash · Vercel Cron + Queue</div>
+  </div>
+  <div class="stack-card" data-band="6">
+    <div class="stack-card__role">产品分析</div>
+    <div class="stack-card__name">PostHog</div>
+    <p class="stack-card__why">事件 + Session Replay + Feature Flags + A/B 一个工具搞定，单人不需要 4 个 SaaS。</p>
+    <div class="stack-card__alt"><b>替代：</b>Plausible (隐私优先, 仅流量) · Mixpanel</div>
+  </div>
+  <div class="stack-card" data-band="6">
+    <div class="stack-card__role">错误监控</div>
+    <div class="stack-card__name">Sentry</div>
+    <p class="stack-card__why">前后端错误堆栈、Source Map、Alert 一站式；免费档位足够 0–1 阶段。</p>
+    <div class="stack-card__alt"><b>替代：</b>Highlight.io · BetterStack · Axiom</div>
+  </div>
+  <div class="stack-card" data-band="1">
+    <div class="stack-card__role">任务 / 路线图</div>
+    <div class="stack-card__name">Linear</div>
+    <p class="stack-card__why">键盘流、数据干净、有 MCP 接入 Cursor。一个人也值得用。</p>
+    <div class="stack-card__alt"><b>替代：</b>Height · GitHub Projects · 一份 Markdown</div>
+  </div>
+  <div class="stack-card" data-band="1">
+    <div class="stack-card__role">文档 / 帮助中心</div>
+    <div class="stack-card__name">Mintlify / Fumadocs</div>
+    <p class="stack-card__why">md/mdx 写文档、自带搜索 + AI 问答，把"写文档"的时间成本降到能持续。</p>
+    <div class="stack-card__alt"><b>替代：</b>Nextra · Docusaurus · 一个 README</div>
+  </div>
+</div>
+
+<div class="callout">
+<div class="callout__icon">$</div>
+<div class="callout__body"><strong>0 用户阶段月度账单：</strong>这套栈在没有付费用户时，月度成本通常落在 <span class="metric metric--ok">$0–25</span> 之间（Vercel Hobby + Supabase Free + Resend 3K 免费 + PostHog 1M events 免费 + Sentry 5K errors 免费 + Cursor $20）。完整成本表见下方第 15 章。</div>
+</div>
+
+<h3 id="7-day-mvp">实操升级 · 从想法到 0.1 版本的 7 天最小可验证路径</h3>
+
+<p>不是"7 天做完一个完整 SaaS"——那是 demo，不是产品。这里的"7 天"是"从模糊想法走到一个真实付费用户付了一笔钱"的最小闭环。每一天只做一件事，做完才进下一天。</p>
+
+<ol class="day-list">
+  <li>
+    <div class="day-num">D1</div>
+    <div class="day-body">
+      <div class="day-title">用户访谈 × 5（不是问候，是验证）</div>
+      <div class="day-detail">找 5 个最像目标用户的人，每人聊 30 分钟。<strong>问"你最近一次为这个问题花钱 / 花时间是什么时候？"</strong>，不是"你愿意为它付费吗"。后者永远得到客气的"愿意"。</div>
+      <ul class="day-checklist"><li>5 段录音</li><li>1 张痛点排序表</li><li>3 句你反复听到的原话（这是你的 landing page 文案）</li></ul>
+    </div>
+  </li>
+  <li>
+    <div class="day-num">D2</div>
+    <div class="day-body">
+      <div class="day-title">写 5 行 PRD + 1 张架构草图</div>
+      <div class="day-detail">PRD 必须能用 5 行写完：<em>谁 / 在什么场景 / 用什么动作 / 解决什么问题 / 我怎么知道它有效</em>。架构草图就 5 个方框：用户 → 前端 → API → DB / AI → 第三方。复杂的草图说明你还没想清。</div>
+      <ul class="day-checklist"><li>PRD.md 5 行</li><li>arch.png 1 张</li><li>Linear 拉满 3 个 Sprint 的任务</li></ul>
+    </div>
+  </li>
+  <li>
+    <div class="day-num">D3</div>
+    <div class="day-body">
+      <div class="day-title">部署一个"什么都没有但能登录"的骨架</div>
+      <div class="day-detail">这一步专治"先做完一周再部署"的拖延症。Cursor 起 Next.js + Supabase Auth + Vercel deploy + 一个空的 dashboard 路由。<strong>给你的 5 个访谈用户发链接，让他们注册一下</strong>，看看真实人能不能走完登录。</div>
+      <ul class="day-checklist"><li>https://xxx.vercel.app 可访问</li><li>5 人完成注册</li><li>Sentry 已接入</li></ul>
+    </div>
+  </li>
+  <li>
+    <div class="day-num">D4</div>
+    <div class="day-body">
+      <div class="day-title">实现唯一一个核心动作（不要做菜单、设置、个人中心）</div>
+      <div class="day-detail">问自己：<em>用户为这个产品付费的理由那一个动作是什么</em>？只做那一个，连"删除"按钮都先不做。这是你最容易过度设计的一天，请给自己定一个硬性下班时间。</div>
+      <ul class="day-checklist"><li>1 条 happy path 走通</li><li>有 1 个失败路径的兜底文案</li><li>录一段 30 秒视频记录效果</li></ul>
+    </div>
+  </li>
+  <li>
+    <div class="day-num">D5</div>
+    <div class="day-body">
+      <div class="day-title">接 Stripe + 设一个最简单的定价</div>
+      <div class="day-detail">不是"等用户多了再说"——付费按钮本身就是验证工具。两档定价（免费 / $X 月付），$X 选你访谈中听到的"我能接受的范围"中位数，不要纠结。给 D1 的 5 个访谈者发 50% off 邀请码。</div>
+      <ul class="day-checklist"><li>Stripe Checkout 跑通</li><li>Webhook 接收订阅事件</li><li>5 张 50% off 邀请码</li></ul>
+    </div>
+  </li>
+  <li>
+    <div class="day-num">D6</div>
+    <div class="day-body">
+      <div class="day-title">写一页 landing + 把 D1 的原话贴上去</div>
+      <div class="day-detail">用户原话 &gt; 你的精心修辞 &gt; AI 生成的市场套话。一页就够，3 屏：痛点 + 一段产品演示动图 + 定价。Plausible / PostHog 接入，关注三件事：访问 → 注册转化、注册 → 首次激活转化、激活 → 付费转化。</div>
+      <ul class="day-checklist"><li>landing 上线</li><li>3 个核心转化漏斗</li><li>FAQ 5 条（来自访谈）</li></ul>
+    </div>
+  </li>
+  <li>
+    <div class="day-num">D7</div>
+    <div class="day-body">
+      <div class="day-title">在你最熟的一个圈子里发布</div>
+      <div class="day-detail">不是 ProductHunt——那是高峰期，先别去。在你自己已经混了一段时间的 Discord / 即刻 / X / 小圈子里发一段 demo + 链接 + 邀请码。<strong>目标不是 1000 注册，是 1 个真实付费用户</strong>。如果一周内拿不到这第 1 个，回到 D1 重新访谈。</div>
+      <ul class="day-checklist"><li>1 篇社区帖</li><li>≥ 1 个付费用户</li><li>≥ 5 条用户反馈</li></ul>
+    </div>
+  </li>
+</ol>
+
+<h3 id="3-defenses">实操升级 · 一人开发的"3 重防线"测试策略（2 小时内搭完）</h3>
+
+<p>一个人不可能写"测试金字塔"——单测 80% 覆盖率？等你写完产品已经凉了。但完全不写测试，会被反噬到夜不能寐。一人开发的现实做法是<strong>三重浅防线</strong>：每一层都很薄，但能挡住对应那一类问题。</p>
+
+<table>
+<thead>
+<tr>
+<th>防线</th>
+<th>怎么搭</th>
+<th>它能挡什么</th>
+<th>它挡不住什么</th>
+<th>预算时间</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 类型墙 (TypeScript Strict)</strong></td>
+<td>开 <code>strict: true</code>、Zod 校验所有外部输入（API、env、表单）</td>
+<td>"undefined is not a function"、null pointer、忘传字段、API shape 漂移</td>
+<td>业务逻辑错误、状态不一致</td>
+<td><span class="metric">10 min</span></td>
+</tr>
+<tr>
+<td><strong>② Smoke (1 条 e2e + Sentry)</strong></td>
+<td>用 Playwright 写一条 happy path（注册→核心动作→登出）；Sentry 全量接入前后端</td>
+<td>关键路径完全爆掉、未捕获的运行时错误、第三方接口换 schema</td>
+<td>具体业务规则错误（如多扣了一次费）</td>
+<td><span class="metric">60 min</span></td>
+</tr>
+<tr>
+<td><strong>③ Canary (Preview + Rollback)</strong></td>
+<td>Vercel preview deployment 当 staging；main 分支 push 自动部署，PostHog 监控转化漏斗，转化骤降时 1 click rollback</td>
+<td>"测试都过了，但用户表现变差"的隐性 regression（按钮看不见、加载变慢）</td>
+<td>已经发出去的邮件、已经收的款</td>
+<td><span class="metric">30 min</span></td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>关键洞察</strong>：你不是在追求"代码正确"，你是在追求"<em>线上信号能告诉我哪里不对</em>"。这三条防线加起来 100 分钟搭完，能挡住一个人 0→100 用户阶段 90% 的"半夜被叫醒"事件。</p>
+
+<h3 id="3am-protocol">实操升级 · 凌晨 3 点告警怎么办（一个人的应急响应手册）</h3>
+
+<p>这是一人开发最不浪漫的部分。你没有 on-call 轮值，没有同事代你顶一晚，告警响了就是响了。所以策略不是"半夜赶紧爬起来修"，而是<strong>让系统在你睡着时尽量自救，让真正必须叫醒你的事情少到一年只有几次</strong>。</p>
+
+<h4 id="3am-design">设计原则：让 80% 的"告警"自己消失</h4>
+
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>做什么</th>
+<th>能减少多少深夜告警</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 可回退 (Reversible)</td>
+<td>所有部署默认带"上一版健康状态"，转化骤降 / 错误率突增 → 自动 revert（Vercel 的 Auto Rollback / 自己写的 GitHub Action）</td>
+<td><span class="metric--ok metric">~40%</span></td>
+</tr>
+<tr>
+<td>② 可降级 (Graceful Degradation)</td>
+<td>外部 API（OpenAI、Stripe 之外的）失败时，返回 cache / 排队 / "稍后再试"，而不是 500</td>
+<td><span class="metric--ok metric">~25%</span></td>
+</tr>
+<tr>
+<td>③ 可吸收 (Idempotent)</td>
+<td>所有付费 / 邮件 / Webhook 处理写成幂等（同一事件处理 N 次结果相同）</td>
+<td><span class="metric--ok metric">~15%</span></td>
+</tr>
+<tr>
+<td>④ 噪声分级</td>
+<td>Sentry / PostHog 的告警分 P0 (打电话) / P1 (推送) / P2 (邮件每日汇总)。<strong>P0 必须满足：影响付费 / 数据丢失 / 完全宕机</strong>，其他都是 P1+</td>
+<td>把"惊醒数"压到一年 &lt;5 次</td>
+</tr>
+</tbody>
+</table>
+
+<h4 id="3am-toolkit">最低限度的工具组合</h4>
+
+<ul>
+  <li><strong>Uptime + 真用户合成监控</strong>：BetterStack / OneUptime，每 30s 探测一次主域名 + 一条登录流</li>
+  <li><strong>电话 / Push 升级</strong>：BetterStack incidents 或 PagerTree，价格便宜版，只在 P0 升级到电话</li>
+  <li><strong>Auto-rollback</strong>：Vercel 自带，或者自己一段 GH Action：错误率连续 3min 翻倍 → revert latest deploy</li>
+  <li><strong>Stripe 关键事件单独群</strong>：Stripe Webhook 失败 / 退款 / 争议进单独 Telegram 群（不进 P 通道，但你早上会看到）</li>
+  <li><strong>"代我顶 5 分钟" 应急人</strong>：找 1 个朋友（哪怕互相帮助），约定"如果我连续 30min 没回 P0，你帮我 revert 最新一次 deploy"</li>
+</ul>
+
+<div class="callout">
+<div class="callout__icon">!</div>
+<div class="callout__body"><strong>反模式提醒</strong>：装 Datadog + PagerDuty + StatusPage + Grafana 全套——一人开发不需要也付不起。<strong>从 BetterStack ($25/月) + Sentry (free) + Stripe webhook → Telegram (free) 起步</strong>，等 MRR 过 $1k 再考虑升级。</div>
+</div>
+
 <h3 id="_105">小结：第十四章的核心，是把单人开发从“个人努力”升级为“个人系统”</h3>
 <p>本章要你真正掌握的，是一个很重要的转变：一人开发不是靠燃烧个人意志持续硬扛，而是靠一个足够稳定的工作系统，把问题发现、设计、实现、验证和发布组织成可重复流程。AI 使这个系统的执行层大幅提速，但系统本身仍要由你设计。谁能更早把个人工作法系统化，谁就更可能真正走到一人产品化与一人商业化阶段。</p>
 <hr />
@@ -2662,6 +3094,235 @@
 <p>教材必须在这里再次反对一个常见误解：项目接上支付，不等于完成商业化。真正的商业化意味着用户从发现产品、注册、试用、转换、续费到流失恢复，整个流程都开始拥有可解释的系统结构。否则，你只是把一个收款按钮挂在一个功能集合上。这样的产品通常很快会暴露出三种问题：付费后权限不同步；取消订阅后体验混乱；你不知道用户为什么不续费，也不知道问题是价值不足、价格错误还是故障过多。</p>
 <h3 id="saas_1">应用构思：单人 SaaS 的最小商业底座怎么搭</h3>
 <p>假设你要做一个“AI 帮顾问整理客户会议并自动生成后续行动项”的 SaaS。按本章逻辑，最小商业底座至少应包含以下结构：Supabase Auth 负责登录、组织空间与基础授权；应用数据库保存用户、工作区、任务、摘要结果与配额；Stripe 负责订阅、发票、付款状态与 Webhook 事件；应用内部以事件驱动方式把付款状态映射为计划等级与功能权限；Vercel 或同类平台负责预览、生产与回滚；日志和分析系统负责查看失败上传、转录错误、模型调用失败与升级漏斗。这个系统不豪华，但它足以支撑一个真实开始卖的产品。</p>
+<h3 id="solo-saas-stack">实操升级 · 一人 SaaS 商业底座参考架构 v1.0</h3>
+
+<p>第 14 章给的是"开发栈"，这一节给的是"<strong>商业底座</strong>"——即"能让用户付款、续费、退款、被通知、被服务，且你不需要每天人工干预"的最小组合。一人 SaaS 不是"做完产品再加个支付按钮"，而是<strong>从第一天就把这套底座当作核心系统设计</strong>。</p>
+
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>2026 年初推荐</th>
+<th>为什么是它</th>
+<th>替代</th>
+<th>典型起步成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>认证 (Auth)</strong></td>
+<td>Better-Auth (开源) 或 Clerk (托管)</td>
+<td>邮件/OAuth/Magic Link/2FA/组织/角色——单人不应该自己实现</td>
+<td>Supabase Auth · Auth.js · WorkOS</td>
+<td><span class="metric metric--ok">$0–25/月</span></td>
+</tr>
+<tr>
+<td><strong>订阅与计费</strong></td>
+<td>Stripe Billing</td>
+<td>试用、按量、Coupon、Proration、发票、Tax、Customer Portal 全套</td>
+<td>Lemon Squeezy (含税) · Polar.sh · Paddle</td>
+<td><span class="metric metric--ok">2.9% + $0.30 / 笔</span></td>
+</tr>
+<tr>
+<td><strong>事务邮件</strong></td>
+<td>Resend + React Email</td>
+<td>JSX 写邮件、API 优秀、送达率好</td>
+<td>Postmark · Loops</td>
+<td><span class="metric metric--ok">$0 (3K/月免费)</span></td>
+</tr>
+<tr>
+<td><strong>营销邮件 / 自动化</strong></td>
+<td>Loops 或 Resend Broadcasts</td>
+<td>欢迎序列、激活提醒、流失挽留——属于商业系统不是"运营事后补"</td>
+<td>ConvertKit · Customer.io</td>
+<td><span class="metric metric--ok">$0–49/月</span></td>
+</tr>
+<tr>
+<td><strong>产品分析 + Session</strong></td>
+<td>PostHog (免费档)</td>
+<td>事件 + Session Replay + Feature Flag + A/B 一站式</td>
+<td>Mixpanel · Amplitude</td>
+<td><span class="metric metric--ok">$0 (1M event/月免费)</span></td>
+</tr>
+<tr>
+<td><strong>账务 / 税务 / 发票</strong></td>
+<td>Stripe Tax + Stripe Invoicing</td>
+<td>面向北美/欧盟自动算税、跨境合规</td>
+<td>Lemon Squeezy (一切税务托管)</td>
+<td><span class="metric metric--warn">+0.5% 笔交易</span></td>
+</tr>
+<tr>
+<td><strong>客服自助</strong></td>
+<td>Mintlify Help / Plain.com 起步</td>
+<td>文档 + AI 问答覆盖 80%；剩下 20% 用一个 inbox</td>
+<td>Crisp · Front · Intercom (太贵)</td>
+<td><span class="metric metric--ok">$0–35/月</span></td>
+</tr>
+<tr>
+<td><strong>异步任务 / Webhook</strong></td>
+<td>Trigger.dev 或 Inngest</td>
+<td>处理 Stripe webhook、续费提醒、被遗忘的购物车——一人 SaaS 的"看不见的员工"</td>
+<td>QStash · Cloudflare Queue</td>
+<td><span class="metric metric--ok">$0 (含免费档)</span></td>
+</tr>
+<tr>
+<td><strong>状态页 / Uptime</strong></td>
+<td>BetterStack Uptime + Status Page</td>
+<td>探测 + 状态页 + on-call 升级一站式</td>
+<td>Atlassian Statuspage · OneUptime (开源)</td>
+<td><span class="metric metric--ok">$0–25/月</span></td>
+</tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">$</div>
+<div class="callout__body"><strong>商业底座的"年付 vs 月付"判断</strong>：你的商业底座一旦验证可用就<strong>立刻全部转年付</strong>。多数家伙打 7–8 折，相当于一年净省一个月。但<em>在产品方向还没验证前不要年付任何工具</em>，包括 Cursor——以免你 3 个月后转方向，沉没成本绑住你。</div>
+</div>
+
+<h3 id="payment-state-machine">实操升级 · 把"收款"理解为状态机：12 种订阅状态 + 应处理动作</h3>
+
+<p>第 15 章正文里说过"收款是状态机不是按钮"——这一节把那句话落到代码层面。下面 12 种状态是 Stripe / Lemon Squeezy 等订阅类系统中你<strong>必然会遇到的</strong>，每一种都对应一组"系统应该自动做的事"和"绝对不能漏的动作"。</p>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>状态</th>
+<th>触发场景</th>
+<th>系统该自动做</th>
+<th>容易漏的事</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>trialing</code></td><td>免费试用中</td><td>赋予 Pro 权限 + 发"3 天后到期"提醒邮件</td><td>试用结束后没 downgrade 权限</td></tr>
+<tr><td>2</td><td><code>active</code></td><td>付费订阅生效</td><td>赋予 Pro 权限 + 发收据 + 标记激活时间</td><td>把 active 当成永久——它会变成 past_due</td></tr>
+<tr><td>3</td><td><code>past_due</code></td><td>续费扣款失败 (卡过期 / 余额不足)</td><td>保留权限 + 发"请更新卡"邮件 + Stripe 自动 retry 3 次</td><td>立即 downgrade——会激怒只是卡刚过期的好用户</td></tr>
+<tr><td>4</td><td><code>unpaid</code></td><td>retry 全部失败</td><td>降级到 Free 权限 + 数据保留 30 天 + 最后一封挽留邮件</td><td>立即删除数据——会触发 chargeback 和差评</td></tr>
+<tr><td>5</td><td><code>canceled</code></td><td>用户主动取消</td><td><strong>到期日</strong>才降级（不是立即），发"我们想听原因"反馈邮件</td><td>立即停服——你违约了，他付的是这个月</td></tr>
+<tr><td>6</td><td><code>incomplete</code></td><td>需要 3DS 验证但用户没完成</td><td>发"再点一下完成支付"邮件 + 24h 内不重新算钱</td><td>当成失败用户——很多人只是验证码没收到</td></tr>
+<tr><td>7</td><td><code>incomplete_expired</code></td><td>incomplete 24h 后自动失败</td><td>清理草稿订阅 + 标记 lead 状态供再营销</td><td>当成"流失"——他从未真正付款</td></tr>
+<tr><td>8</td><td><code>paused</code></td><td>用户暂停订阅 (按企业策略)</td><td>降到 Free 但保留所有数据 + 一键恢复入口</td><td>不存数据——重启时用户会很愤怒</td></tr>
+<tr><td>9</td><td><code>refunded</code></td><td>退款发生</td><td>立即降级 + 发"退款已到账"邮件 + 要求反馈</td><td>权限不撤——你在被薅</td></tr>
+<tr><td>10</td><td><code>chargeback</code></td><td>用户在银行发起争议</td><td>立即冻结账户（防止继续被薅）+ 推送你接下来的应对窗口（7 天）</td><td>不知道有 dispute——会自动判输</td></tr>
+<tr><td>11</td><td><code>dunning</code></td><td>3 次 retry 期间持续触达</td><td>第 1/3/7 天分别发不同语调的邮件 + 站内 banner 提醒</td><td>只发一次——挽回率会差 3 倍</td></tr>
+<tr><td>12</td><td><code>upgraded / downgraded</code></td><td>用户改套餐</td><td>立即生效新权限 + 按比例 prorate 退/补差额 + 单独发"已升/降级"邮件</td><td>只更新数据库不通知 → 客服爆炸</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">→</div>
+<div class="callout__body"><strong>实战建议</strong>：在你写第一行 Stripe 代码<em>之前</em>，先把这 12 种状态画成一张状态转移图（盗用图 6 的"经营回路"风格自己画一张），贴在 README 旁边。每加一个 webhook handler 都对照一下你处理了哪些转移。<strong>不要试图一次写完 12 种</strong>——按 1, 2, 3, 4, 5 的顺序先覆盖头 5 种就能开张，剩下的随用户量增长按需补。</div>
+</div>
+
+<h3 id="funnel-events">实操升级 · 注册到付费的 7 个必埋事件 + 一人能看的仪表盘</h3>
+
+<p>"装了 PostHog 就有数据看"是错觉。<strong>埋了正确的事件才有数据看</strong>。下面 7 个事件是任何一人 SaaS 的"最小漏斗"，缺一个你都会做出错误的产品决策。</p>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事件名</th>
+<th>触发时机</th>
+<th>关键属性</th>
+<th>用它回答什么</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>landing_viewed</code></td><td>访问 marketing 页</td><td>referrer, utm_*</td><td>哪个渠道在导流</td></tr>
+<tr><td>2</td><td><code>signup_started</code></td><td>点击"注册"按钮</td><td>plan_intended (free / pro)</td><td>谁愿意试，但中途放弃了</td></tr>
+<tr><td>3</td><td><code>signup_completed</code></td><td>账号创建成功 + 邮箱已验证</td><td>signup_method (email / google)</td><td>注册转化、Auth 是否在阻碍人</td></tr>
+<tr><td>4</td><td><code>activation_done</code></td><td><strong>用户第一次完成那个"产品的核心动作"</strong> (你必须自己定义这个动作)</td><td>time_to_first_value (秒)</td><td>这是单一最重要的指标——多少人真正"用起来"了</td></tr>
+<tr><td>5</td><td><code>checkout_started</code></td><td>点击"升级"按钮跳转 Stripe</td><td>plan, period (monthly/yearly)</td><td>升级意图与最终成功的 gap</td></tr>
+<tr><td>6</td><td><code>subscription_created</code></td><td>Stripe webhook 确认订阅生效</td><td>amount_usd, plan, period, coupon</td><td>真实付费转化、定价的弹性</td></tr>
+<tr><td>7</td><td><code>subscription_canceled</code></td><td>用户主动取消</td><td>days_active, cancel_reason</td><td>流失原因、付费用户生命周期</td></tr>
+</tbody>
+</table>
+
+<h4 id="funnel-dashboard">"一个人能看完"的仪表盘 = 1 个屏幕，5 个数</h4>
+
+<p>不要搭 30 个图。下面 5 个数足以告诉你"上周做对了 / 做错了什么"，超过这个量你也看不过来：</p>
+
+<ul>
+  <li><strong>① 注册 → 激活 转化率</strong>（事件 3 → 事件 4）：&lt;30% 说明 onboarding 烂了</li>
+  <li><strong>② 激活 → 付费 转化率</strong>（事件 4 → 事件 6）：&lt;5% 说明定价 / 价值传递有问题</li>
+  <li><strong>③ 7 日留存</strong>（事件 4 后 7 天又触发任何核心事件）：&lt;30% 说明产品本身没粘性</li>
+  <li><strong>④ MRR / ARR</strong>：本月新增、流失、净增</li>
+  <li><strong>⑤ Cancel reason 分布</strong>（事件 7 的 reason 字段）：你产品下一个版本的方向</li>
+</ul>
+
+<h3 id="cost-table">实操升级 · 0 → 100 付费用户的真实月度成本表</h3>
+
+<p>很多人把"一人 SaaS"想成"零成本"，结果运行 6 个月才发现自己在每月亏 200 美金给云厂。下面是一个典型的 B2B SaaS（按量适中、有 AI 调用）在不同阶段的真实月度成本。<strong>你可以用这张表来反向倒推：你需要多少付费用户才能开始不亏钱</strong>。</p>
+
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>0 用户阶段</th>
+<th>10 付费用户</th>
+<th>100 付费用户</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><strong>开发工具</strong>（Cursor Pro）</td><td>$20</td><td>$20</td><td>$20</td><td>固定</td></tr>
+<tr><td><strong>Hosting</strong>（Vercel Pro 或 Hobby）</td><td>$0</td><td>$20</td><td>$20</td><td>有付费用户必须升 Pro（合规、SLA）</td></tr>
+<tr><td><strong>DB + Auth + Storage</strong>（Supabase）</td><td>$0</td><td>$0</td><td>$25</td><td>Pro 计划开始</td></tr>
+<tr><td><strong>支付</strong>（Stripe 手续费）</td><td>$0</td><td>~$15</td><td>~$150</td><td>按 GMV 2.9% + $0.30 估</td></tr>
+<tr><td><strong>事务邮件</strong>（Resend）</td><td>$0</td><td>$0</td><td>$20</td><td>3K 免费够小用户量</td></tr>
+<tr><td><strong>营销邮件</strong>（Loops）</td><td>$0</td><td>$0</td><td>$49</td><td>有自动化序列后</td></tr>
+<tr><td><strong>分析</strong>（PostHog 自托管 or 云）</td><td>$0</td><td>$0</td><td>$0–50</td><td>1M 事件免费</td></tr>
+<tr><td><strong>错误监控</strong>（Sentry）</td><td>$0</td><td>$0</td><td>$26</td><td>Team Plan</td></tr>
+<tr><td><strong>异步任务</strong>（Trigger.dev）</td><td>$0</td><td>$0</td><td>$20</td><td>有用户后开始计费</td></tr>
+<tr><td><strong>客服 / 文档</strong>（Mintlify / Plain）</td><td>$0</td><td>$0</td><td>$25</td><td>有付费用户后</td></tr>
+<tr><td><strong>Uptime + Status</strong>（BetterStack）</td><td>$0</td><td>$0</td><td>$25</td><td>有付费用户后</td></tr>
+<tr><td><strong>AI 用量</strong>（OpenAI/Anthropic）</td><td>$10</td><td>~$50</td><td>~$200–500</td><td>取决于你产品对 AI 依赖度</td></tr>
+<tr><td><strong>域名 + 邮箱</strong></td><td>$5</td><td>$5</td><td>$5</td><td>固定</td></tr>
+<tr><td><strong>合计</strong></td><td><span class="metric metric--ok">~$35</span></td><td><span class="metric metric--ok">~$110</span></td><td><span class="metric metric--warn">~$685</span></td><td>不含税务、保险、个人合规等</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">!</div>
+<div class="callout__body"><strong>盈亏平衡公式</strong>：如果你定价 $19/月，需要约 <span class="metric metric--ok">36 个付费用户</span> 才能 cover 100 用户阶段的月度成本（不算你自己时间）。如果定价 $49/月，约 <span class="metric metric--ok">14 个</span>。<strong>这意味着低于 $20 / 月的定价对一人 SaaS 在这个阶段几乎不可持续</strong>——除非你的核心成本（AI / Stripe）能压得更低。</div>
+</div>
+
+<h3 id="revenue-traps">实操升级 · 5 个"看起来在收钱实际在亏钱"的陷阱</h3>
+
+<p>下面这些设计错误，每一个我（PENG）或者我认识的独立开发者都付过学费。它们隐蔽到不会马上让你"破产"，但会让你的有效收入悄悄缩水 30–60%——直到某一天你看后台数据才发现"咦，怎么这个月真没赚到钱"。</p>
+
+<aside class="lesson-card" style="--card-band: var(--band-6);">
+  <div class="lesson-card__head"><span class="lesson-card__num">陷阱 01</span><span class="lesson-card__title">无限期免费试用 + 信任系统会自动转化</span></div>
+  <p class="lesson-card__scene">"我做出来好用了用户自然会付费"——不会。免费试用必须有<strong>明确截止日</strong>（7/14/30 天三选一），到期前 3 天、1 天、当天各发一封不同语调的提醒邮件。没有"试用结束触发"的 SaaS 大概率有 60%+ 的"沉默卡死"用户。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>试用是状态机里的一个明确状态，不是产品的常态。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-2);">
+  <div class="lesson-card__head"><span class="lesson-card__num">陷阱 02</span><span class="lesson-card__title">不主动处理 past_due，月流失率被偷偷拉高</span></div>
+  <p class="lesson-card__scene">Stripe 默认会 retry 3 次（4 天内），但用户经常根本不知道续费失败了——卡过期 / 银行风控 / 余额不足。如果你不主动发"请更新卡"+ 站内 banner + Customer Portal 链接，你大约 30% 的"流失"其实是<em>意外流失</em>，不是用户想走。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>Dunning（催收流程）是商业系统的一部分，不是"售后"。一封好邮件能挽回 15–25% 的"假流失"。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-5);">
+  <div class="lesson-card__head"><span class="lesson-card__num">陷阱 03</span><span class="lesson-card__title">税务交给一个会计、自己不开 Stripe Tax</span></div>
+  <p class="lesson-card__scene">如果你卖给欧盟、英国、加州、澳洲，<strong>你有义务收当地销售税并申报</strong>。一开始觉得"等做大再说"，等做大了发现 18 个月内的销售税要补缴 + 罚款，单这一项可能吃掉半年利润。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>有第 1 个跨境付费用户的当天，要么开 Stripe Tax (+0.5% 笔交易，自动算 + 半托管申报)，要么换到 Lemon Squeezy / Paddle (Merchant of Record，全托管但贵 4–5%)。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-3);">
+  <div class="lesson-card__head"><span class="lesson-card__num">陷阱 04</span><span class="lesson-card__title">Lifetime Deal 当增长引擎，结果一年后全是只付一次的用户</span></div>
+  <p class="lesson-card__scene">早期为了"启动现金流"在 AppSumo 类平台搞 LTD（终身买断），单价 $59 一波卖 500 单——账面 $30K 现金真香。但 12 个月后你的 active 用户里 80% 是 LTD 用户，他们不会再付费、消耗你 80% 的服务器和客服资源、产生 80% 的 feature request。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>除非你是"一次性工具"（如 icon 生成器、合同模板），否则<strong>永远不要给订阅型产品做 LTD</strong>。要现金流可以做"年付 50% off"或"创始用户终身锁价"，但锁价不是终身免费。</div></div>
+</aside>
+
+<aside class="lesson-card" style="--card-band: var(--band-4);">
+  <div class="lesson-card__head"><span class="lesson-card__num">陷阱 05</span><span class="lesson-card__title">客服全部走邮件 / 实时聊天，被吃掉一天 4 小时</span></div>
+  <p class="lesson-card__scene">"为了用户体验"不上文档站、所有问题靠 1-on-1 回复——前 30 个用户感觉很贴心，第 100 个用户开始你每天 4 小时在重复回答 5 个问题。一人公司里时间 = 现金流，这种"软支出"比服务器贵得多。</p>
+  <div class="lesson-card__rule"><div><b>规则：</b>同一类问题被问到第 3 次，立刻写进 FAQ / 文档站。客服 inbox 必须有"指向已存在文档"的快捷回复模板。<strong>目标：80% 问题能被自助解决，剩下 20% 才动手回</strong>。</div></div>
+</aside>
+
 <h3 id="_113">小结：第十五章的核心，是把商业化理解为系统工程而不是支付接入</h3>
 <p>本章希望你真正建立的认知，是：一人产品走向一人商业化，不是把“功能做好”之后再顺手接个支付，而是把认证、账单、权限、通知、部署和观测一起组织成商业底座。你越早把这套底座系统化，越不容易在开始收费后被运营碎片吞噬。对单人开发者来说，商业化本质上也是软件架构问题。</p>
 <hr />
@@ -2812,6 +3473,326 @@
   <figcaption><b>图 6</b> 一人公司经营回路图</figcaption>
 </figure>
 <p>图 6 对第十六章非常关键，因为它把“产品、商业化、支持、度量”这些常被分开理解的事情重新连成了单一经营回路。你以后判断一个一人公司是否真正成立，不是看它有没有收费页面，而是看这个回路是否已经开始稳定闭合。</p>
+<h3 id="loop-metrics">实操升级 · 6 大经营回路 × 关键指标 × 警报阈值</h3>
+
+<p>图 6（一人公司经营回路图）告诉你"应该有 6 个回路"，这一节告诉你"<strong>每个回路用什么数字判断它是否在运转</strong>"。一人公司的经营本质就是看这 18 个数字（每环 3 个），其他都是噪声。把这张表打印出来贴墙上。</p>
+
+<table>
+<thead>
+<tr>
+<th>回路</th>
+<th>核心问题</th>
+<th>3 个关键指标</th>
+<th>红线 / 黄线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 选题</strong></td>
+<td>我做的事情是不是用户真的有人愿意付钱解决？</td>
+<td>① 周访谈数（≥3）<br/>② 候选 idea 列表长度（≥5）<br/>③ 已验证 idea 的"愿付费指标"（如预购、deposit）</td>
+<td><span class="metric metric--bad">连续 4 周访谈 = 0 → 项目方向危险</span></td>
+</tr>
+<tr>
+<td><strong>② 产品</strong></td>
+<td>核心动作是否真的能在 60 秒内被新用户完成？</td>
+<td>① TTV (time-to-first-value)<br/>② 激活转化（注册→首次完成核心动作）<br/>③ 7 日留存</td>
+<td><span class="metric metric--warn">激活率 &lt; 30% → onboarding 出问题</span></td>
+</tr>
+<tr>
+<td><strong>③ 分发</strong></td>
+<td>有没有一条不依赖广告投放的可重复获客通路？</td>
+<td>① 周新增访问<br/>② 渠道集中度（最大渠道占比）<br/>③ 内容产出（周发文 / 周活动数）</td>
+<td><span class="metric metric--bad">单一渠道 &gt; 70% → 渠道风险</span></td>
+</tr>
+<tr>
+<td><strong>④ 转化</strong></td>
+<td>访客 → 注册 → 付费的漏斗是不是在收敛？</td>
+<td>① 访问→注册转化<br/>② 注册→付费转化<br/>③ ARPU (每用户平均收入)</td>
+<td><span class="metric metric--warn">注册→付费 &lt; 2% → 定价 / 价值传递有问题</span></td>
+</tr>
+<tr>
+<td><strong>⑤ 交付</strong></td>
+<td>系统能不能在我不在场时也把价值送给用户？</td>
+<td>① Uptime %<br/>② P95 响应时间<br/>③ 客服响应中位数（自助 + 人工）</td>
+<td><span class="metric metric--bad">月故障 &gt; 3 次 OR 单次 &gt; 30min → 必须复盘</span></td>
+</tr>
+<tr>
+<td><strong>⑥ 复购</strong></td>
+<td>付费用户是否在持续付费？</td>
+<td>① 月度 churn rate<br/>② NRR (净收入留存)<br/>③ 推荐 / NPS / Reviews</td>
+<td><span class="metric metric--bad">月 churn &gt; 8% → 产品价值不达期望</span></td>
+</tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">→</div>
+<div class="callout__body"><strong>一人公司的"周一晨会"模板</strong>：每周一花 15 分钟把这 18 个数字填进一份固定的 markdown 文件，红黄线触发的指标用 emoji 标出，决定本周是否调方向。<strong>不要等季报才看</strong>——一人公司在错误方向上待 6 周可能就要赔上 6 个月。</div>
+</div>
+
+<h3 id="mrr-milestones">实操升级 · MRR $100 / $1k / $10k 三个里程碑：每一阶段必须具备的系统能力</h3>
+
+<p>"我什么时候该升级 X？"这个问题的标准答案不是"等需要时"——而是<strong>提前一个里程碑就开始准备</strong>。下面三个阶段，每一阶段的"已经具备"和"开始准备"清单是经过反复验证的最稀薄但有效的版本。</p>
+
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>典型规模</th>
+<th>这一阶段必须已经具备的能力</th>
+<th>开始为下一阶段准备的 3 件事</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MRR $100</strong><br/><sub>~5 付费用户</sub></td>
+<td>第 1 个真实付费<br/>正在每周与用户聊</td>
+<td>
+  · 注册 / 付费 / 退款基本可走通<br/>
+  · Stripe webhook 至少处理 2 个事件<br/>
+  · 1 条 happy path 的 e2e 测试<br/>
+  · Sentry 接入<br/>
+  · 1 个能联系到你的 support email
+</td>
+<td>
+  ① 把 5 个最常被问的问题写进 FAQ<br/>
+  ② 把试用期 / 续费失败的邮件序列搭起来<br/>
+  ③ 学会读 PostHog 漏斗
+</td>
+</tr>
+<tr>
+<td><strong>MRR $1,000</strong><br/><sub>~30 付费用户</sub></td>
+<td>每月稳定有新增 / 老用户活跃<br/>开始考虑"全职化"</td>
+<td>
+  · 状态机 12 状态至少处理 8 个<br/>
+  · 营销邮件序列（欢迎 / 激活 / 流失挽留）<br/>
+  · Status Page + Uptime 监控<br/>
+  · 文档站 + 30 篇常见问题<br/>
+  · 自动 backup（DB + storage）
+</td>
+<td>
+  ① 把"代我顶 30 分钟"的应急人定下来<br/>
+  ② 开 Stripe Tax 或换 Lemon Squeezy<br/>
+  ③ 找 1 个外包做你最不擅长的环节（设计 / 内容 / 客服）
+</td>
+</tr>
+<tr>
+<td><strong>MRR $10,000</strong><br/><sub>~150 付费用户</sub></td>
+<td>有可重复增长通路<br/>开始拒绝 50% 的功能请求</td>
+<td>
+  · 全部 12 状态都正确处理<br/>
+  · 客服 80% 自助化（AI bot + 文档）<br/>
+  · CI/CD 全自动 + Auto-rollback<br/>
+  · 周报 / 月报 + KPI 仪表盘<br/>
+  · 公司主体 / 财务记账规范化
+</td>
+<td>
+  ① 决定 (A) 招第一个全职 (B) 升级到外包矩阵 (C) 保持单人但提价<br/>
+  ② 准备 SOC2 lite / GDPR / 隐私政策（开始有 B 端客户问）<br/>
+  ③ 开始建立"非你也能签下大单"的销售脚本
+</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="first-hire">实操升级 · 第一个外包 / 员工的决策树</h3>
+
+<p>"我什么时候该招人？"是一人公司最容易做错的决策——招早了拖垮现金流，招晚了你成为单点瓶颈。下面这棵决策树用<strong>"瓶颈是结构性的还是情境性的"</strong>来引导你做出选择。</p>
+
+<table>
+<thead>
+<tr>
+<th>状态信号</th>
+<th>诊断</th>
+<th>建议动作</th>
+<th>不建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>每周 60h+，但 80% 时间在做"如果有人代我就能做"的重复劳动（客服、内容、UI 调整）</td>
+<td><strong>瓶颈在重复劳动</strong></td>
+<td>① <strong>先用 AI / 自动化吃掉 50%</strong>（FAQ bot、模板回复、自动化脚本）<br/>② 剩下 50% 用<strong>角色外包</strong>（按任务付费的 freelancer）</td>
+<td>立刻招全职——雇佣关系本身就是一份成本</td>
+</tr>
+<tr>
+<td>有客户在等一个你完全做不来的能力（比如 iOS 原生、合规审计、特定语种翻译）</td>
+<td><strong>瓶颈在能力空缺</strong></td>
+<td><strong>项目制外包</strong>（一锤子买卖，约定交付物）。先在 Upwork / Toptal / 朋友圈找。</td>
+<td>为了这一个项目去学一门新技术</td>
+</tr>
+<tr>
+<td>MRR 已稳定 $5k+，但你 80% 时间在做核心创造（产品 / 战略 / 用户访谈），剩下 20% 在做重复劳动且<em>已经被自动化吃过</em></td>
+<td><strong>瓶颈在你需要"协作伙伴"</strong>不是"打工人"</td>
+<td>找 <strong>fractional / part-time</strong> 合伙人或长期外包，按项目计费但人是固定的</td>
+<td>招全职——一人公司的"招了第一个全职"是 80% 概率引入新问题</td>
+</tr>
+<tr>
+<td>MRR $10k+，且方向已经验证、未来 12 个月可预期 $30k+，且你有结构性能力空白（销售、商务、运营）</td>
+<td><strong>真到了第一个全职</strong></td>
+<td>招 <strong>合伙人级别的 #2</strong>（不是 employee #1）。<br/>给股权 + 真薪水，让对方能在你不在时做决策。</td>
+<td>招"junior 帮你打杂"——你会变成他的全职 manager</td>
+</tr>
+</tbody>
+</table>
+
+<h4 id="role-outsource-list">"角色外包"参考供应商名单（2026 初）</h4>
+
+<div class="stack-grid">
+  <div class="stack-card" data-band="3"><div class="stack-card__role">设计 (UI / Marketing)</div><div class="stack-card__name">Dribbble · Toptal · 即刻 / 小红书自荐</div><p class="stack-card__why">按项目制 $300–2000，先做 1 个小项目验合作</p></div>
+  <div class="stack-card" data-band="3"><div class="stack-card__role">内容 (Blog / SEO)</div><div class="stack-card__name">SuperPath · Compose.ly · 微信付费搞定</div><p class="stack-card__why">一篇 SEO 长文 $200–500，按 brief 验收</p></div>
+  <div class="stack-card" data-band="4"><div class="stack-card__role">客服 / VA</div><div class="stack-card__name">OnlineJobs.ph · MagicTask · DeepIntern</div><p class="stack-card__why">月 $400–1500，先用 AI 训一份 SOP 再交</p></div>
+  <div class="stack-card" data-band="4"><div class="stack-card__role">财务 / 记账</div><div class="stack-card__name">Bench · Pilot · 国内本地代记账</div><p class="stack-card__why">月 $100–500，对一人公司必须外包</p></div>
+  <div class="stack-card" data-band="5"><div class="stack-card__role">法律 / 合规</div><div class="stack-card__name">LegalGenius · Termly (DIY) · Stripe Atlas</div><p class="stack-card__why">隐私政策 / TOS / 入境合规，一次性 $100–800</p></div>
+  <div class="stack-card" data-band="5"><div class="stack-card__role">特定开发任务</div><div class="stack-card__name">Toptal · Upwork · 朋友圈悬赏</div><p class="stack-card__why">用项目验收制，不用小时计费（小时计费 = 浪费时间动机）</p></div>
+</div>
+
+<h3 id="no-go-zones">实操升级 · 一人公司的 5 大禁区（这 5 类生意一个人不该做）</h3>
+
+<p>不是所有商业模式都适合一个人。下面 5 类生意我（PENG）见过的独立开发者翻车率几乎是 100%——不是因为做的人不努力，而是因为这些生意的<strong>结构性成本</strong>超过任何一个人的执行带宽。</p>
+
+<table>
+<thead>
+<tr>
+<th>禁区</th>
+<th>典型例子</th>
+<th>为什么一个人扛不住</th>
+<th>如果非做不可，前提是</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① 24×7 真人客服需求</strong></td>
+<td>面向 C 端的实时聊天工具、医疗咨询、紧急求助类</td>
+<td>用户 1am 发消息你 9am 回 → 差评。一年内必触发 PTSD</td>
+<td>能交给 AI 处理 80%+ 工单，且 SLA 写明"非紧急 24h 内回"</td>
+</tr>
+<tr>
+<td><strong>② 强合规 / 监管不确定的领域</strong></td>
+<td>金融（券商、贷款、虚拟资产）、医疗诊断、未成年人服务、博彩</td>
+<td>合规咨询费可能比开发费贵 10 倍，且监管随时变规</td>
+<td>已有该牌照、已有合规团队，否则做"周边工具"而不是"主链路"</td>
+</tr>
+<tr>
+<td><strong>③ 重资产 / 重库存</strong></td>
+<td>电商自有库存、SaaS 自建数据中心、卖硬件</td>
+<td>资金占用 + 物流 + 售后退换货——单人无法管理这种现金周期</td>
+<td>POD（按需印制）/ Dropshipping / 数字交付的形式</td>
+</tr>
+<tr>
+<td><strong>④ 需要本地化人力服务的</strong></td>
+<td>家政、本地维修、家教、餐饮、送货上门</td>
+<td>本质是"线下劳动力撮合平台"，单人公司没有规模复制可能</td>
+<td>你只做撮合层 + 抽佣，不做交付（甚至如此也很难一人）</td>
+</tr>
+<tr>
+<td><strong>⑤ 必须依赖单一大客户的</strong></td>
+<td>给某大厂做定制开发 / 长期外包 / 唯一渠道分销</td>
+<td>大客户一旦砍预算 / 换供应商 / 内部流转，你 100% 收入归零</td>
+<td>3 个月内能让单一客户占比 &lt; 30%，否则你不是公司你是雇员</td>
+</tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout__icon">!</div>
+<div class="callout__body"><strong>反向结论</strong>：一人公司适合做的是 <em>数字交付 + 异步服务 + 自助使用 + 多客户分散 + 监管确定</em> 的生意。这不是劝退——这是把你的有限带宽指向最高 ROI 的位置。</div>
+</div>
+
+<h3 id="review-rhythm">实操升级 · 一人公司的复盘节律：周报 / 月报 / 季报模板</h3>
+
+<p>一人公司没有"上级"逼你交报告，所以你必须给自己安一套。复盘节律的目的不是"汇报"，是<strong>把"我感觉这周还行"换成"我有数据知道这周行不行"</strong>。下面三个模板可以直接 fork 到你仓库里用：</p>
+
+<h4 id="weekly-template">📅 周报模板（每周一早上 15 分钟）</h4>
+
+<pre><code># 周报 · {YYYY-MM-DD}
+
+## 一句话：上周最重要的事
+{产品 / 增长 / 客户 角度，最关键的一件事}
+
+## 18 个回路指标
+（参考"6 大经营回路 × 关键指标"表，逐项填，红线用 🔴 标）
+
+## 上周做完了什么
+- [x] {完成项 1}
+- [x] {完成项 2}
+
+## 上周 *没做* 但应该做的
+- [ ] {延期项 + 真实原因，不要写"没时间"}
+
+## 本周只做这 3 件
+1. {单一最高优先级，必须能在周日前看到结果}
+2. {次要优先级}
+3. {次要优先级}
+
+## 本周 *拒绝* 做的事（feature creep / 非紧急客服 / 看起来诱人的副线）
+- {写出来才能拒绝}
+</code></pre>
+
+<h4 id="monthly-template">📅 月报模板（每月 1 号 30 分钟）</h4>
+
+<pre><code># 月报 · {YYYY-MM}
+
+## 财务
+- MRR: {开始} → {结束}（净增 {±X%}）
+- 现金流: {上月余额} → {本月余额}
+- Runway: {可支撑月数}（含我自己工资）
+
+## 用户
+- 付费用户: {开始} → {结束}（新增 {N}, churn {N}）
+- 月活: {数字 + 趋势}
+- NPS / 满意度调研: {本月 N 份反馈，关键洞察}
+
+## 产品
+- 上线了: {3 个最重要的发布}
+- 关闭了: {如果有功能被砍掉的，写为什么}
+- 技术债: {已知 + 严重度，超过 2 个月没还的债是危险信号}
+
+## 渠道与增长
+- 渠道排名: {Top 3 + 占比}
+- 内容产出: {发了 N 篇 / N 个视频 / N 次活动}
+- 试验: {本月跑了哪几个增长实验，结果}
+
+## 自我状态
+- 工作时长: {小时}（&gt; 240h 是警告）
+- 焦虑指数: {1-10}
+- 学到了: {1 件具体的事}
+- 想换的: {如果有想 quit 的念头，记录下来——这是重要信号}
+</code></pre>
+
+<h4 id="quarterly-template">📅 季报模板（每季度末 2 小时，配一杯好咖啡）</h4>
+
+<pre><code># 季报 · {YYYY-Qx}
+
+## 我们走对的方向（3 件）
+{有数据支撑的——不是感觉对，是有数字证明}
+
+## 我们走错的方向（3 件）
+{用了 N 周但没产生预期回报的——必须列，不然下季再犯}
+
+## 大决策（3 个）
+- 留下: {继续做的事 + 理由}
+- 加倍: {做对了要加大投入的事}
+- 删除: {无论多舍不得，本季要砍掉的事}
+
+## 一人公司的 6 大回路评分（1-10）
+- 选题: {分数} / 理由
+- 产品: {分数} / 理由
+- 分发: {分数} / 理由
+- 转化: {分数} / 理由
+- 交付: {分数} / 理由
+- 复购: {分数} / 理由
+
+## 自己的话
+{给 3 个月后的你写一封信，提醒此刻你看见的最重要的东西}
+</code></pre>
+
+<div class="callout">
+<div class="callout__icon">★</div>
+<div class="callout__body"><strong>把模板放到 GitHub 仓库的 <code>docs/reviews/</code> 目录里</strong>，每周 commit 一份。一年下来你拥有的不是 52 份散乱的 markdown，而是一份<em>可读、可搜、可对比、能让 3 年后的你回看自己怎么走过来的</em>真实经营档案——这是任何"一人公司教程"都给不了你的东西。</div>
+</div>
+
 <h3 id="_120">小结：第十六章的核心，是把一人公司理解为一组被系统化的经营回路</h3>
 <p>本章真正想让你记住的，是一人公司不是神话，也不是口号。它成立的条件，是你能否把 AI、平台与自动化组合成稳定回路，让自己从低杠杆重复劳动中抽离出来，专注于问题判断、价值定义、边界决策和质量标准。软件工程进入 AI 原生时代之后，单人拥有了前所未有的放大器；但只有那些愿意像设计系统一样设计自己的经营结构的人，才能把这种放大器真正转化为可持续商业能力。</p>
 <hr />

@@ -1447,6 +1447,214 @@ figure.diagram svg .dia-stroke-accent{ stroke: var(--accent); fill: none; }
   }
 }
 
+/* ============================================================
+   高密度知识组件（13–16 章营养升级用）
+   ============================================================ */
+
+/* PENG 教训卡片：作者亲身踩坑回忆 */
+.lesson-card {
+  --card-band: var(--band-6);
+  position: relative;
+  margin: 18px 0;
+  padding: 18px 22px 18px 22px;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--card-band) 14%, var(--paper-elevated)),
+    var(--paper-elevated) 70%
+  );
+  border: 1px solid color-mix(in srgb, var(--card-band) 30%, var(--line));
+  border-left: 5px solid var(--card-band);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.lesson-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.lesson-card__num {
+  flex: 0 0 auto;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--card-band);
+  background: color-mix(in srgb, var(--card-band) 15%, transparent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--card-band) 35%, transparent);
+}
+.lesson-card__title {
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--ink-strong);
+}
+.lesson-card__scene {
+  margin: 6px 0 12px;
+  color: var(--ink-soft);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+.lesson-card__rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--card-band) 10%, transparent);
+  border-radius: 8px;
+  border: 1px dashed color-mix(in srgb, var(--card-band) 35%, transparent);
+}
+.lesson-card__rule::before {
+  content: "→";
+  font-weight: 800;
+  color: var(--card-band);
+  flex: 0 0 auto;
+}
+.lesson-card__rule b {
+  color: var(--card-band);
+  font-weight: 700;
+}
+
+/* 工具栈卡片：每个工具一张小卡 */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 20px 0 8px;
+}
+.stack-card {
+  background: var(--paper-elevated);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px 14px 18px;
+  border-left: 4px solid var(--accent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.stack-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.stack-card[data-band="2"] { border-left-color: var(--band-2); }
+.stack-card[data-band="3"] { border-left-color: var(--band-3); }
+.stack-card[data-band="4"] { border-left-color: var(--band-4); }
+.stack-card[data-band="5"] { border-left-color: var(--band-5); }
+.stack-card[data-band="6"] { border-left-color: var(--band-6); }
+.stack-card__role {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+.stack-card__name {
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--ink-strong);
+  margin: 4px 0 6px;
+}
+.stack-card__why {
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin: 0 0 6px;
+}
+.stack-card__alt {
+  font-size: 0.76rem;
+  color: var(--muted);
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+  margin-top: 8px;
+}
+.stack-card__alt b { color: var(--ink-soft); font-weight: 600; }
+
+/* 日程卡片：从 D-1 到 D-7 */
+.day-list {
+  list-style: none;
+  margin: 16px 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.day-list li {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--paper-elevated);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+}
+.day-list .day-num {
+  flex: 0 0 56px;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border-right: 1px solid var(--line);
+  padding-right: 14px;
+}
+.day-list .day-body {
+  flex: 1;
+  min-width: 0;
+}
+.day-list .day-title {
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+  color: var(--ink-strong);
+  margin-bottom: 4px;
+}
+.day-list .day-detail {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+.day-list .day-checklist {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.day-list .day-checklist li {
+  display: inline-block;
+  border: none;
+  border-left: none;
+  background: var(--surface);
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* 大数字徽章 (用于成本表 / MRR 里程碑) */
+.metric {
+  display: inline-block;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  color: var(--accent-strong);
+  background: var(--accent-fade);
+  padding: 1px 8px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.metric--ok { color: var(--band-4); background: color-mix(in srgb, var(--band-4) 15%, transparent); border-color: color-mix(in srgb, var(--band-4) 30%, transparent); }
+.metric--warn { color: var(--band-1); background: color-mix(in srgb, var(--band-1) 18%, transparent); border-color: color-mix(in srgb, var(--band-1) 35%, transparent); }
+.metric--bad { color: var(--band-6); background: color-mix(in srgb, var(--band-6) 15%, transparent); border-color: color-mix(in srgb, var(--band-6) 35%, transparent); }
+
 /* ------------------------------------------------------------
    关于作者 · 学习小组卡片组
    ------------------------------------------------------------ */
