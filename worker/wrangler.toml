@@ -10,11 +10,11 @@ compatibility_flags = ["nodejs_compat"]
 
 # Vars (非敏感, 可以放 toml; 敏感的 API_KEY 用 wrangler secret put)
 [vars]
-# 上游 endpoint (OpenAI 兼容协议, 必须能接受 /v1/chat/completions 风格请求)
-API_BASE = "https://ai.t8star.cn/v1/chat/completions"
+# 上游 endpoint (OpenAI 兼容协议, 必须能接受 /chat/completions 风格请求)
+API_BASE = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions"
 
 # 默认模型
-MODEL = "gemini-3.1-flash-lite-preview-thinking-minimal"
+MODEL = "astron-code-latest"
 
 # 允许的访问来源 (防别人薅你的 worker)
 ALLOWED_ORIGINS = "https://wpeng024-hue.github.io,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8765,http://localhost:8787"
