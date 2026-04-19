@@ -1,0 +1,817 @@
+/* ============================================================
+   一人公司·从 0 到 1 — Mobile-First 重排样式
+   仅在 (max-width: 768px) 下加载，桌面体验完全不受影响。
+   原则：
+     1. 内容大于装饰 — 一切非阅读元素让位
+     2. 拇指可达 — 主要操作放在屏幕底部 1/3
+     3. 单列流 — 不再尝试横向并排
+     4. 大点击区 — 所有可交互元素 ≥ 44×44px (Apple HIG)
+     5. 安全区适配 — 兼容 iOS notch / 全面屏底部 home 横条
+   ============================================================ */
+
+/* ============================================================
+   1. 基础排版 mobile-first
+   ============================================================ */
+html {
+  scroll-padding-top: 60px;
+}
+body {
+  font-size: 16.5px;       /* 比桌面略小，避免一行字数过少 */
+  line-height: 1.78;
+  /* 兼容刘海屏：左右内容自动避开 notch */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+html[data-fontsize="s"]  body { font-size: 14.5px; }
+html[data-fontsize="m"]  body { font-size: 16.5px; }
+html[data-fontsize="l"]  body { font-size: 18px; }
+html[data-fontsize="xl"] body { font-size: 19.5px; line-height: 1.85; }
+
+p {
+  font-size: 1rem;
+  margin: 0.85em 0;
+  /* 中文长字符串折行更优雅 */
+  word-break: break-word;
+  line-break: normal;
+  hanging-punctuation: allow-end;
+}
+
+/* 段落里行内 footnote 上标 — 更圆、更易点 */
+p > a[title] {
+  font-size: 0.78em;
+  padding: 1px 7px;
+  margin: 0 1px;
+  vertical-align: super;
+}
+
+/* ============================================================
+   2. Topbar — 缩小、只保留 brand + ☰ 一个动作
+   ============================================================ */
+.topbar {
+  /* 半透明玻璃感保留，但变薄 */
+  border-bottom: 1px solid var(--divider);
+}
+.topbar__inner {
+  padding: 8px 14px;
+  gap: 10px;
+  /* 兼容刘海屏 */
+  padding-top: max(8px, env(safe-area-inset-top));
+}
+.topbar__brand {
+  font-size: 0.92rem;
+  /* 只显示 logo + 简化标题 */
+  gap: 8px;
+}
+.topbar__brand span:not(.topbar__logo) {
+  display: inline;
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topbar__logo {
+  width: 28px;
+  height: 28px;
+  font-size: 0.78rem;
+}
+
+/* 在 mobile 下只在 topbar 留 1 个"目录"按钮，
+   其它操作 (搜索/主题/顶部) 都移到底部工具栏 */
+.topbar__chip,
+.topbar__divider,
+#searchTrigger,
+#settingsTrigger,
+.topbar a.icon-btn[aria-label="GitHub 仓库"] {
+  display: none !important;
+}
+.topbar__actions {
+  gap: 4px;
+}
+#tocToggle {
+  width: 40px;
+  height: 40px;
+}
+
+/* 设置弹层在 mobile 上变成底部抽屉 */
+.menu {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  top: auto;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  min-width: 0;
+  border-radius: 18px;
+  padding: 14px;
+  z-index: 95;
+}
+.menu[data-open="true"] {
+  transform: translateY(0);
+}
+.menu:not([data-open="true"]) {
+  transform: translateY(20px);
+}
+
+/* ============================================================
+   3. 主体两栏 → 单栏
+   ============================================================ */
+.page {
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 12px 12px calc(96px + env(safe-area-inset-bottom));
+}
+.main {
+  padding: 22px 18px 30px;
+  border-radius: 12px;
+  border-left: none;
+  border-right: none;
+  margin-left: -12px;
+  margin-right: -12px;
+  box-shadow: none;
+}
+.main::before {
+  /* mobile 上隐藏背景渐变 — 节省 GPU + 减少视觉噪音 */
+  display: none;
+}
+
+/* ============================================================
+   4. Hero — 紧凑、垂直、大字钩子
+   ============================================================ */
+.hero {
+  padding: 26px 18px 22px;
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+.hero::after {
+  width: 200px;
+  height: 200px;
+  right: -50px;
+  top: -50px;
+}
+.hero__badges {
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.hero__badge {
+  font-size: 0.68rem;
+  padding: 3px 8px;
+}
+.hero__title {
+  font-size: clamp(1.55rem, 7vw, 2.2rem);
+  line-height: 1.22;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.hero__subtitle {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+.hero__author {
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.hero__author--meta {
+  font-size: 0.7rem;
+}
+.hero__meta {
+  /* 4 项数据 → 2 列 2 行，密度更高 */
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+.hero__stat {
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.hero__stat-num {
+  font-size: 1.3rem;
+}
+.hero__stat-label {
+  font-size: 0.72rem;
+}
+
+/* ============================================================
+   5. 学习地图 — 单列大卡片，每张都更显眼
+   ============================================================ */
+.chapter-map {
+  margin: 28px 0 16px;
+}
+.chapter-map__head h2 {
+  font-size: 1.2rem;
+}
+.chapter-map__head p {
+  font-size: 0.85rem;
+}
+.chapter-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.chapter-card {
+  padding: 16px 16px 16px 18px;
+  border-left-width: 5px;
+  border-radius: 12px;
+  /* 移动端永远默认提升一点，给手指更明确的点击反馈 */
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.chapter-card:active {
+  transform: scale(0.98);
+  background: color-mix(in srgb, var(--band, var(--accent)) 8%, var(--paper-elevated));
+}
+.chapter-card__num {
+  font-size: 0.7rem;
+}
+.chapter-card__title {
+  font-size: 1rem;
+}
+.chapter-card__desc {
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+/* ============================================================
+   6. 标题排版 — mobile 字阶
+   ============================================================ */
+h1 {
+  font-size: 1.55rem;
+  padding-bottom: 0.3em;
+}
+h2 {
+  font-size: 1.25rem;
+  padding: 4px 0 4px 12px;
+}
+h3 {
+  font-size: 1.08rem;
+  padding-left: 10px;
+}
+h4 {
+  font-size: 1rem;
+}
+.chapter-section > .chapter-h2 {
+  padding: 12px 14px;
+  font-size: 1.2rem;
+}
+.chapter-section > .chapter-h2::before {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+}
+
+/* 锚点复制按钮 mobile 默认显示但更小 */
+.heading-anchor {
+  opacity: 0.4;
+  margin-left: 4px;
+  padding: 6px;  /* 大点击区 */
+}
+.heading-anchor svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ============================================================
+   7. 引文 / 列表 / 分隔线
+   ============================================================ */
+blockquote {
+  margin: 1.1em -4px;
+  padding: 14px 16px 14px 18px;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.96rem;
+}
+blockquote::before {
+  font-size: 1.8rem;
+  top: -16px;
+  left: 8px;
+}
+hr {
+  margin: 1.6em 0;
+}
+
+/* ============================================================
+   8. 表格 → label/value 卡片化（mobile 杀器）
+   每个 td 用 data-label 显示来源列名
+   ============================================================ */
+.table-wrap {
+  overflow: visible;            /* 不再横向滚动 */
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  margin: 1.1em 0 1.4em;
+}
+.table-wrap table {
+  display: block;
+  font-size: 0.9rem;
+}
+.table-wrap thead {
+  /* 表头视觉留作"分组标题"备用，但默认隐藏 */
+  display: none;
+}
+.table-wrap tbody {
+  display: block;
+}
+.table-wrap tbody tr {
+  display: block;
+  background: var(--paper-elevated);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.table-wrap tbody tr:nth-child(even) td {
+  background: transparent;        /* 取消斑马纹（卡片化后不需要） */
+}
+.table-wrap tbody tr:hover td {
+  background: transparent;
+}
+.table-wrap tbody td {
+  display: block;
+  padding: 6px 0;
+  border: none;
+  border-bottom: 1px dashed var(--divider);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.table-wrap tbody td:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.table-wrap tbody td:first-child {
+  padding-top: 0;
+}
+/* data-label 由 JS 在 mobile 下注入 */
+.table-wrap tbody td[data-label]::before {
+  content: attr(data-label);
+  display: block;
+  font-family: "Inter", "PingFang SC", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+  margin-bottom: 4px;
+  opacity: 0.85;
+}
+
+/* ============================================================
+   9. TL;DR 卡片 — mobile 紧凑
+   ============================================================ */
+.tldr-card {
+  padding: 18px 18px 16px;
+  margin: 18px 0 22px;
+  border-radius: 14px;
+}
+.tldr-card::after {
+  width: 100px;
+  height: 100px;
+  top: -30px;
+  right: -30px;
+}
+.tldr-card__head {
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tldr-card__icon {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  font-size: 0.95rem;
+}
+.tldr-card__eyebrow {
+  font-size: 0.66rem;
+}
+.tldr-card__title {
+  font-size: 0.96rem;
+  line-height: 1.4;
+}
+.tldr-card__list li {
+  font-size: 0.92rem;
+  padding: 8px 0;
+}
+.tldr-card__bullet {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  font-size: 0.72rem;
+}
+.tldr-card__foot {
+  font-size: 0.76rem;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+/* ============================================================
+   10. 章末上下章导航 — 单列大按钮
+   ============================================================ */
+.chapter-nav {
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 28px 0 8px;
+  padding-top: 18px;
+}
+.chapter-nav__btn {
+  padding: 14px 16px;
+  border-radius: 12px;
+  text-align: center !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+}
+.chapter-nav__btn--map { order: 0; }
+.chapter-nav__btn--prev { order: -1; }
+.chapter-nav__btn--next { order: 1; }
+.chapter-nav__dir {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+.chapter-nav__title {
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  text-align: left;
+}
+
+/* ============================================================
+   11. 教训卡 / 工具栈卡 / 日程卡 / 学习小组卡 / 关于作者卡
+   ============================================================ */
+.lesson-card {
+  padding: 14px 16px;
+  margin: 14px 0;
+  border-radius: 12px;
+}
+.lesson-card__head {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.lesson-card__num {
+  font-size: 0.66rem;
+  padding: 3px 8px;
+}
+.lesson-card__title {
+  font-size: 0.96rem;
+  line-height: 1.45;
+  flex-basis: 100%;
+}
+.lesson-card__scene {
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+.lesson-card__rule {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+}
+
+.stack-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.stack-card {
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.stack-card__role {
+  font-size: 0.68rem;
+}
+.stack-card__name {
+  font-size: 0.96rem;
+}
+.stack-card__why {
+  font-size: 0.82rem;
+}
+.stack-card__alt {
+  font-size: 0.74rem;
+}
+
+.day-list li {
+  flex-direction: column;
+  padding: 12px 14px;
+  gap: 8px;
+}
+.day-list .day-num {
+  flex: none;
+  font-size: 1.1rem;
+  border-right: none;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 6px;
+  width: 100%;
+  justify-content: flex-start;
+}
+.day-list .day-title {
+  font-size: 0.95rem;
+}
+.day-list .day-detail {
+  font-size: 0.86rem;
+}
+.day-list .day-checklist li {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+}
+
+/* 关于作者 */
+.about-card {
+  padding: 22px 18px 16px;
+  border-radius: 14px;
+}
+.about-card__head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+.about-card__avatar {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  font-size: 1.6rem;
+}
+.about-card__name {
+  font-size: 1.4rem;
+}
+.about-card__role {
+  font-size: 0.88rem;
+}
+.about-card__chip {
+  font-size: 0.68rem;
+  padding: 3px 8px;
+}
+.about-card__quote {
+  margin: 14px 0;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+}
+
+/* 学习小组 4 卡 → 1 列大按钮 */
+.join-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+.join-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  min-height: 64px;
+}
+.join-card__icon {
+  font-size: 1.65rem;
+  flex: 0 0 32px;
+}
+.join-card__title {
+  font-size: 0.98rem;
+  margin-top: 0;
+}
+.join-card__desc {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.about-credo {
+  font-size: 0.92rem;
+  padding: 14px 16px;
+}
+
+/* ============================================================
+   12. SVG 图 / 代码块 / 图片
+   ============================================================ */
+figure.diagram {
+  padding: 14px 12px 10px;
+  margin: 22px -4px 26px;
+  border-radius: 12px;
+}
+figure.diagram svg {
+  /* 给图一个最小高度，避免某些图被压成"扁条" */
+  min-height: 200px;
+}
+figure.diagram figcaption {
+  font-size: 0.78rem;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+figure.diagram figcaption b {
+  font-size: 0.72rem;
+  margin-right: 6px;
+}
+
+pre {
+  margin: 1.1em -8px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+pre code {
+  /* 移动端代码不强制 break-word，让它自然横滑 */
+  white-space: pre;
+}
+.code-copy {
+  /* mobile 上始终显示，因为没有 hover */
+  opacity: 0.85;
+  font-size: 0.7rem;
+  padding: 4px 9px;
+}
+
+img {
+  margin: 16px auto 22px;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   13. 提示框 (callout)
+   ============================================================ */
+.callout {
+  padding: 12px 14px;
+  margin: 14px 0;
+  gap: 10px;
+}
+.callout__icon {
+  flex: 0 0 24px;
+  height: 24px;
+  font-size: 0.78rem;
+  border-radius: 6px;
+}
+.callout__body {
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   14. 侧边目录抽屉 — 更宽 + 更易关闭
+   ============================================================ */
+.sidebar {
+  width: 88vw;
+  max-width: 360px;
+  padding: 8px;
+  /* 兼容刘海 */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+}
+.sidebar__inner {
+  padding: 16px 8px 12px 16px;
+  border-radius: 14px;
+}
+.sidebar__list a {
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  /* 拇指可达 */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.sidebar__list .lvl-3 {
+  padding-left: 26px;
+  font-size: 0.84rem;
+  min-height: 40px;
+}
+
+/* ============================================================
+   15. 底部固定工具栏 (mobile 专属)
+   桌面没有这个元素，由 JS 在 mobile 下注入
+   ============================================================ */
+.mobile-fab {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 88;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--paper-elevated) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(0);
+  transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.2s ease;
+  opacity: 1;
+}
+.mobile-fab.is-hidden {
+  transform: translateY(calc(100% + env(safe-area-inset-bottom) + 24px));
+  opacity: 0;
+  pointer-events: none;
+}
+.mobile-fab__btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 0 6px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  min-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.mobile-fab__btn:active {
+  transform: scale(0.94);
+  background: var(--accent-fade);
+  color: var(--accent);
+}
+.mobile-fab__btn svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
+}
+.mobile-fab__label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+/* 原桌面"回到顶部"在 mobile 下被工具栏中的"顶部"按钮替代 */
+.back-to-top {
+  display: none !important;
+}
+
+/* ============================================================
+   16. 搜索弹层 — 全屏式更适合手机
+   ============================================================ */
+.search-modal {
+  padding-top: 0;
+  align-items: stretch;
+}
+.search-box {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  height: 100vh;
+  max-height: 100vh;
+  padding: 8px 10px 16px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.search-box__input {
+  font-size: 1.05rem;
+  padding: 14px 4px;
+}
+
+/* ============================================================
+   17. 页脚 — 紧凑、不占点击区
+   ============================================================ */
+.site-footer {
+  margin-top: 36px;
+  padding: 22px 18px 16px;
+  font-size: 0.78rem;
+  /* 给底部工具栏让位 */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+
+/* ============================================================
+   18. 阅读进度条 — 略微加粗
+   ============================================================ */
+.reading-progress {
+  height: 3.5px;
+}
+
+/* ============================================================
+   19. 长按选择文本时不要被工具栏覆盖
+   ============================================================ */
+::selection {
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* ============================================================
+   20. 减弱动效（mobile 上 GPU 资源更宝贵）
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    transition-duration: 0.25s;
+  }
+}
+
+/* ============================================================
+   21. iPad / 大屏 mobile 兼容（>540 但 ≤768）
+   ============================================================ */
+@media (min-width: 540px) and (max-width: 768px) {
+  .chapter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stack-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .join-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .hero__meta {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

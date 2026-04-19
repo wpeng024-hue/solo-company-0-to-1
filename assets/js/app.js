@@ -795,6 +795,158 @@
   }
 
   /* ----------------------------------------------------------
+     15. 移动端：把 <td> 自动注入 data-label（用于卡片化表格）
+     ---------------------------------------------------------- */
+  function injectTableDataLabels() {
+    $$(".main table").forEach((table) => {
+      const headers = $$("thead th", table).map((th) =>
+        th.textContent.trim()
+      );
+      if (headers.length === 0) return;
+      $$("tbody tr", table).forEach((row) => {
+        $$("td", row).forEach((td, i) => {
+          if (!td.hasAttribute("data-label") && headers[i]) {
+            td.setAttribute("data-label", headers[i]);
+          }
+        });
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------
+     16. 移动端底部固定工具栏（滚动方向控制 + 4 按钮）
+     仅在 viewport ≤ 768px 时注入并工作
+     ---------------------------------------------------------- */
+  const MOBILE_MQ = window.matchMedia("(max-width: 768px)");
+  let mobileFab = null;
+  let lastScrollY = 0;
+  let scrollDirRaf = null;
+
+  function buildMobileFab() {
+    if (mobileFab) return mobileFab;
+    const el = document.createElement("nav");
+    el.className = "mobile-fab";
+    el.setAttribute("aria-label", "移动端工具栏");
+    el.innerHTML = `
+      <button class="mobile-fab__btn" type="button" data-action="toc" aria-label="目录">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+        <span class="mobile-fab__label">目录</span>
+      </button>
+      <button class="mobile-fab__btn" type="button" data-action="search" aria-label="搜索">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span class="mobile-fab__label">搜索</span>
+      </button>
+      <button class="mobile-fab__btn" type="button" data-action="theme" aria-label="主题">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <span class="mobile-fab__label">主题</span>
+      </button>
+      <button class="mobile-fab__btn" type="button" data-action="top" aria-label="回到顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+        <span class="mobile-fab__label">顶部</span>
+      </button>
+    `;
+    document.body.appendChild(el);
+
+    el.addEventListener("click", (e) => {
+      const btn = e.target.closest(".mobile-fab__btn");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      switch (action) {
+        case "toc":
+          openSidebar();
+          break;
+        case "search":
+          $("#searchTrigger")?.click();
+          break;
+        case "theme": {
+          // 轮换 4 个主题
+          const cur = root.getAttribute("data-theme") || "auto";
+          const order = ["auto", "paper", "dark", "sepia"];
+          const next = order[(order.indexOf(cur) + 1) % order.length];
+          applyTheme(next);
+          localStorage.setItem(STORAGE_KEYS.theme, next);
+          toast(
+            "主题：" +
+              ({ auto: "跟随系统", paper: "纸感", dark: "深夜", sepia: "护眼" }[
+                next
+              ] || next)
+          );
+          break;
+        }
+        case "top":
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          break;
+      }
+    });
+
+    mobileFab = el;
+    return el;
+  }
+
+  function destroyMobileFab() {
+    if (mobileFab) {
+      mobileFab.remove();
+      mobileFab = null;
+    }
+  }
+
+  function onScrollDirection() {
+    if (scrollDirRaf || !mobileFab) return;
+    scrollDirRaf = requestAnimationFrame(() => {
+      const y = window.scrollY;
+      const delta = y - lastScrollY;
+      // 在顶部、底部附近永远显示
+      const nearTop = y < 80;
+      const nearBottom =
+        y + window.innerHeight >= document.documentElement.scrollHeight - 100;
+      if (nearTop || nearBottom) {
+        mobileFab.classList.remove("is-hidden");
+      } else if (Math.abs(delta) > 8) {
+        // 向下滚动（delta>0）→ 隐藏；向上滚动（delta<0）→ 显示
+        if (delta > 0) {
+          mobileFab.classList.add("is-hidden");
+        } else {
+          mobileFab.classList.remove("is-hidden");
+        }
+      }
+      lastScrollY = y;
+      scrollDirRaf = null;
+    });
+  }
+
+  function applyMobileMode(isMobile) {
+    if (isMobile) {
+      buildMobileFab();
+      window.addEventListener("scroll", onScrollDirection, { passive: true });
+      lastScrollY = window.scrollY;
+    } else {
+      window.removeEventListener("scroll", onScrollDirection);
+      destroyMobileFab();
+    }
+  }
+
+  function bindMobileMode() {
+    applyMobileMode(MOBILE_MQ.matches);
+    // 旋屏 / 调窗口大小时切换
+    if (MOBILE_MQ.addEventListener) {
+      MOBILE_MQ.addEventListener("change", (e) => applyMobileMode(e.matches));
+    } else if (MOBILE_MQ.addListener) {
+      MOBILE_MQ.addListener((e) => applyMobileMode(e.matches));
+    }
+  }
+
+  /* ----------------------------------------------------------
      启动
      ---------------------------------------------------------- */
   function init() {
@@ -802,6 +954,7 @@
     bindMenu();
     bindProgress();
     wrapTables();
+    injectTableDataLabels();
     enhanceChapters();
     injectAnchorButtons();
     injectCodeCopy();
@@ -812,6 +965,7 @@
     bindSearch();
     bindFadeIn();
     fillStats();
+    bindMobileMode();
     // 兜底：anchor 跳转后首屏调整
     if (location.hash) {
       requestAnimationFrame(() => {
