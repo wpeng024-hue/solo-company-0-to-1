@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local server / build output
+node_modules/
+dist/
+.cache/
+
+# Personal scratch
+TODO.local.md
+notes.local/

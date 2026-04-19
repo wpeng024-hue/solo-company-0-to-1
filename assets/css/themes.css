@@ -1,0 +1,183 @@
+/* ============================================================
+   一人公司·从 0 到 1 — 主题色板
+   三套主题：paper(默认温润纸感) / dark(深夜) / sepia(护眼)
+   颜色统一通过 CSS Variables 暴露给 main.css
+   ============================================================ */
+
+:root,
+[data-theme="paper"] {
+  /* 背景与表面 */
+  --bg: #f4ede0;
+  --bg-soft: #efe6d3;
+  --paper: #fffdf7;
+  --paper-elevated: #fffefa;
+  --surface: #fbf6ec;
+  --surface-hover: #f3ecdb;
+
+  /* 文字 */
+  --ink: #1f2937;
+  --ink-strong: #0f172a;
+  --ink-soft: #4b5563;
+  --muted: #6b7280;
+  --muted-2: #94a3b8;
+
+  /* 线条 */
+  --line: #e2dac7;
+  --line-strong: #cdc4ad;
+  --divider: #ece4d2;
+
+  /* 主色 / 强调 */
+  --accent: #8b5e34;
+  --accent-strong: #6d4520;
+  --accent-soft: #efe2cc;
+  --accent-fade: rgba(139, 94, 52, 0.08);
+  --accent-ring: rgba(139, 94, 52, 0.35);
+
+  /* 语义色 */
+  --quote-bg: #f5ecd9;
+  --quote-bar: var(--accent);
+  --code-bg: #2b2b2b;
+  --code-ink: #f5f3ee;
+  --code-inline-bg: #efe6d3;
+  --code-inline-ink: #6d4520;
+
+  /* 章节色带 (6 学习阶段) */
+  --band-1: #c98a52;  /* 系统认知 */
+  --band-2: #8b5e34;  /* 架构本质 */
+  --band-3: #c5a05e;  /* 协调与平台 */
+  --band-4: #6c8e75;  /* 技术深描 */
+  --band-5: #5b7fa3;  /* AI 原生 */
+  --band-6: #a25e6d;  /* 一人公司 */
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(20, 14, 0, 0.04), 0 1px 3px rgba(20, 14, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(20, 14, 0, 0.06), 0 2px 4px rgba(20, 14, 0, 0.04);
+  --shadow-lg: 0 12px 30px rgba(20, 14, 0, 0.08), 0 4px 10px rgba(20, 14, 0, 0.05);
+  --shadow-xl: 0 24px 60px rgba(20, 14, 0, 0.12);
+
+  --color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #15130f;
+  --bg-soft: #1c1916;
+  --paper: #1f1c18;
+  --paper-elevated: #25221d;
+  --surface: #26221d;
+  --surface-hover: #2e2924;
+
+  --ink: #ece6d8;
+  --ink-strong: #fbf7ec;
+  --ink-soft: #c8c1b1;
+  --muted: #9b9382;
+  --muted-2: #6f6859;
+
+  --line: #34302a;
+  --line-strong: #4a443c;
+  --divider: #2a2620;
+
+  --accent: #d2a06a;
+  --accent-strong: #e6b884;
+  --accent-soft: #3a2f24;
+  --accent-fade: rgba(210, 160, 106, 0.12);
+  --accent-ring: rgba(210, 160, 106, 0.4);
+
+  --quote-bg: #2a241d;
+  --quote-bar: var(--accent);
+  --code-bg: #0f0e0c;
+  --code-ink: #e8e2d3;
+  --code-inline-bg: #2a241d;
+  --code-inline-ink: #e6b884;
+
+  --band-1: #d49765;
+  --band-2: #c4895a;
+  --band-3: #d8b574;
+  --band-4: #8db097;
+  --band-5: #7da6cc;
+  --band-6: #c98796;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.6);
+
+  --color-scheme: dark;
+}
+
+[data-theme="sepia"] {
+  --bg: #ebe1cc;
+  --bg-soft: #e2d6bb;
+  --paper: #f4ead2;
+  --paper-elevated: #f7eed8;
+  --surface: #ede2c5;
+  --surface-hover: #e3d6b6;
+
+  --ink: #4b3a22;
+  --ink-strong: #2f2410;
+  --ink-soft: #6b5638;
+  --muted: #8a7958;
+  --muted-2: #ad9b78;
+
+  --line: #d2c19a;
+  --line-strong: #b8a47a;
+  --divider: #d8c8a2;
+
+  --accent: #9c5a23;
+  --accent-strong: #7a4416;
+  --accent-soft: #e5d4a8;
+  --accent-fade: rgba(156, 90, 35, 0.08);
+  --accent-ring: rgba(156, 90, 35, 0.35);
+
+  --quote-bg: #ebdcb1;
+  --quote-bar: var(--accent);
+  --code-bg: #2b2419;
+  --code-ink: #f0e6cf;
+  --code-inline-bg: #ddca9d;
+  --code-inline-ink: #6b3f10;
+
+  --band-1: #b87635;
+  --band-2: #9c5a23;
+  --band-3: #b89048;
+  --band-4: #5e7c5e;
+  --band-5: #50739b;
+  --band-6: #91475a;
+
+  --shadow-sm: 0 1px 2px rgba(64, 40, 0, 0.06), 0 1px 3px rgba(64, 40, 0, 0.07);
+  --shadow-md: 0 4px 12px rgba(64, 40, 0, 0.09), 0 2px 4px rgba(64, 40, 0, 0.05);
+  --shadow-lg: 0 12px 30px rgba(64, 40, 0, 0.12);
+  --shadow-xl: 0 24px 60px rgba(64, 40, 0, 0.18);
+
+  --color-scheme: light;
+}
+
+/* 系统偏好优先：用户没显式选过则跟随系统 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #15130f;
+    --bg-soft: #1c1916;
+    --paper: #1f1c18;
+    --paper-elevated: #25221d;
+    --surface: #26221d;
+    --surface-hover: #2e2924;
+    --ink: #ece6d8;
+    --ink-strong: #fbf7ec;
+    --ink-soft: #c8c1b1;
+    --muted: #9b9382;
+    --muted-2: #6f6859;
+    --line: #34302a;
+    --line-strong: #4a443c;
+    --divider: #2a2620;
+    --accent: #d2a06a;
+    --accent-strong: #e6b884;
+    --accent-soft: #3a2f24;
+    --accent-fade: rgba(210, 160, 106, 0.12);
+    --accent-ring: rgba(210, 160, 106, 0.4);
+    --quote-bg: #2a241d;
+    --quote-bar: var(--accent);
+    --code-bg: #0f0e0c;
+    --code-ink: #e8e2d3;
+    --code-inline-bg: #2a241d;
+    --code-inline-ink: #e6b884;
+    --color-scheme: dark;
+  }
+}
