@@ -947,7 +947,7 @@
   }
 
   /* ----------------------------------------------------------
-     17. AI 划词解释 (Gemini via Cloudflare Worker, 支持 BYOK)
+     17. AI 划词解释 (Cloudflare Worker 代理, 支持 BYOK)
      ----------------------------------------------------------
      工作流:
        划词 → 气泡按钮 → 点击 → 右侧面板打开 → SSE 流式输出
@@ -1068,7 +1068,7 @@
     el.innerHTML = `
       <header class="ai-panel__head">
         <div class="ai-panel__title-wrap">
-          <span class="ai-panel__eyebrow">AI 解释 · Gemini</span>
+          <span class="ai-panel__eyebrow">AI 解释</span>
           <h3 id="ai-panel-title" class="ai-panel__title">划词解释</h3>
         </div>
         <button class="ai-panel__close icon-btn" type="button" aria-label="关闭">
@@ -1165,7 +1165,7 @@
   /* ===== SSE 流式解析 (OpenAI Chat Completions 格式) =====
      无论是否 BYOK 都走 worker, worker 端会决定用哪把 key 调上游.
      这样既保证 CORS, 又用统一的协议格式 (OpenAI). */
-  async function streamFromGemini(text, contextStr, onChunk) {
+  async function streamExplanation(text, contextStr, onChunk) {
     const userKey = (localStorage.getItem(STORAGE_KEYS.byokKey) || "").trim();
     const useByok = userKey && /^sk-[\w-]{20,}$/.test(userKey);
 
@@ -1241,7 +1241,7 @@
     if (quote) quote.textContent = text;
     if (body)
       body.innerHTML =
-        '<p class="ai-panel__loading">✨ Gemini 正在思考<span class="dots"></span></p>';
+        '<p class="ai-panel__loading">✨ AI 想想咋跟你说<span class="dots"></span></p>';
 
     const k = cacheKey(text);
     if (!force && explainState.cache[k]) {
@@ -1253,7 +1253,7 @@
     const ctxTitle = getCurrentChapterTitle();
 
     try {
-      const answer = await streamFromGemini(text, ctxTitle, (incr) => {
+      const answer = await streamExplanation(text, ctxTitle, (incr) => {
         if (body) body.innerHTML = renderMarkdown(incr);
       });
       if (answer) {
@@ -1269,7 +1269,7 @@
             <p><strong>调用失败：</strong>${escHtml(e.message || "未知错误")}</p>
             ${
               isQuota
-                ? '<p style="font-size:.88rem;opacity:.85">额度已用尽。可在<a href="#" id="ai-panel-go-byok">设置里贴上你自己的 Gemini key</a>继续使用。</p>'
+                ? '<p style="font-size:.88rem;opacity:.85">额度已用尽。可在<a href="#" id="ai-panel-go-byok">设置里贴上你自己的 key</a>继续使用。</p>'
                 : ""
             }
           </div>`;

@@ -1,6 +1,6 @@
 # 🤖 AI 划词解释代理（Cloudflare Worker · OpenAI 兼容协议）
 
-把这本书的"划词 → AI 解释"特性背后的 API key 藏在 Cloudflare Worker 里，源代码可以公开，但 key 永远不会进入仓库或浏览器。
+把这本教材的"划词 → AI 解释"特性背后的 API key 藏在 Cloudflare Worker 里，源代码可以公开，但 key 永远不会进入仓库或浏览器。
 
 > 💡 这个 Worker 用的是 **OpenAI Chat Completions 兼容协议**（`/v1/chat/completions` + `Authorization: Bearer ...`），所以任何兼容 OpenAI 协议的供应商（OpenAI / Azure / 国内 t8star / OpenRouter / Together / 自部署 vLLM）都能直接用，只要换一下 `API_BASE` 和 `MODEL`。
 
@@ -21,7 +21,7 @@
                             ④ 输入字符 / 输出 token 上限
 ```
 
-如果你不是 PENG 本人（即你 fork 了这本书）：
+如果你不是 PENG 本人（即你 fork 了这本教材）：
 
 | 用法 | 你需要做 | 适合谁 |
 | :--- | :--- | :--- |
@@ -145,7 +145,7 @@ MODEL = "gpt-4o-mini"
 
 | 资源 | 免费额度 | 你大概率不会超 |
 | :--- | :--- | :--- |
-| Cloudflare Workers 请求 | 100,000 / 天 | 一本电子书的读者通常 < 1,000 / 天 |
+| Cloudflare Workers 请求 | 100,000 / 天 | 一本教材的读者通常 < 1,000 / 天 |
 | Cloudflare KV 读写 | 100,000 读 + 1,000 写 / 天 | 默认每次解释只产生 2 读 + 2 写 |
 | 上游 LLM | 看你具体用谁 | 建议在上游平台后台**设月度上限**，防极端情况 |
 
