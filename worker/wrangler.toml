@@ -5,12 +5,8 @@ main = "src/worker.js"
 compatibility_date = "2026-04-19"
 compatibility_flags = ["nodejs_compat"]
 
-# 部署区域：自动选最近的边缘节点
-account_id = ""  # 留空，wrangler 会用 `wrangler login` 后绑定的账号
-
-# CPU 时间上限（ms）— 流式响应可能较长，给足空间
-[limits]
-cpu_ms = 30000
+# 部署区域：自动选最近的边缘节点 (登录后自动绑定账号)
+# 注：自定义 [limits] 仅 Paid 套餐支持，Free 套餐用默认 10s CPU 时长足够 SSE 流式
 
 # Vars (非敏感, 可以放 toml; 敏感的 API_KEY 用 wrangler secret put)
 [vars]
@@ -33,7 +29,7 @@ MAX_OUTPUT_TOKENS = "800"
 # ⚠️ 部署前请运行 `npx wrangler kv namespace create RATE_LIMIT` 然后把 id 填进来
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "40fce70726044f0bbea963614879d82c"
 
 [observability]
 enabled = true

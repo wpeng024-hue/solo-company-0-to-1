@@ -954,9 +954,10 @@
        支持: ⌘/Ctrl+J 触发 | localStorage 缓存最近 50 条 | 一键复制
      ---------------------------------------------------------- */
 
-  // ⚠️ 部署完 Cloudflare Worker 后, 把这个 URL 改成你自己的:
-  //    部署指引: 见 worker/README.md
-  const WORKER_URL = "https://gemini-explainer.wpeng024-hue.workers.dev";
+  // 当前部署 URL (PENG 的 Cloudflare 账号)
+  // 如果你 fork 了这个项目, 部署完自己的 Worker 后请改成你的 URL
+  // 部署指引: worker/README.md
+  const WORKER_URL = "https://gemini-explainer.wpeng024.workers.dev";
 
   STORAGE_KEYS.byokKey = "yrgs.byokKey";
   STORAGE_KEYS.explainCache = "yrgs.explainCache";
