@@ -83,7 +83,7 @@ git push -u origin main
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/PENG/一人公司-从0到1.git
+git clone https://github.com/wpeng024-hue/一人公司-从0到1.git
 cd 一人公司-从0到1
 
 # 2. 任选一种方式启动本地预览
