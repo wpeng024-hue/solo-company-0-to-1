@@ -947,6 +947,500 @@
   }
 
   /* ----------------------------------------------------------
+     17. AI 划词解释 (Gemini via Cloudflare Worker, 支持 BYOK)
+     ----------------------------------------------------------
+     工作流:
+       划词 → 气泡按钮 → 点击 → 右侧面板打开 → SSE 流式输出
+       支持: ⌘/Ctrl+J 触发 | localStorage 缓存最近 50 条 | 一键复制
+     ---------------------------------------------------------- */
+
+  // ⚠️ 部署完 Cloudflare Worker 后, 把这个 URL 改成你自己的:
+  //    部署指引: 见 worker/README.md
+  const WORKER_URL = "https://gemini-explainer.wpeng024-hue.workers.dev";
+
+  STORAGE_KEYS.byokKey = "yrgs.byokKey";
+  STORAGE_KEYS.explainCache = "yrgs.explainCache";
+
+  const explainState = {
+    bubble: null,
+    panel: null,
+    selectionText: "",
+    selectionRect: null,
+    abortCtrl: null,
+    cache: loadExplainCache(),
+  };
+
+  function loadExplainCache() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.explainCache) || "{}");
+    } catch {
+      return {};
+    }
+  }
+  function saveExplainCache() {
+    try {
+      // 保留最近 50 条
+      const entries = Object.entries(explainState.cache);
+      if (entries.length > 50) {
+        entries.sort((a, b) => b[1].t - a[1].t);
+        const trimmed = Object.fromEntries(entries.slice(0, 50));
+        explainState.cache = trimmed;
+      }
+      localStorage.setItem(
+        STORAGE_KEYS.explainCache,
+        JSON.stringify(explainState.cache)
+      );
+    } catch {}
+  }
+  function cacheKey(text) {
+    // 简单 hash, 同一段文字 → 同一个 key
+    let h = 0;
+    for (let i = 0; i < text.length; i++) h = (h << 5) - h + text.charCodeAt(i) | 0;
+    return "k" + (h >>> 0).toString(36);
+  }
+
+  function getCurrentChapterTitle() {
+    const sec = document.querySelector(".chapter-section:has(.chapter-h2)");
+    if (!sec) return "";
+    // 找视口里最靠上的 chapter-section
+    const all = $$(".chapter-section");
+    let curr = all[0];
+    for (const s of all) {
+      const r = s.getBoundingClientRect();
+      if (r.top < 100) curr = s;
+    }
+    return curr ? curr.querySelector("h2")?.textContent.trim() || "" : "";
+  }
+
+  /* ===== 气泡 ===== */
+  function ensureBubble() {
+    if (explainState.bubble) return explainState.bubble;
+    const el = document.createElement("button");
+    el.className = "ai-bubble";
+    el.type = "button";
+    el.setAttribute("aria-label", "AI 解释这段");
+    el.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <path d="M12 2 L13.5 8.5 L20 10 L13.5 11.5 L12 18 L10.5 11.5 L4 10 L10.5 8.5 Z"/>
+        <path d="M19 16 L19.6 18.4 L22 19 L19.6 19.6 L19 22 L18.4 19.6 L16 19 L18.4 18.4 Z"/>
+      </svg>
+      <span>AI 解释</span>
+      <kbd class="ai-bubble__kbd">⌘J</kbd>
+    `;
+    el.addEventListener("mousedown", (e) => e.preventDefault()); // 防止丢失 selection
+    el.addEventListener("click", openPanelWithCurrentSelection);
+    document.body.appendChild(el);
+    explainState.bubble = el;
+    return el;
+  }
+  function showBubble(rect) {
+    const b = ensureBubble();
+    b.style.opacity = "1";
+    b.style.pointerEvents = "auto";
+    // 优先放选区上方; 顶部不够时放下方
+    const margin = 10;
+    const bw = 130, bh = 38;
+    let top = rect.top + window.scrollY - bh - margin;
+    let left = rect.left + window.scrollX + rect.width / 2 - bw / 2;
+    if (top < window.scrollY + 60) {
+      top = rect.bottom + window.scrollY + margin;
+    }
+    left = Math.max(8, Math.min(left, document.documentElement.clientWidth - bw - 8));
+    b.style.top = top + "px";
+    b.style.left = left + "px";
+  }
+  function hideBubble() {
+    if (explainState.bubble) {
+      explainState.bubble.style.opacity = "0";
+      explainState.bubble.style.pointerEvents = "none";
+    }
+  }
+
+  /* ===== 右侧面板 ===== */
+  function ensurePanel() {
+    if (explainState.panel) return explainState.panel;
+    const el = document.createElement("aside");
+    el.className = "ai-panel";
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "false");
+    el.setAttribute("aria-labelledby", "ai-panel-title");
+    el.innerHTML = `
+      <header class="ai-panel__head">
+        <div class="ai-panel__title-wrap">
+          <span class="ai-panel__eyebrow">AI 解释 · Gemini</span>
+          <h3 id="ai-panel-title" class="ai-panel__title">划词解释</h3>
+        </div>
+        <button class="ai-panel__close icon-btn" type="button" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </header>
+      <div class="ai-panel__quote" id="ai-panel-quote"></div>
+      <div class="ai-panel__body" id="ai-panel-body" aria-live="polite"></div>
+      <footer class="ai-panel__foot">
+        <button class="ai-panel__action" data-act="copy" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" width="14" height="14" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          复制答案
+        </button>
+        <button class="ai-panel__action" data-act="retry" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" width="14" height="14" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          再问一次
+        </button>
+        <span class="ai-panel__byok-hint" id="ai-panel-byok-hint"></span>
+      </footer>
+    `;
+    document.body.appendChild(el);
+
+    el.querySelector(".ai-panel__close").addEventListener("click", closePanel);
+    el.querySelector('[data-act="copy"]').addEventListener("click", () => {
+      const body = $("#ai-panel-body");
+      if (!body) return;
+      navigator.clipboard
+        .writeText(body.innerText.trim())
+        .then(() => toast("答案已复制"))
+        .catch(() => toast("复制失败"));
+    });
+    el.querySelector('[data-act="retry"]').addEventListener("click", () => {
+      if (explainState.selectionText) {
+        delete explainState.cache[cacheKey(explainState.selectionText)];
+        runExplain(explainState.selectionText, true);
+      }
+    });
+    explainState.panel = el;
+    return el;
+  }
+  function openPanelWithCurrentSelection() {
+    if (!explainState.selectionText) return;
+    runExplain(explainState.selectionText, false);
+    hideBubble();
+  }
+  function openPanel() {
+    const p = ensurePanel();
+    p.classList.add("is-open");
+    document.body.style.overflowX = "hidden";
+    // 更新 BYOK 提示
+    const hint = $("#ai-panel-byok-hint");
+    if (hint) {
+      const k = (localStorage.getItem(STORAGE_KEYS.byokKey) || "").trim();
+      hint.textContent = k ? "✓ 使用你自己的 key (BYOK)" : "由项目代付";
+      hint.dataset.byok = k ? "true" : "false";
+    }
+  }
+  function closePanel() {
+    if (explainState.panel) explainState.panel.classList.remove("is-open");
+    if (explainState.abortCtrl) {
+      explainState.abortCtrl.abort();
+      explainState.abortCtrl = null;
+    }
+    document.body.style.overflowX = "";
+  }
+
+  /* ===== 极简 markdown 渲染 (避免引第三方库) ===== */
+  function renderMarkdown(md) {
+    let s = escHtml(md);
+    // code blocks
+    s = s.replace(/```([\s\S]*?)```/g, (_m, c) => `<pre><code>${c}</code></pre>`);
+    // inline code
+    s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    // bold
+    s = s.replace(/\*\*([^\*\n]+)\*\*/g, "<strong>$1</strong>");
+    // italic
+    s = s.replace(/(^|[^*])\*([^\*\n]+)\*([^*]|$)/g, "$1<em>$2</em>$3");
+    // links
+    s = s.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener">$1</a>'
+    );
+    // 段落 (空行分段)
+    s = s
+      .split(/\n{2,}/)
+      .map((p) => (p.trim() ? `<p>${p.replace(/\n/g, "<br/>")}</p>` : ""))
+      .join("");
+    return s;
+  }
+
+  /* ===== SSE 流式解析 ===== */
+  async function streamFromGemini(text, contextStr, onChunk) {
+    const userKey = (localStorage.getItem(STORAGE_KEYS.byokKey) || "").trim();
+    const useDirect = userKey && /^AIza[\w-]{20,}$/.test(userKey);
+
+    const ctrl = new AbortController();
+    explainState.abortCtrl = ctrl;
+
+    let url, body, headers;
+    if (useDirect) {
+      // BYOK: 浏览器直接调 Google
+      const model = "gemini-3.1-flash-lite-preview-thinking-low";
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        model
+      )}:streamGenerateContent?alt=sse&key=${encodeURIComponent(userKey)}`;
+      headers = { "Content-Type": "application/json" };
+      body = JSON.stringify({
+        systemInstruction: {
+          parts: [
+            {
+              text:
+                "你是这本电子书的划词解释助手。读者从书中划选了一段文字，请用 1–3 段中文清楚解释这个概念/术语/句子。≤ 250 字，简洁有判断，不要重复原文，不要写'以下是解释'这种废话。可用 markdown 但不要 H1/H2/H3。",
+            },
+          ],
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: contextStr
+                  ? `【所在章节】${contextStr.slice(0, 600)}\n\n【读者划选的文字】\n${text}`
+                  : `【读者划选的文字】\n${text}`,
+              },
+            ],
+          },
+        ],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 800, topP: 0.9 },
+      });
+    } else {
+      // 走代理
+      url = WORKER_URL;
+      headers = { "Content-Type": "application/json" };
+      body = JSON.stringify({ text, context: contextStr });
+    }
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers,
+      body,
+      signal: ctrl.signal,
+    });
+
+    if (!resp.ok) {
+      let detail = "";
+      try {
+        const j = await resp.json();
+        detail = j.error?.message || j.error || JSON.stringify(j);
+      } catch {
+        detail = await resp.text().catch(() => "");
+      }
+      const err = new Error(detail || `HTTP ${resp.status}`);
+      err.status = resp.status;
+      throw err;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    let full = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      // SSE: 多行以 "\n\n" 分隔, 每行以 "data: " 开头
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        for (const line of chunk.split("\n")) {
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const obj = JSON.parse(payload);
+            const part =
+              obj.candidates?.[0]?.content?.parts?.[0]?.text ||
+              obj.error?.message ||
+              "";
+            if (part) {
+              full += part;
+              onChunk(full);
+            }
+          } catch {
+            /* ignore non-json fragment */
+          }
+        }
+      }
+    }
+    return full;
+  }
+
+  /* ===== 主流程 ===== */
+  async function runExplain(text, force) {
+    openPanel();
+    const quote = $("#ai-panel-quote");
+    const body = $("#ai-panel-body");
+    if (quote) quote.textContent = text;
+    if (body)
+      body.innerHTML =
+        '<p class="ai-panel__loading">✨ Gemini 正在思考<span class="dots"></span></p>';
+
+    const k = cacheKey(text);
+    if (!force && explainState.cache[k]) {
+      const cached = explainState.cache[k].a;
+      if (body) body.innerHTML = renderMarkdown(cached);
+      return;
+    }
+
+    const ctxTitle = getCurrentChapterTitle();
+
+    try {
+      const answer = await streamFromGemini(text, ctxTitle, (incr) => {
+        if (body) body.innerHTML = renderMarkdown(incr);
+      });
+      if (answer) {
+        explainState.cache[k] = { a: answer, t: Date.now() };
+        saveExplainCache();
+      }
+    } catch (e) {
+      if (e.name === "AbortError") return;
+      if (body) {
+        const isQuota = /quota|429|503|budget/i.test(e.message || "");
+        body.innerHTML = `
+          <div class="ai-panel__error">
+            <p><strong>调用失败：</strong>${escHtml(e.message || "未知错误")}</p>
+            ${
+              isQuota
+                ? '<p style="font-size:.88rem;opacity:.85">额度已用尽。可在<a href="#" id="ai-panel-go-byok">设置里贴上你自己的 Gemini key</a>继续使用。</p>'
+                : ""
+            }
+          </div>`;
+        const goByok = $("#ai-panel-go-byok");
+        if (goByok) {
+          goByok.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            closePanel();
+            $("#settingsTrigger")?.click();
+            setTimeout(() => $("#byokInput")?.focus(), 200);
+          });
+        }
+      }
+    }
+  }
+
+  /* ===== 选区监听 ===== */
+  function isSelectionInsideMain() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return null;
+    const range = sel.getRangeAt(0);
+    const main = $(".main");
+    if (!main || !main.contains(range.commonAncestorContainer)) return null;
+    const text = sel.toString().trim();
+    if (text.length < 2 || text.length > 1500) return null;
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return null;
+    return { text, rect };
+  }
+  function bindSelectionTrigger() {
+    let raf = null;
+    function check() {
+      const sel = isSelectionInsideMain();
+      if (!sel) {
+        explainState.selectionText = "";
+        explainState.selectionRect = null;
+        hideBubble();
+        return;
+      }
+      explainState.selectionText = sel.text;
+      explainState.selectionRect = sel.rect;
+      showBubble(sel.rect);
+    }
+    function debounced() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        check();
+        raf = null;
+      });
+    }
+    document.addEventListener("mouseup", debounced);
+    document.addEventListener("touchend", debounced);
+    document.addEventListener("selectionchange", debounced);
+
+    // 全局快捷键 ⌘/Ctrl + J
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
+        const sel = isSelectionInsideMain();
+        if (sel) {
+          e.preventDefault();
+          explainState.selectionText = sel.text;
+          openPanelWithCurrentSelection();
+        }
+      } else if (e.key === "Escape" && explainState.panel?.classList.contains("is-open")) {
+        closePanel();
+      }
+    });
+
+    // 点击别处时关闭气泡（但不影响面板）
+    document.addEventListener("mousedown", (e) => {
+      if (!explainState.bubble) return;
+      if (e.target.closest(".ai-bubble") || e.target.closest(".ai-panel")) return;
+    });
+  }
+
+  /* ===== BYOK 表单注入设置弹层 ===== */
+  function injectByokForm() {
+    const menu = $("#settingsMenu");
+    if (!menu || menu.querySelector("#byokInput")) return;
+    const div = document.createElement("div");
+    div.className = "menu__byok";
+    div.innerHTML = `
+      <div class="menu__title">AI 解释 · BYOK <span class="menu__opt">可选</span></div>
+      <p class="menu__hint">贴你自己的 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio key</a> 后, 划词解释将不再消耗站点额度。Key 只存在你浏览器 localStorage 里。</p>
+      <div class="menu__byok-row">
+        <input id="byokInput" class="menu__byok-input" type="password" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+        <button class="menu__pill menu__byok-btn" type="button" id="byokSave">保存</button>
+        <button class="menu__pill menu__byok-btn menu__byok-btn--clear" type="button" id="byokClear" aria-label="清除">×</button>
+      </div>
+      <div class="menu__byok-status" id="byokStatus"></div>
+    `;
+    menu.appendChild(div);
+
+    const input = $("#byokInput", div);
+    const status = $("#byokStatus", div);
+    function renderStatus() {
+      const k = (localStorage.getItem(STORAGE_KEYS.byokKey) || "").trim();
+      if (k && /^AIza[\w-]{20,}$/.test(k)) {
+        status.innerHTML = `✅ 已启用 BYOK · <code>${k.slice(0, 6)}…${k.slice(-4)}</code>`;
+        status.dataset.ok = "true";
+      } else if (k) {
+        status.innerHTML = "⚠️ 格式不像 Gemini key (AIza 开头)";
+        status.dataset.ok = "false";
+      } else {
+        status.innerHTML = "未启用 (使用站点默认代理)";
+        status.dataset.ok = "false";
+      }
+    }
+    renderStatus();
+
+    $("#byokSave", div).addEventListener("click", () => {
+      const v = input.value.trim();
+      if (!v) {
+        toast("请先粘贴 key");
+        return;
+      }
+      localStorage.setItem(STORAGE_KEYS.byokKey, v);
+      input.value = "";
+      renderStatus();
+      toast("BYOK 已保存");
+    });
+    $("#byokClear", div).addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEYS.byokKey);
+      input.value = "";
+      renderStatus();
+      toast("BYOK 已清除");
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        $("#byokSave", div).click();
+      }
+    });
+  }
+
+  function bindAiExplain() {
+    bindSelectionTrigger();
+    injectByokForm();
+  }
+
+  /* ----------------------------------------------------------
      启动
      ---------------------------------------------------------- */
   function init() {
@@ -966,6 +1460,7 @@
     bindFadeIn();
     fillStats();
     bindMobileMode();
+    bindAiExplain();
     // 兜底：anchor 跳转后首屏调整
     if (location.hash) {
       requestAnimationFrame(() => {

@@ -1448,6 +1448,307 @@ figure.diagram svg .dia-stroke-accent{ stroke: var(--accent); fill: none; }
 }
 
 /* ============================================================
+   AI 划词解释 (Gemini)
+   ============================================================ */
+
+/* 选中文字时浮出的小气泡按钮 */
+.ai-bubble {
+  position: absolute;
+  z-index: 96;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 12px;
+  background: linear-gradient(135deg, var(--band-2), var(--band-6));
+  color: #fffdf7;
+  border: none;
+  border-radius: 999px;
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(20, 14, 0, 0.25), 0 2px 4px rgba(20, 14, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  letter-spacing: 0.02em;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateY(-2px);
+}
+.ai-bubble:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 28px rgba(20, 14, 0, 0.3);
+}
+.ai-bubble:active {
+  transform: translateY(0) scale(0.97);
+}
+.ai-bubble svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+.ai-bubble__kbd {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 2px;
+  font-weight: 500;
+}
+
+/* 右侧滑入解释面板 */
+.ai-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(440px, 92vw);
+  height: 100dvh;
+  background: var(--paper-elevated);
+  border-left: 1px solid var(--line);
+  box-shadow: -16px 0 40px rgba(20, 14, 0, 0.15);
+  z-index: 105;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  font-family: "Noto Serif SC", "PingFang SC", "Microsoft YaHei", serif;
+}
+.ai-panel.is-open {
+  transform: translateX(0);
+}
+.ai-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--divider);
+  flex: 0 0 auto;
+}
+.ai-panel__title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.ai-panel__eyebrow {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 4px;
+}
+.ai-panel__title {
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+  margin: 0;
+  line-height: 1.3;
+}
+.ai-panel__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.ai-panel__quote {
+  margin: 14px 20px 0;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  font-style: italic;
+  max-height: 96px;
+  overflow-y: auto;
+  flex: 0 0 auto;
+}
+.ai-panel__body {
+  padding: 16px 22px 22px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  font-size: 0.97rem;
+  line-height: 1.78;
+  color: var(--ink);
+  scroll-behavior: smooth;
+}
+.ai-panel__body p { margin: 0.6em 0; }
+.ai-panel__body p:first-child { margin-top: 0; }
+.ai-panel__body strong { color: var(--accent-strong); }
+.ai-panel__body code {
+  background: var(--code-inline-bg);
+  color: var(--code-inline-ink);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.ai-panel__body pre {
+  margin: 0.8em 0;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+}
+.ai-panel__body a { font-weight: 600; }
+.ai-panel__loading {
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+.ai-panel__loading .dots::after {
+  content: "...";
+  display: inline-block;
+  animation: aiDots 1.2s steps(4, end) infinite;
+}
+@keyframes aiDots {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+.ai-panel__error {
+  background: color-mix(in srgb, var(--band-6) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--band-6) 35%, var(--line));
+  color: var(--ink);
+  padding: 14px 16px;
+  border-radius: 10px;
+}
+.ai-panel__error p { margin: 0.4em 0; }
+.ai-panel__error a { color: var(--band-6); text-decoration: underline; }
+
+.ai-panel__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--divider);
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--paper) 70%, var(--paper-elevated));
+}
+.ai-panel__action {
+  appearance: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 0.82rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ai-panel__action:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+.ai-panel__byok-hint {
+  margin-left: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.74rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.ai-panel__byok-hint[data-byok="true"] { color: var(--band-4); font-weight: 600; }
+
+/* BYOK 表单（注入设置弹层） */
+.menu__byok {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+.menu__opt {
+  font-size: 0.66rem;
+  color: var(--muted);
+  background: var(--surface);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.menu__hint {
+  margin: 4px 8px 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.menu__hint a {
+  color: var(--accent);
+  border: none;
+}
+.menu__hint a:hover { text-decoration: underline; background: transparent; }
+.menu__byok-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0 4px;
+}
+.menu__byok-input {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  padding: 7px 10px;
+  border-radius: 8px;
+  outline: none;
+}
+.menu__byok-input:focus {
+  border-color: var(--accent);
+  background: var(--paper-elevated);
+}
+.menu__byok-btn {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+}
+.menu__byok-btn--clear {
+  flex: 0 0 32px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+.menu__byok-status {
+  margin: 8px 4px 0;
+  font-family: "Inter", sans-serif;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.menu__byok-status[data-ok="true"] { color: var(--band-4); }
+.menu__byok-status code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  background: var(--surface);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: inherit;
+}
+
+/* 桌面：开 panel 时主页右侧留出空间，避免遮挡 */
+@media (min-width: 1280px) {
+  body:has(.ai-panel.is-open) .page {
+    margin-right: 460px;
+    transition: margin-right 0.3s ease;
+  }
+}
+
+/* 打印：完全隐藏 AI 相关组件 */
+@media print {
+  .ai-bubble,
+  .ai-panel,
+  .menu__byok {
+    display: none !important;
+  }
+}
+
+/* ============================================================
    高密度知识组件（13–16 章营养升级用）
    ============================================================ */
 

@@ -1,0 +1,16 @@
+{
+  "name": "gemini-explainer-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker proxy for AI 划词解释 in 一人公司·从 0 到 1",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8787",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "kv:create": "wrangler kv:namespace create RATE_LIMIT",
+    "secret:put": "wrangler secret put GEMINI_API_KEY"
+  },
+  "devDependencies": {
+    "wrangler": "^3.95.0"
+  }
+}

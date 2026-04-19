@@ -1,0 +1,32 @@
+#:schema node_modules/wrangler/config-schema.json
+# Cloudflare Worker 配置 — AI 划词解释代理
+name = "gemini-explainer"
+main = "src/worker.js"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+# 部署区域：自动选择最近的边缘节点
+account_id = ""  # 留空，wrangler 会用 `wrangler login` 后绑定的账号
+
+# CPU 时间上限（ms）— 流式响应可能较长，给足空间
+[limits]
+cpu_ms = 30000
+
+# Vars (非敏感，可以放 toml；敏感的 GEMINI_API_KEY 用 wrangler secret put)
+[vars]
+ALLOWED_ORIGINS = "https://wpeng024-hue.github.io,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8765"
+DAILY_BUDGET_PER_IP = "50"
+DAILY_BUDGET_GLOBAL = "5000"
+MAX_INPUT_CHARS = "1500"
+MAX_OUTPUT_TOKENS = "800"
+MODEL = "gemini-3.1-flash-lite-preview-thinking-low"
+
+# KV 命名空间：用于存放每天的 IP / 全局调用计数
+# ⚠️ 部署前请运行 `wrangler kv:namespace create RATE_LIMIT` 然后把 id 填进来
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# 可选：开启 logs（默认 7 天保留）
+[observability]
+enabled = true

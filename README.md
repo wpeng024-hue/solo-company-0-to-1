@@ -120,6 +120,13 @@ npx serve .
 - **回到顶部按钮**：滚动一定距离后淡入。
 - **段落锚点复制**：鼠标停留在标题旁边可一键复制本节锚点链接。
 
+### 🤖 AI 划词解释（Gemini · 可选 BYOK）
+- **划词即解释**：选中正文任意 2–1500 字 → 屏幕浮出"AI 解释"小气泡 → 点击或按 `⌘ / Ctrl + J` → 右侧（手机底部）滑出面板，Gemini 流式生成解释
+- **API key 完全不在前端**：本仓库只调一个无名的 Cloudflare Worker 代理，作者自己的 Gemini key 存在 Worker 的加密 secret 里，仓库源码与浏览器请求里都看不到
+- **4 层防护**：Origin 白名单 + 每 IP 每天 50 次 + 全站 5000 次 / 天闸刀 + 输入 1500 字上限，详见 [`worker/README.md`](./worker/README.md)
+- **BYOK（Bring Your Own Key）**：fork 这个项目的人可以在站点设置里贴上自己的 Gemini key（仅存浏览器 localStorage），之后的请求绕过代理直连 Google，不消耗作者的额度
+- **结果缓存 + 复制 + 重问**：同一段文字第二次划选立即出结果，面板内一键复制 / 重新生成
+
 ### 🛠 工程与可维护性
 - **零依赖**：纯 HTML + CSS + JS，没有任何打包工具、没有任何 npm 包，开箱即用。
 - **模块化资源**：样式与逻辑分别在 `assets/css` 与 `assets/js`，便于二次开发。
@@ -169,16 +176,23 @@ npx serve .
 
 ```text
 一人公司-从0到1/
-├── index.html                # 阅读入口（GitHub Pages 默认页）
+├── index.html                  # 阅读入口（GitHub Pages 默认页）
 ├── assets/
 │   ├── css/
-│   │   ├── main.css          # 排版、布局、组件样式
-│   │   └── themes.css        # 三套主题配色变量
+│   │   ├── main.css            # 排版、布局、组件、AI 面板样式
+│   │   ├── mobile.css          # mobile-first 重排（≤768px 自动加载）
+│   │   └── themes.css          # 三套主题配色变量
 │   └── js/
-│       └── app.js            # TOC、滚动监听、主题、搜索、进度条等交互
-├── README.md                 # 本文件
-├── CONTRIBUTING.md           # 贡献指南
-├── LICENSE                   # MIT
+│       └── app.js              # TOC、主题、搜索、AI 划词解释、移动 FAB 等
+├── worker/                     # Cloudflare Worker (AI 划词解释代理)
+│   ├── src/worker.js           # SSE 流式代理 + 4 层防护
+│   ├── wrangler.toml           # CF 配置
+│   ├── package.json
+│   └── README.md               # 部署手册
+├── .github/workflows/pages.yml # 自动部署到 GitHub Pages
+├── README.md                   # 本文件
+├── CONTRIBUTING.md             # 贡献指南
+├── LICENSE                     # MIT
 └── .gitignore
 ```
 
