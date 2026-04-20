@@ -1,0 +1,19 @@
+{
+  "name": "solo-company-0-to-1",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "一人公司·从 0 到 1 (SOLO) — 静态站 + UI 质量门禁",
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "audit": "node _tools/audit-ui.mjs",
+    "audit:strict": "node _tools/audit-ui.mjs && echo 'all clean'",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "test:visual:ui": "playwright test --ui",
+    "qa": "npm run audit && npm run test:visual"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

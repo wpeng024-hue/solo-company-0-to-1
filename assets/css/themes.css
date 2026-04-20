@@ -1,6 +1,6 @@
 /* ============================================================
    一人公司·从 0 到 1 — 主题色板
-   四套主题：meta(默认 · Meta Style) / paper(温润纸感) / dark(深夜) / sepia(护眼)
+   四套主题：threads(默认 · Threads 极简) / paper(温润纸感) / dark(深夜) / sepia(护眼)
    颜色统一通过 CSS Variables 暴露给 main.css
    ============================================================ */
 
@@ -8,7 +8,7 @@
    全局形状 / 字体变量（不随主题变）
    ------------------------------------------------------------ */
 :root {
-  /* 圆角语言（Meta Style 一律大圆角 + Pill） */
+  /* 圆角语言 */
   --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -16,78 +16,180 @@
   --radius-xl: 28px;
   --radius-pill: 999px;
 
-  /* 字体家族 */
-  --font-display: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
-  --font-body: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  /* 字体家族 — Threads 用 SF Pro Display, 我们用 Inter 替代 */
+  --font-display: "Inter", "SF Pro Display", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-body: "Inter", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
   --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "Times New Roman", Georgia, serif;
   --font-mono: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, monospace;
 }
 
 /* ============================================================
-   META 主题（默认）—— Facebook / Meta 现行品牌系
-   - Meta Blue #0866FF 主色
-   - 蓝紫粉橙四彩渐变色带
-   - 大圆角 + Pill 按钮
-   - 干净白底 + FB 浅灰背景
+   STUDIO 主题（默认）—— 深色 SaaS Dashboard 风
+   设计语言:
+   - 深黑底 #0A0A0A + 卡片稍亮 #161616, 像 Vercel/Linear/现代 SaaS
+   - 蓝色 #4A90FF 作为唯一强调色 (用在数字/CTA/链接/聚焦)
+   - 大圆角卡片 + Pill 按钮
+   - 大字蓝色数字, 灰色辅助文字, 白色主标题
    ============================================================ */
 :root,
-[data-theme="meta"] {
-  /* 背景与表面 */
-  --bg: #f0f2f5;            /* Meta 经典背景灰 */
-  --bg-soft: #e4e6eb;
-  --paper: #ffffff;         /* 卡片纯白 */
-  --paper-elevated: #ffffff;
-  --surface: #f0f2f5;
-  --surface-hover: #e4e6eb;
+[data-theme="studio"] {
+  /* 背景层级 (深色 dashboard 关键: 三层灰阶) */
+  --bg: #0a0a0a;                    /* 主底, 近纯黑 */
+  --bg-soft: #131313;
+  --paper: #161616;                 /* 卡片底, 比 bg 略亮 */
+  --paper-elevated: #1c1c1c;        /* 上层卡片, 更亮 */
+  --surface: #232323;               /* icon button / chip 底 */
+  --surface-hover: #2a2a2a;
 
-  /* 文字 */
-  --ink: #1c1e21;           /* FB 文字深 */
-  --ink-strong: #050505;    /* FB 极深 */
-  --ink-soft: #4b4f56;
-  --muted: #65676b;         /* FB secondary */
-  --muted-2: #8a8d91;
+  /* 文字 — 浅色, 有层次 */
+  --ink: #e5e5e5;
+  --ink-strong: #ffffff;
+  --ink-soft: #a8a8a8;
+  --muted: #6e6e6e;
+  --muted-2: #4a4a4a;
 
-  /* 线条 */
-  --line: #dadde1;          /* FB divider */
-  --line-strong: #ccd0d5;
-  --divider: #e4e6eb;
+  /* 线条 — 深色 hairline */
+  --line: #2a2a2a;
+  --line-strong: #3a3a3a;
+  --divider: #1f1f1f;
 
-  /* 主色 / 强调 — Meta Blue */
-  --accent: #0866ff;
-  --accent-strong: #0653cc;
-  --accent-soft: #e7f0ff;
-  --accent-fade: rgba(8, 102, 255, 0.08);
-  --accent-ring: rgba(8, 102, 255, 0.4);
+  /* 主色 — 夜空蓝 (Dashboard 风的强调蓝) */
+  --accent: #4a90ff;
+  --accent-strong: #6ba5ff;
+  --accent-soft: rgba(74, 144, 255, 0.12);
+  --accent-fade: rgba(74, 144, 255, 0.06);
+  --accent-ring: rgba(74, 144, 255, 0.4);
 
   /* 语义色 */
-  --quote-bg: #e7f0ff;
+  --quote-bg: #161616;
   --quote-bar: var(--accent);
-  --code-bg: #1c1e21;
-  --code-ink: #f5f6f7;
-  --code-inline-bg: #e7f0ff;
-  --code-inline-ink: #0653cc;
+  --code-bg: #050505;
+  --code-ink: #f5f5f5;
+  --code-inline-bg: #232323;
+  --code-inline-ink: #4a90ff;
 
-  /* 章节色带 — 全部收敛到 Meta Blue 单色族
-     彩虹只允许出现在 SOLO Logo 与 Hero 焦点词 (--meta-gradient)
-     这里走 Facebook 主站的克制路线: 一种蓝统治一切 */
-  --band-1: #0866ff;
-  --band-2: #0866ff;
-  --band-3: #0866ff;
-  --band-4: #0866ff;
-  --band-5: #0866ff;
-  --band-6: #0866ff;
+  /* 6 色带统一蓝色 (Dashboard 不靠彩色分类) */
+  --band-1: #4a90ff;
+  --band-2: #4a90ff;
+  --band-3: #4a90ff;
+  --band-4: #4a90ff;
+  --band-5: #4a90ff;
+  --band-6: #4a90ff;
 
-  /* 阴影（Meta 风：柔和、低饱和、大范围） */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.06);
-  --shadow-xl: 0 24px 60px rgba(8, 102, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* 阴影 (深色环境用更深的阴影) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.7);
 
-  /* Meta 标志渐变（蓝→紫→粉→橙） */
-  --meta-gradient: linear-gradient(135deg, #0866ff 0%, #8b5cf6 35%, #ec4899 65%, #f97316 100%);
-  --meta-gradient-soft: linear-gradient(135deg, rgba(8,102,255,0.10), rgba(139,92,246,0.10) 35%, rgba(236,72,153,0.10) 65%, rgba(249,115,22,0.10));
+  /* 渐变变量 (用蓝色辉光替代彩虹) */
+  --meta-gradient: linear-gradient(135deg, #4a90ff 0%, #2563eb 100%);
+  --meta-gradient-soft: rgba(74, 144, 255, 0.06);
 
-  /* 标记当前是 meta 主题（供 main.css 写覆盖时使用） */
+  --is-meta: 1;
+  --color-scheme: dark;
+}
+
+/* ============================================================
+   THREADS 主题 —— 黑白灰极简 + 大留白 + 0 彩色装饰
+   ============================================================ */
+[data-theme="threads"] {
+  /* 背景与表面 — Threads 浅灰底 + 白卡 */
+  --bg: #fafafa;
+  --bg-soft: #f3f3f3;
+  --paper: #ffffff;
+  --paper-elevated: #ffffff;
+  --surface: #f5f5f5;
+  --surface-hover: #ebebeb;
+
+  /* 文字 — 纯黑统治 */
+  --ink: #0a0a0a;
+  --ink-strong: #000000;
+  --ink-soft: #4a4a4a;
+  --muted: #888888;
+  --muted-2: #b0b0b0;
+
+  /* 线条 — 极淡 */
+  --line: #e6e6e6;
+  --line-strong: #d0d0d0;
+  --divider: #efefef;
+
+  /* 主色 / 强调 — 黑色 (Threads 真正的"主色") */
+  --accent: #000000;
+  --accent-strong: #000000;
+  --accent-soft: #f0f0f0;
+  --accent-fade: rgba(0, 0, 0, 0.04);
+  --accent-ring: rgba(0, 0, 0, 0.4);
+
+  /* 语义色 */
+  --quote-bg: #f5f5f5;
+  --quote-bar: #000000;
+  --code-bg: #0a0a0a;
+  --code-ink: #f5f5f5;
+  --code-inline-bg: #f0f0f0;
+  --code-inline-ink: #000000;
+
+  /* 章节色带 — 全部纯黑, Threads 不用色彩区分 */
+  --band-1: #000000;
+  --band-2: #000000;
+  --band-3: #000000;
+  --band-4: #000000;
+  --band-5: #000000;
+  --band-6: #000000;
+
+  /* 阴影 — 几乎不可见 */
+  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.08);
+
+  /* "渐变"已废弃，但保留变量为单色黑以兼容旧引用 */
+  --meta-gradient: #000000;
+  --meta-gradient-soft: rgba(0, 0, 0, 0.04);
+
+  --is-meta: 1;
+  --color-scheme: light;
+}
+
+/* 旧的 [data-theme="meta"] 别名 - 兼容历史 localStorage 用户, 也指向 Threads 风 */
+[data-theme="meta"] {
+  --bg: #fafafa;
+  --bg-soft: #f3f3f3;
+  --paper: #ffffff;
+  --paper-elevated: #ffffff;
+  --surface: #f5f5f5;
+  --surface-hover: #ebebeb;
+  --ink: #0a0a0a;
+  --ink-strong: #000000;
+  --ink-soft: #4a4a4a;
+  --muted: #888888;
+  --muted-2: #b0b0b0;
+  --line: #e6e6e6;
+  --line-strong: #d0d0d0;
+  --divider: #efefef;
+  --accent: #000000;
+  --accent-strong: #000000;
+  --accent-soft: #f0f0f0;
+  --accent-fade: rgba(0, 0, 0, 0.04);
+  --accent-ring: rgba(0, 0, 0, 0.4);
+  --quote-bg: #f5f5f5;
+  --quote-bar: #000000;
+  --code-bg: #0a0a0a;
+  --code-ink: #f5f5f5;
+  --code-inline-bg: #f0f0f0;
+  --code-inline-ink: #000000;
+  --band-1: #000000;
+  --band-2: #000000;
+  --band-3: #000000;
+  --band-4: #000000;
+  --band-5: #000000;
+  --band-6: #000000;
+  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --meta-gradient: #000000;
+  --meta-gradient-soft: rgba(0, 0, 0, 0.04);
   --is-meta: 1;
   --color-scheme: light;
 }
@@ -146,54 +248,54 @@
 }
 
 /* ============================================================
-   DARK 主题（深夜）—— Meta Dark（FB Dark Mode 风格）
+   DARK 主题（深夜）—— Threads Dark Mode 风
+   纯黑底 + 白字, 0 彩色装饰
    ============================================================ */
 [data-theme="dark"] {
-  --bg: #18191a;            /* FB Dark BG */
-  --bg-soft: #242526;
-  --paper: #242526;         /* FB Dark Card */
-  --paper-elevated: #3a3b3c;
-  --surface: #3a3b3c;
-  --surface-hover: #4e4f50;
+  --bg: #000000;
+  --bg-soft: #0a0a0a;
+  --paper: #161616;
+  --paper-elevated: #1c1c1c;
+  --surface: #1c1c1c;
+  --surface-hover: #2a2a2a;
 
-  --ink: #e4e6eb;
+  --ink: #f5f5f5;
   --ink-strong: #ffffff;
-  --ink-soft: #b0b3b8;
-  --muted: #8a8d91;
-  --muted-2: #65676b;
+  --ink-soft: #b8b8b8;
+  --muted: #888888;
+  --muted-2: #5a5a5a;
 
-  --line: #3e4042;
-  --line-strong: #4e4f50;
-  --divider: #3a3b3c;
+  --line: #2a2a2a;
+  --line-strong: #3a3a3a;
+  --divider: #1f1f1f;
 
-  --accent: #2e89ff;        /* Meta Blue 在深色上更亮 */
-  --accent-strong: #5599ff;
-  --accent-soft: #1a3a6e;
-  --accent-fade: rgba(46, 137, 255, 0.14);
-  --accent-ring: rgba(46, 137, 255, 0.45);
+  --accent: #ffffff;
+  --accent-strong: #ffffff;
+  --accent-soft: #2a2a2a;
+  --accent-fade: rgba(255, 255, 255, 0.06);
+  --accent-ring: rgba(255, 255, 255, 0.4);
 
-  --quote-bg: #1a3a6e;
-  --quote-bar: var(--accent);
-  --code-bg: #0c0c0d;
-  --code-ink: #e4e6eb;
-  --code-inline-bg: #1a3a6e;
-  --code-inline-ink: #5599ff;
+  --quote-bg: #1c1c1c;
+  --quote-bar: #ffffff;
+  --code-bg: #0a0a0a;
+  --code-ink: #f5f5f5;
+  --code-inline-bg: #2a2a2a;
+  --code-inline-ink: #ffffff;
 
-  /* 6 色带收敛到 FB Dark 蓝单色族 */
-  --band-1: #2e89ff;
-  --band-2: #2e89ff;
-  --band-3: #2e89ff;
-  --band-4: #2e89ff;
-  --band-5: #2e89ff;
-  --band-6: #2e89ff;
+  --band-1: #ffffff;
+  --band-2: #ffffff;
+  --band-3: #ffffff;
+  --band-4: #ffffff;
+  --band-5: #ffffff;
+  --band-6: #ffffff;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.45);
-  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.6);
 
-  --meta-gradient: linear-gradient(135deg, #4a9aff 0%, #a78bfa 35%, #f472b6 65%, #fb923c 100%);
-  --meta-gradient-soft: linear-gradient(135deg, rgba(74,154,255,0.18), rgba(167,139,250,0.18) 35%, rgba(244,114,182,0.18) 65%, rgba(251,146,60,0.18));
+  --meta-gradient: #ffffff;
+  --meta-gradient-soft: rgba(255, 255, 255, 0.06);
 
   --is-meta: 1;
   --color-scheme: dark;
@@ -253,44 +355,43 @@
 }
 
 /* ------------------------------------------------------------
-   系统偏好优先：用户没显式选过，且系统是深色 → 用 dark
-   （注意：默认主题已经是 meta，这里只在系统暗色时覆盖）
+   系统偏好优先：用户没显式选过，且系统是深色 → 用 Threads Dark
    ------------------------------------------------------------ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg: #18191a;
-    --bg-soft: #242526;
-    --paper: #242526;
-    --paper-elevated: #3a3b3c;
-    --surface: #3a3b3c;
-    --surface-hover: #4e4f50;
-    --ink: #e4e6eb;
+    --bg: #000000;
+    --bg-soft: #0a0a0a;
+    --paper: #161616;
+    --paper-elevated: #1c1c1c;
+    --surface: #1c1c1c;
+    --surface-hover: #2a2a2a;
+    --ink: #f5f5f5;
     --ink-strong: #ffffff;
-    --ink-soft: #b0b3b8;
-    --muted: #8a8d91;
-    --muted-2: #65676b;
-    --line: #3e4042;
-    --line-strong: #4e4f50;
-    --divider: #3a3b3c;
-    --accent: #2e89ff;
-    --accent-strong: #5599ff;
-    --accent-soft: #1a3a6e;
-    --accent-fade: rgba(46, 137, 255, 0.14);
-    --accent-ring: rgba(46, 137, 255, 0.45);
-    --quote-bg: #1a3a6e;
-    --quote-bar: var(--accent);
-    --code-bg: #0c0c0d;
-    --code-ink: #e4e6eb;
-    --code-inline-bg: #1a3a6e;
-    --code-inline-ink: #5599ff;
-    --band-1: #2e89ff;
-    --band-2: #2e89ff;
-    --band-3: #2e89ff;
-    --band-4: #2e89ff;
-    --band-5: #2e89ff;
-    --band-6: #2e89ff;
-    --meta-gradient: linear-gradient(135deg, #4a9aff 0%, #a78bfa 35%, #f472b6 65%, #fb923c 100%);
-    --meta-gradient-soft: linear-gradient(135deg, rgba(74,154,255,0.18), rgba(167,139,250,0.18) 35%, rgba(244,114,182,0.18) 65%, rgba(251,146,60,0.18));
+    --ink-soft: #b8b8b8;
+    --muted: #888888;
+    --muted-2: #5a5a5a;
+    --line: #2a2a2a;
+    --line-strong: #3a3a3a;
+    --divider: #1f1f1f;
+    --accent: #ffffff;
+    --accent-strong: #ffffff;
+    --accent-soft: #2a2a2a;
+    --accent-fade: rgba(255, 255, 255, 0.06);
+    --accent-ring: rgba(255, 255, 255, 0.4);
+    --quote-bg: #1c1c1c;
+    --quote-bar: #ffffff;
+    --code-bg: #0a0a0a;
+    --code-ink: #f5f5f5;
+    --code-inline-bg: #2a2a2a;
+    --code-inline-ink: #ffffff;
+    --band-1: #ffffff;
+    --band-2: #ffffff;
+    --band-3: #ffffff;
+    --band-4: #ffffff;
+    --band-5: #ffffff;
+    --band-6: #ffffff;
+    --meta-gradient: #ffffff;
+    --meta-gradient-soft: rgba(255, 255, 255, 0.06);
     --is-meta: 1;
     --color-scheme: dark;
   }

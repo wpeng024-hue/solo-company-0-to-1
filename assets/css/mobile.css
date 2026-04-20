@@ -211,7 +211,6 @@ p > a[title] {
 }
 .chapter-card {
   padding: 16px 16px 16px 18px;
-  border-left-width: 5px;
   border-radius: 12px;
   /* 移动端永远默认提升一点，给手指更明确的点击反馈 */
   transition: background 0.15s, border-color 0.15s, transform 0.1s;

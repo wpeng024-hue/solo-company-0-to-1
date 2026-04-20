@@ -1,0 +1,134 @@
+---
+description: 一人公司·从 0 到 1 项目上下文 — 每次对话自动加载
+alwaysApply: true
+---
+
+# 项目：一人公司·从 0 到 1（SOLO）
+
+你正在协助 **PENG**（独立 Agent 开发者）维护一个开源教材项目。
+项目身份和工作约定如下，请严格遵守。
+
+## 1. 项目本质
+
+- **不是软件项目，是开源中文教材**
+- 标题：**一人公司·从 0 到 1**（SOLO）
+- 内容：把"看懂系统 → 做对架构 → 用 AI 落地 → 经营成公司"完整串成一条线
+- 16 章正文 + 关于作者 + 学习小组 CTA
+- 作者：**PENG**（不要写 Manus AI 或其他名字）
+
+## 2. 仓库与上线
+
+| | |
+| :--- | :--- |
+| GitHub 仓库 | `https://github.com/wpeng024-hue/solo-company-0-to-1` |
+| 在线阅读 | `https://wpeng024-hue.github.io/solo-company-0-to-1/` |
+| 部署方式 | GitHub Pages + GitHub Actions（push 到 main 自动重新部署，~30 秒） |
+| 本地预览 | `python3 -m http.server 8000` 然后开 `http://localhost:8000` |
+
+## 3. 文件结构（请熟悉）
+
+```
+index.html                  # 单文件主入口, ~4200 行
+assets/
+  css/
+    main.css                # 桌面排版/组件 ~2000 行
+    mobile.css              # mobile-first 重排 ~600 行 (媒体查询 ≤768px 自动加载)
+    themes.css              # 3 套主题 + 6 套色带 CSS variables
+  js/
+    app.js                  # ~1700 行: TOC/搜索/主题/AI 划词/移动 FAB...
+worker/                     # Cloudflare Worker (AI 划词解释代理)
+  src/worker.js             # OpenAI Chat Completions 兼容协议
+  wrangler.toml             # API_BASE, MODEL, 限额
+  .dev.vars                 # 本地 secret (gitignored, 永远不进 git)
+  README.md                 # 部署手册
+.github/workflows/pages.yml # 自动部署
+README.md / CONTRIBUTING.md / LICENSE
+```
+
+## 4. 设计系统（必须复用）
+
+- **颜色**：用 themes.css 里的 CSS 变量，**不要硬编码颜色值**
+  - `--accent`, `--accent-strong`, `--accent-fade`, `--ink`, `--ink-strong`, `--ink-soft`, `--muted`, `--paper`, `--paper-elevated`, `--surface`, `--line`
+  - 6 学习阶段色带：`--band-1` (棕) / `--band-2` (深棕) / `--band-3` (金) / `--band-4` (墨绿) / `--band-5` (蓝) / `--band-6` (酒红)
+- **3 套主题**：`paper`（默认纸感）/ `dark`（深夜）/ `sepia`（护眼），用户可在设置面板切换
+- **现有可复用组件**（请先用现有的，不要重造）：
+  - `.tldr-card` — 章首速读卡
+  - `.lesson-card` — PENG 教训卡（5 条 vibe coding 教训用了它）
+  - `.stack-card` / `.stack-grid` — 工具栈卡
+  - `.day-list` — 日程卡（D1–D7 那种）
+  - `.callout` — 行内提示
+  - `.numbered-list` — 编号列表（替代"第一/第二/第三"散文）
+  - `.metric` / `.metric--ok/warn/bad` — 行内数据徽章
+  - `figure.diagram` — SVG 概念图容器
+- **Logo**：SOLO 四宫格（`.topbar__logo` + 4 个 `.topbar__logo-cell`），4 格各用 band-2/3/5/6
+- **字体**：正文 Noto Serif SC（衬线）/ 标题 Inter + PingFang / 代码 JetBrains Mono
+
+## 5. 写作风格（中文）
+
+- **优先讲"它在解决什么问题"，不只是定义**
+- **要给真实例子或反例**，不要堆砌名词
+- **术语第一次出现给英文原词**（括号内）
+- **长段落要拆**：用 `.numbered-list` 把"第一/第二/第三..."从散文中救出来
+- **不要写"以下是…"** 这种废话；不要在标题前加 "📌" 之类装饰 emoji（除非用户要求）
+- 称呼：用"教材"，**不要用"书"或"电子书"**（小红书/图书馆等无关词除外）
+- **专注力友好**："必须记住的判断"先行，再展开
+
+## 6. AI 划词解释功能（敏感）
+
+- 上游 endpoint：`https://maas-coding-api.cn-huabei-1.xf-yun.com/v2/chat/completions`（讯飞 MaaS Coding，OpenAI 兼容协议）
+- 模型：`astron-code-latest`
+- Worker URL：`https://gemini-explainer.wpeng024.workers.dev`（CF Worker，名字保留没改，无伤大雅）
+- API key 存放位置：`worker/.dev.vars`（本地）+ Cloudflare Worker 加密 secret，**永远不能进 git，永远不能在前端代码里出现**
+- BYOK：用户可在站点设置面板贴自己的 `sk-` key，存浏览器 localStorage，仍走 Worker 中转
+- 4 层防护：Origin 白名单 + IP 50/天 + 全站 5000/天 + 输入 1500 字
+
+## 7. 工作约定（重要）
+
+- **不要主动 git commit**——只在用户说"提交"或"push"时才动
+- **改了 CSS/JS/HTML 后**，告诉用户要不要 push（push 触发 GitHub Pages 自动重新部署）
+- **改 worker 后**：要 `cd worker && npx wrangler deploy` 才生效；KV id 已在 wrangler.toml 里
+- **修长文件用 StrReplace**，不要重写整个文件（index.html 4200 行）
+- **不要主动写新 README/docs 文件**，除非用户明确要求
+- **不要堆砌 emoji**——只在确实增加可读性时用
+- **改动公开文案前**先想：开源用户也会看，措辞要稳
+
+## 8. 当前已完成里程碑（不要重复造轮子）
+
+| 模块 | 状态 |
+| :--- | :--- |
+| 16 章正文 | ✅ 含图文导航、6 SVG 概念图 |
+| 13–16 章深度增强 | ✅ 17 个实操模块（编辑器选型表 / 7 天 MVP / 状态机 12 状态 / 经营回路 18 指标 / 周月季报模板 等） |
+| 关于作者 + 学习小组 | ✅ section + GitHub Discussions 已开 |
+| 3 套主题 + 4 档字号 | ✅ 写入 localStorage |
+| 移动端独立展示 | ✅ mobile.css 自动加载，含底部 FAB / 表格卡片化 |
+| AI 划词解释 | ✅ Worker 已上线 + BYOK + SSE 流式 |
+| Logo (SOLO 四宫格) | ✅ 含 favicon 同步 |
+| 编号列表组件 | ✅ 15 段散文已重排 |
+
+## 9. 用户偏好（PENG 个人风格）
+
+- 喜欢简洁、有判断的语言
+- 喜欢看到"现在的状态/做了什么/下一步"的清晰汇报
+- 不喜欢被问太多确认问题——动手前判断好就直接做
+- 改完会要"在浏览器看效果"，所以**改完静态资源主动给个 URL 或 `open` 命令**
+- 喜欢 PENG 个人色彩的内容（教训卡、亲历经验），不喜欢空话
+- 复杂任务用 TodoWrite 拆解，让他能跟进度
+
+## 10. 常用命令速查
+
+```bash
+# 本地预览
+cd "/Users/mac/Documents/Kiro-Porject/一人公司-从0到1"
+python3 -m http.server 8000
+
+# 部署 worker
+cd worker && npx wrangler deploy
+npx wrangler tail               # 看实时日志
+
+# 推到 GitHub (触发 Pages 自动部署, ~30s)
+git add -A && git commit -m "..." && git push
+
+# 看部署状态
+gh run list --repo wpeng024-hue/solo-company-0-to-1 --limit 1
+gh run watch <id> --repo wpeng024-hue/solo-company-0-to-1
+```

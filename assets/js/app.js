@@ -11,6 +11,8 @@
   const STORAGE_KEYS = {
     theme: "yrgs.theme",
     fontSize: "yrgs.fontSize",
+    readMode: "yrgs.readMode",
+    focusDone: "yrgs.focusDone",
   };
 
   /* ----------------------------------------------------------
@@ -40,11 +42,24 @@
       );
     });
   }
+  function applyReadMode(mode) {
+    const val = mode === "focus" ? "focus" : "book";
+    root.setAttribute("data-readmode", val);
+    $$('[data-readmode-pill]').forEach((btn) => {
+      btn.setAttribute(
+        "aria-pressed",
+        String(btn.dataset.readmodePill === val)
+      );
+    });
+    document.body.classList.toggle("is-focus-mode", val === "focus");
+  }
 
   const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || "auto";
   const savedFont = localStorage.getItem(STORAGE_KEYS.fontSize) || "m";
+  const savedReadMode = localStorage.getItem(STORAGE_KEYS.readMode) || "book";
   applyTheme(savedTheme);
   applyFontSize(savedFont);
+  applyReadMode(savedReadMode);
 
   function bindSettings() {
     $$('[data-theme-pill]').forEach((btn) => {
@@ -60,6 +75,15 @@
         const s = btn.dataset.fontPill;
         applyFontSize(s);
         localStorage.setItem(STORAGE_KEYS.fontSize, s);
+      });
+    });
+    $$('[data-readmode-pill]').forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const m = btn.dataset.readmodePill;
+        applyReadMode(m);
+        localStorage.setItem(STORAGE_KEYS.readMode, m);
+        renderLearningDeck();
+        toast(m === "focus" ? "已切到 ADHD 学习模式" : "已切到教材模式");
       });
     });
   }
@@ -533,11 +557,18 @@
           open();
         } else if (e.key.toLowerCase() === "t") {
           const cur = root.getAttribute("data-theme") || "auto";
-          const order = ["auto", "meta", "paper", "dark", "sepia"];
+          const order = ["auto", "studio", "threads", "paper", "dark"];
           const next = order[(order.indexOf(cur) + 1) % order.length];
           applyTheme(next);
           localStorage.setItem(STORAGE_KEYS.theme, next);
           toast("主题: " + nextLabel(next));
+        } else if (e.key.toLowerCase() === "f") {
+          const curMode = root.getAttribute("data-readmode") || "book";
+          const nextMode = curMode === "focus" ? "book" : "focus";
+          applyReadMode(nextMode);
+          localStorage.setItem(STORAGE_KEYS.readMode, nextMode);
+          renderLearningDeck();
+          toast(nextMode === "focus" ? "学习模式: ADHD" : "学习模式: 教材");
         } else if (e.key.toLowerCase() === "g") {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
@@ -545,7 +576,7 @@
     });
   }
   function nextLabel(t) {
-    return { auto: "跟随系统", meta: "Meta", paper: "纸感", dark: "深夜", sepia: "护眼" }[t] || t;
+    return { auto: "跟随系统", studio: "Studio", threads: "Threads", meta: "Threads", paper: "纸感", dark: "深夜", sepia: "护眼" }[t] || t;
   }
 
   /* ----------------------------------------------------------
@@ -607,7 +638,206 @@
   }
 
   /* ----------------------------------------------------------
-     14. 章节骨架增强 (色带 + section 包裹 + TL;DR 卡片 + 上下章导航)
+     14. ADHD 学习模式 (卡片导航 + 长段落折叠 + 勾选进度)
+     ---------------------------------------------------------- */
+  const learningState = {
+    filter: "all",
+    items: [],
+    doneMap: loadFocusDoneMap(),
+  };
+
+  function loadFocusDoneMap() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.focusDone) || "{}");
+      return data && typeof data === "object" ? data : {};
+    } catch {
+      return {};
+    }
+  }
+  function saveFocusDoneMap() {
+    try {
+      localStorage.setItem(STORAGE_KEYS.focusDone, JSON.stringify(learningState.doneMap));
+    } catch {}
+  }
+  function normalizeText(s) {
+    return (s || "").replace(/\s+/g, " ").trim();
+  }
+  function truncateText(s, max = 92) {
+    const txt = normalizeText(s);
+    if (!txt) return "这一章建议先看 TL;DR 与图表，再进入正文。";
+    return txt.length > max ? txt.slice(0, max) + "…" : txt;
+  }
+  function getChapterLabel(text, fallbackNum) {
+    const m = text.match(/^第([一二三四五六七八九十\d]+)章/);
+    if (m) return `第${m[1]}章`;
+    return `第 ${fallbackNum} 章`;
+  }
+  function firstReadableParagraph(section) {
+    // 只取正文段落，跳过摘要卡/术语卡/callout/表格图表说明
+    const ps = $$("p", section).filter((p) => {
+      if (p.closest(".section-summary")) return false;
+      if (p.closest(".term-card__body")) return false;
+      if (p.closest(".callout")) return false;
+      if (p.closest(".tldr-card")) return false;
+      if (p.closest("figure.diagram")) return false;
+      if (p.closest(".table-wrap")) return false;
+      const txt = normalizeText(p.textContent);
+      return txt.length >= 24;
+    });
+    return ps[0] || null;
+  }
+  function collectLearningItems() {
+    const sections = $$(".chapter-section");
+    return sections.map((sec, idx) => {
+      const h2 = sec.querySelector("h2[id]");
+      const title = normalizeText(h2?.textContent || `第 ${idx + 1} 章`);
+      const p = firstReadableParagraph(sec);
+      const summary = truncateText(p?.textContent || "", 92);
+      const hasFigure = !!sec.querySelector("figure.diagram");
+      const hasTable = !!sec.querySelector(".table-wrap, table");
+      const hasCallout = !!sec.querySelector(".callout, .section-summary, .tldr-card");
+      return {
+        id: h2?.id || `chapter-${idx + 1}`,
+        chapterLabel: getChapterLabel(title, idx + 1),
+        title,
+        summary,
+        hasFigure,
+        hasTable,
+        hasCallout,
+      };
+    });
+  }
+  function renderLearningDeck() {
+    const deck = $("#learningDeck");
+    const grid = $("#learningDeckGrid");
+    const progress = $("#learningDeckProgress");
+    if (!deck || !grid) return;
+
+    learningState.items = collectLearningItems();
+    const total = learningState.items.length;
+
+    let shown = learningState.items;
+    if (learningState.filter === "figure") {
+      shown = shown.filter((i) => i.hasFigure);
+    } else if (learningState.filter === "table") {
+      shown = shown.filter((i) => i.hasTable);
+    } else if (learningState.filter === "callout") {
+      shown = shown.filter((i) => i.hasCallout);
+    }
+
+    const doneCount = learningState.items.filter((i) => learningState.doneMap[i.id]).length;
+    if (progress) {
+      progress.textContent =
+        `完成进度 ${doneCount}/${total}` +
+        (shown.length !== total ? ` · 当前筛选 ${shown.length} 章` : "");
+    }
+
+    if (shown.length === 0) {
+      grid.innerHTML =
+        '<div class="learning-empty">当前筛选下没有章节，换一个筛选试试。</div>';
+      return;
+    }
+
+    grid.innerHTML = shown
+      .map((item) => {
+        const badges = [
+          item.hasFigure ? '<span class="learning-badge">图解</span>' : "",
+          item.hasTable ? '<span class="learning-badge">表格</span>' : "",
+          item.hasCallout ? '<span class="learning-badge">要点卡</span>' : "",
+        ]
+          .filter(Boolean)
+          .join("");
+        const checked = learningState.doneMap[item.id] ? "checked" : "";
+        const doneClass = learningState.doneMap[item.id] ? " is-done" : "";
+        return `
+          <article class="learning-card${doneClass}" data-id="${item.id}">
+            <div class="learning-card__top">
+              <span class="learning-card__chapter">${escHtml(item.chapterLabel)}</span>
+              <label class="learning-card__done">
+                <input type="checkbox" data-learning-done="${item.id}" ${checked} />
+                <span>已读</span>
+              </label>
+            </div>
+            <h3 class="learning-card__title">${escHtml(item.title)}</h3>
+            <p class="learning-card__summary">${escHtml(item.summary)}</p>
+            <div class="learning-card__meta">${badges}</div>
+            <a class="learning-card__go" href="#${item.id}" data-learning-go="${item.id}">开始学习</a>
+          </article>`;
+      })
+      .join("");
+  }
+  function bindLearningDeck() {
+    const deck = $("#learningDeck");
+    if (!deck) return;
+
+    deck.addEventListener("click", (e) => {
+      const filterBtn = e.target.closest("[data-learning-filter]");
+      if (filterBtn) {
+        const next = filterBtn.dataset.learningFilter || "all";
+        learningState.filter = next;
+        $$("[data-learning-filter]", deck).forEach((btn) => {
+          btn.setAttribute("aria-pressed", String(btn.dataset.learningFilter === next));
+        });
+        renderLearningDeck();
+        return;
+      }
+      const go = e.target.closest("[data-learning-go]");
+      if (go) {
+        // focus 模式下点击卡片后轻提示, 让用户知道支持 F 快捷回切
+        const mode = root.getAttribute("data-readmode") || "book";
+        if (mode === "focus") {
+          toast("已跳转到章节 · 按 F 可切回教材模式");
+        }
+      }
+    });
+
+    deck.addEventListener("change", (e) => {
+      const input = e.target.closest("input[data-learning-done]");
+      if (!input) return;
+      const id = input.dataset.learningDone;
+      learningState.doneMap[id] = input.checked;
+      saveFocusDoneMap();
+      renderLearningDeck();
+    });
+
+    renderLearningDeck();
+  }
+  function decorateLongParagraphs() {
+    const article = $("#book-content");
+    if (!article) return;
+
+    $$("p", article).forEach((p, idx) => {
+      if (p.dataset.focusDecorated === "1") return;
+      if (p.closest(".section-summary")) return;
+      if (p.closest(".term-card__body")) return;
+      if (p.closest(".callout")) return;
+      if (p.closest(".tldr-card")) return;
+      if (p.closest("blockquote")) return;
+      if (p.closest("figure.diagram")) return;
+      if (p.closest(".table-wrap")) return;
+      if (p.closest(".learning-deck")) return;
+      const txt = normalizeText(p.textContent);
+      if (txt.length < 130) return;
+
+      p.dataset.focusDecorated = "1";
+      p.classList.add("focus-text");
+      const btn = document.createElement("button");
+      btn.className = "focus-text__toggle";
+      btn.type = "button";
+      btn.dataset.focusTarget = String(idx);
+      btn.setAttribute("aria-expanded", "false");
+      btn.textContent = "展开全文";
+      btn.addEventListener("click", () => {
+        const expanded = p.classList.toggle("is-expanded");
+        btn.setAttribute("aria-expanded", String(expanded));
+        btn.textContent = expanded ? "收起" : "展开全文";
+      });
+      p.insertAdjacentElement("afterend", btn);
+    });
+  }
+
+  /* ----------------------------------------------------------
+     15. 章节骨架增强 (色带 + section 包裹 + TL;DR 卡片 + 上下章导航)
      ---------------------------------------------------------- */
   const CHAPTER_TITLES = [
     "现代软件系统的对象",
@@ -892,13 +1122,13 @@
         case "theme": {
           // 轮换 5 个主题
           const cur = root.getAttribute("data-theme") || "auto";
-          const order = ["auto", "meta", "paper", "dark", "sepia"];
+          const order = ["auto", "studio", "threads", "paper", "dark"];
           const next = order[(order.indexOf(cur) + 1) % order.length];
           applyTheme(next);
           localStorage.setItem(STORAGE_KEYS.theme, next);
           toast(
             "主题：" +
-              ({ auto: "跟随系统", meta: "Meta", paper: "纸感", dark: "深夜", sepia: "护眼" }[
+              ({ auto: "跟随系统", studio: "Studio", threads: "Threads", paper: "纸感", dark: "深夜", sepia: "护眼" }[
                 next
               ] || next)
           );
@@ -1727,6 +1957,8 @@
     wrapTables();
     injectTableDataLabels();
     enhanceChapters();
+    decorateLongParagraphs();
+    bindLearningDeck();
     injectAnchorButtons();
     injectCodeCopy();
     const items = buildSidebarTOC();

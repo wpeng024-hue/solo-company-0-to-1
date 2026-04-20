@@ -19,6 +19,11 @@ node_modules/
 dist/
 .cache/
 
+# Visual regression artifacts (baselines 进 git, 中间产物不进)
+_visual/test-results/
+_visual/playwright-report/
+playwright/.cache/
+
 # Personal scratch
 TODO.local.md
 notes.local/

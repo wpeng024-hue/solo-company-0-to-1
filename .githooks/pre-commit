@@ -1,0 +1,30 @@
+#!/bin/sh
+# ============================================================
+# 一人公司·从 0 到 1 — pre-commit hook
+# ------------------------------------------------------------
+# 拦截 UI contract 违规, 不让低级错误进 git.
+# 跑的是静态 audit (秒级), 不跑视觉 diff (40s 太慢, 留给 pre-push 或 CI).
+#
+# 临时跳过: git commit --no-verify   (不推荐, 仅紧急情况)
+# ============================================================
+
+set -e
+
+# 只在 HTML / CSS / JS 有改动时才审查 (改 README / commit message 不触发)
+CHANGED=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(html|css|mjs|js)$' || true)
+
+if [ -z "$CHANGED" ]; then
+  exit 0
+fi
+
+echo "→ pre-commit: 跑 UI contract 审查..."
+
+if ! node _tools/audit-ui.mjs --quiet; then
+  echo ""
+  echo "✗ UI contract 审查未通过, commit 被拦截."
+  echo "  ↳ 修复违规后再 git add & commit"
+  echo "  ↳ 紧急跳过: git commit --no-verify"
+  exit 1
+fi
+
+exit 0

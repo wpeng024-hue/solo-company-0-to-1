@@ -850,6 +850,9 @@ p > a[title]:hover {
   .hero { padding: 32px 22px 28px; }
 }
 
+/* Hero 蓝色 3D 装饰球: 默认隐藏, 只在 Studio 主题下被强化层 display 出来 */
+.hero__orb { display: none; }
+
 /* ------------------------------------------------------------
    章节卡片（学习地图）
    ------------------------------------------------------------ */
@@ -2483,6 +2486,28 @@ ol.numbered-list > li > strong:first-child {
 .metric--warn { color: var(--band-1); background: color-mix(in srgb, var(--band-1) 18%, transparent); border-color: color-mix(in srgb, var(--band-1) 35%, transparent); }
 .metric--bad { color: var(--band-6); background: color-mix(in srgb, var(--band-6) 15%, transparent); border-color: color-mix(in srgb, var(--band-6) 35%, transparent); }
 
+/* 成本/判断徽章 — .metric 的"长文本兄弟"
+   CONTRACT:
+   - 用于 ≥12 字符的成本/判断/阈值文本 ($0–25/月, "月 churn > 8% → 复盘")
+   - 矩形圆角而非 pill, 多行 wrap 后仍是漂亮的小卡 */
+.cost-chip {
+  display: inline-block;
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+  font-size: 0.86em;
+  line-height: 1.5;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  word-break: keep-all;
+  max-width: 100%;
+  text-align: left;
+  vertical-align: baseline;
+}
+.cost-chip--ok   { color: #16a34a; background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.28); }
+.cost-chip--warn { color: #b45309; background: rgba(234, 179, 8, 0.14); border-color: rgba(234, 179, 8, 0.32); }
+.cost-chip--bad  { color: #b91c1c; background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.30); }
+
 /* ------------------------------------------------------------
    关于作者 · 学习小组卡片组
    ------------------------------------------------------------ */
@@ -2731,351 +2756,317 @@ ol.numbered-list > li > strong:first-child {
 }
 
 /* ============================================================
-   ⬇⬇⬇  META STYLE 强化层  ⬇⬇⬇
-   - 仅在默认主题(:root 无 data-theme)与显式 [data-theme="meta"] 时生效
-   - paper / sepia 切回时自动失效, 回到温润纸感
-   - 设计语言: Meta Blue + 蓝紫粉橙四彩渐变 + 大圆角 + Pill + Inter
+   ⬇⬇⬇  THREADS STYLE 强化层  ⬇⬇⬇
+   - 仅在显式 [data-theme="threads"] 和兼容旧 localStorage 的 [data-theme="meta"] 时生效
+   - 设计原则: 纯黑白灰, 0 彩色装饰, 大留白, Inter regular/medium
    ============================================================ */
-html:not([data-theme]),
+html[data-theme="threads"],
 html[data-theme="meta"] {
 
-  /* —— 全局: 字体切到 Inter (Meta 不用衬线) —— */
+  /* —— 全局: 字体切到 Inter, 大行距 + 大字号 + 抗锯齿 —— */
   body {
     font-family: var(--font-body);
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.005em;
+    letter-spacing: -0.011em;     /* SF 风的微微负字距 */
   }
   body p {
     font-size: 1rem;
     color: var(--ink);
+    line-height: 1.75;
   }
 
-  /* 滚动条更细 */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); }
 
-  /* —— 链接: 取消默认下划虚线, 改 Meta 蓝下划 —— */
+  /* —— 链接: Threads 风, 黑色 + 下划 + 微微上移 hover —— */
   a {
     border-bottom: none;
-    color: var(--accent);
+    color: var(--ink-strong);
     font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
   }
   a:hover {
-    color: var(--accent-strong);
-    background: var(--accent-fade);
-    border-radius: var(--radius-xs);
-    padding: 0 2px;
-    margin: 0 -2px;
+    color: var(--ink-strong);
+    background: transparent;
+    text-decoration-color: var(--ink-strong);
     border-bottom: none;
   }
 
-  /* —— 顶栏: 半透明白底 + Meta 风 —— */
+  /* —— 顶栏: Threads 纯白底, 1px 极淡灰边, 不用 blur —— */
   .topbar {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(250, 250, 250, 0.92);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    border-bottom: 1px solid var(--line);
   }
-  .topbar__inner {
-    padding: 14px 24px;
-  }
+  .topbar__inner { padding: 14px 24px; }
   .topbar__brand {
-    font-weight: 800;
-    font-size: 1.02rem;
+    font-weight: 700;
+    font-size: 0.98rem;
     letter-spacing: -0.015em;
     color: var(--ink-strong);
   }
 
-  /* —— SOLO Logo: 改成 Meta 四彩渐变四宫格 —— */
+  /* —— SOLO Logo: 4 阶灰度 (Threads 风, 0 彩色) —— */
   .topbar__logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(8, 102, 255, 0.25);
-    background: var(--meta-gradient);
-    padding: 2px;
-    gap: 1px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #000000;
+    padding: 0;
+    gap: 0;
+    box-shadow: none;
   }
-  .topbar__logo-cell { color: #ffffff; font-size: 12px; font-weight: 800; }
-  .topbar__logo-cell:nth-child(1) { background: #0866ff; border-radius: 8px 0 0 0; }
-  .topbar__logo-cell:nth-child(2) { background: #8b5cf6; border-radius: 0 8px 0 0; }
-  .topbar__logo-cell:nth-child(3) { background: #ec4899; border-radius: 0 0 0 8px; }
-  .topbar__logo-cell:nth-child(4) { background: #f97316; border-radius: 0 0 8px 0; }
+  .topbar__logo-cell { color: #ffffff; font-size: 11px; font-weight: 700; }
+  .topbar__logo-cell:nth-child(1) { background: #000000; border-radius: 10px 0 0 0; }
+  .topbar__logo-cell:nth-child(2) { background: #2a2a2a; border-radius: 0 10px 0 0; }
+  .topbar__logo-cell:nth-child(3) { background: #5a5a5a; border-radius: 0 0 0 10px; }
+  .topbar__logo-cell:nth-child(4) { background: #888888; border-radius: 0 0 10px 0; }
   .topbar__brand:hover .topbar__logo {
-    transform: rotate(0) scale(1.08);
-    box-shadow: 0 8px 24px rgba(8, 102, 255, 0.35);
+    transform: scale(1.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   }
 
-  /* —— Topbar chip: pill —— */
+  /* —— Topbar chip: Threads 风极淡灰 pill —— */
   .topbar__chip {
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    border: 1px solid transparent;
-    font-weight: 600;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--line);
+    font-weight: 500;
   }
   .topbar__divider { display: none; }
 
-  /* —— Icon 按钮: Pill —— */
+  /* —— Icon 按钮: Pill, 黑色 hover —— */
   .icon-btn {
     border-radius: var(--radius-pill);
     color: var(--ink-strong);
   }
   .icon-btn:hover {
-    background: var(--accent-fade);
-    color: var(--accent);
+    background: var(--surface);
+    color: var(--ink-strong);
     border-color: transparent;
   }
   .icon-btn--wide {
     background: var(--surface);
-    color: var(--ink-soft);
+    color: var(--ink);
+    font-weight: 500;
   }
 
-  /* —— GitHub icon 按钮: 用 Meta Blue 实心 —— */
+  /* —— GitHub 按钮: 黑色 pill, Threads 主站 follow 按钮风 —— */
   .topbar__actions a.icon-btn[href*="github"] {
-    background: var(--accent);
+    background: var(--ink-strong);
     color: #ffffff;
-    box-shadow: 0 4px 12px rgba(8, 102, 255, 0.3);
+    box-shadow: none;
   }
   .topbar__actions a.icon-btn[href*="github"]:hover {
-    background: var(--accent-strong);
+    background: #1a1a1a;
     color: #ffffff;
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(8, 102, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  /* —— 设置弹层 pill 选中态: Meta 渐变填充 —— */
+  /* —— 设置弹层 —— */
   .menu {
     border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(8, 102, 255, 0.08);
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
   }
   .menu__pill {
     border-radius: var(--radius-pill);
-    font-weight: 600;
+    font-weight: 500;
     background: var(--surface);
     border-color: transparent;
+    color: var(--ink-soft);
+  }
+  .menu__pill:hover {
+    background: var(--surface-hover);
+    color: var(--ink-strong);
   }
   .menu__pill[aria-pressed="true"] {
-    background: var(--accent);
+    background: var(--ink-strong);
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 2px 8px rgba(8, 102, 255, 0.3);
+    box-shadow: none;
   }
 
-  /* —— 主内容卡: 大圆角, 更柔软 —— */
+  /* —— 主内容卡: 极简白底, 1px 灰边, 大留白 —— */
   .main {
     border-radius: var(--radius-xl);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.04);
-    padding: 56px 64px 80px;
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    padding: 64px 72px 88px;
+    background: #ffffff;
   }
-  .main::before {
-    background:
-      radial-gradient(900px 320px at -10% -10%, rgba(8, 102, 255, 0.06), transparent 60%),
-      radial-gradient(900px 280px at 110% 0%, rgba(236, 72, 153, 0.05), transparent 60%);
-  }
+  .main::before { background: none; }   /* 去掉所有彩色光晕 */
   @media (max-width: 720px) {
     .main { padding: 28px 20px 48px; border-radius: var(--radius-lg); }
   }
 
-  /* —— 标题: Inter Black, 紧字间距, Meta 标志风 —— */
+  /* —— 标题: Inter 700, 字距收紧, Threads 风 (不要 900 黑体) —— */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.22;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    line-height: 1.2;
     color: var(--ink-strong);
   }
   h1 {
-    font-size: clamp(2rem, 2.8vw + 1rem, 2.85rem);
+    font-size: clamp(2rem, 2.8vw + 1rem, 2.7rem);
     border-bottom: none;
     padding-bottom: 0;
-    font-weight: 900;
-    letter-spacing: -0.025em;
+    font-weight: 700;
+    letter-spacing: -0.028em;
+    margin-top: 0.4em;
+    margin-bottom: 0.6em;
   }
-  h1::after {
-    content: "";
-    display: block;
-    width: 64px;
-    height: 5px;
-    margin-top: 18px;
-    border-radius: var(--radius-pill);
-    background: var(--meta-gradient);
-  }
+  h1::after { content: none; }
   h2 {
-    font-size: clamp(1.5rem, 1.6vw + 0.9rem, 1.9rem);
+    font-size: clamp(1.45rem, 1.4vw + 0.9rem, 1.8rem);
     border-left: none;
     padding: 0;
-    margin-top: 2.4em;
-    font-weight: 800;
+    margin: 2.6em 0 0.7em;
+    font-weight: 700;
   }
   h3 {
-    font-size: clamp(1.15rem, 0.6vw + 1rem, 1.32rem);
+    font-size: clamp(1.1rem, 0.5vw + 1rem, 1.25rem);
     border-left: none;
     padding-left: 0;
     color: var(--ink-strong);
-    font-weight: 700;
+    font-weight: 600;
+    margin-top: 2em;
   }
-  h3::before {
-    content: "";
-    display: inline-block;
-    width: 4px;
-    height: 1em;
-    margin-right: 12px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    vertical-align: -3px;
-  }
+  h3::before { content: none; }       /* 去掉蓝色竖条 */
   h4 {
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ink-strong);
+    margin-top: 1.6em;
   }
 
-  /* —— Hero: Meta 标志性"渐变光晕"风 —— */
+  /* —— Hero: Threads 风 — 纯白底, 0 渐变光晕, 大字 —— */
   .hero {
     background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--line);
     border-radius: var(--radius-xl);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 48px rgba(8, 102, 255, 0.06);
-    padding: 64px 56px 56px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    padding: 72px 56px 56px;
     overflow: hidden;
   }
-  .hero::before {
-    content: "";
-    position: absolute;
-    top: -160px;
-    left: -120px;
-    width: 480px;
-    height: 480px;
-    background: radial-gradient(closest-side, rgba(8, 102, 255, 0.18), transparent 75%);
-    pointer-events: none;
-    filter: blur(8px);
-  }
-  .hero::after {
-    width: 520px;
-    height: 520px;
-    right: -180px;
-    top: -180px;
-    background: radial-gradient(closest-side,
-      rgba(236, 72, 153, 0.16) 0%,
-      rgba(249, 115, 22, 0.10) 40%,
-      transparent 75%);
-    filter: blur(10px);
-  }
+  .hero::before { content: none; }
+  .hero::after { display: none; }      /* 全部彩色光晕清零 */
 
-  .hero__badges { gap: 8px; margin-bottom: 22px; }
+  .hero__badges { gap: 8px; margin-bottom: 24px; }
   .hero__badge {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: var(--surface);
+    backdrop-filter: none;
+    border: 1px solid var(--line);
     color: var(--ink);
-    font-weight: 600;
-    padding: 6px 14px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
   }
   .hero__badge--accent {
-    background: var(--meta-gradient);
+    background: var(--ink-strong);
     color: #ffffff;
     border: none;
-    box-shadow: 0 4px 12px rgba(8, 102, 255, 0.3);
+    box-shadow: none;
   }
 
   .hero__title {
     font-family: var(--font-display);
-    font-weight: 900;
-    font-size: clamp(2.4rem, 3.6vw + 1rem, 4.2rem);
-    line-height: 1.05;
+    font-weight: 700;
+    font-size: clamp(2.4rem, 3.6vw + 1rem, 4rem);
+    line-height: 1.08;
     letter-spacing: -0.035em;
-    margin: 0 0 18px;
+    margin: 0 0 20px;
     color: var(--ink-strong);
   }
   .hero__title em {
     font-style: normal;
-    background: var(--meta-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
+    background: none;
+    color: var(--muted);
+    -webkit-text-fill-color: var(--muted);
+    display: inline;
   }
   .hero__subtitle {
-    font-size: 1.12rem;
+    font-size: 1.08rem;
     color: var(--ink-soft);
     line-height: 1.65;
     max-width: 620px;
     font-weight: 400;
   }
   .hero__author {
-    font-weight: 600;
-    color: var(--accent);
+    font-weight: 500;
+    color: var(--muted);
   }
 
   .hero__stat {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: var(--surface);
+    backdrop-filter: none;
+    border: 1px solid var(--line);
     border-radius: var(--radius-md);
     padding: 16px 18px;
   }
   .hero__stat-num {
-    font-size: 1.85rem;
-    font-weight: 900;
-    background: var(--meta-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.02em;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--ink-strong);
+    letter-spacing: -0.025em;
   }
-  .hero__stat-label { font-weight: 600; color: var(--muted); }
+  .hero__stat-label { font-weight: 500; color: var(--muted); }
+  .hero__stat:hover {
+    border-color: var(--ink-strong);
+    box-shadow: none;
+    transform: none;
+  }
 
   @media (max-width: 720px) {
-    .hero { padding: 40px 24px 32px; border-radius: var(--radius-lg); }
-    .hero__title { font-size: clamp(2rem, 7vw + 0.5rem, 3rem); }
+    .hero { padding: 40px 22px 32px; border-radius: var(--radius-lg); }
+    .hero__title { font-size: clamp(2rem, 7vw + 0.4rem, 2.6rem); }
   }
 
-  /* —— 章节卡片: Facebook 主站风 — 纯白卡, 无彩色装饰 —— */
+  /* —— 章节卡片: Threads 风, 极简白卡, 0 装饰 —— */
   .chapter-card {
     border-radius: var(--radius-md);
     background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--line);
     border-left: none;
     padding: 20px 20px 18px;
     position: relative;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    box-shadow: none;
     overflow: hidden;
   }
-  /* 顶部彩条已移除 — Meta 主站没有这种装饰 */
   .chapter-card::before { content: none; }
   .chapter-card:hover {
-    transform: translateY(-2px);
-    border-color: transparent;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 0 1.5px var(--accent);
+    transform: translateY(-1px);
+    border-color: var(--ink-strong);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   }
   .chapter-card__num {
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--muted);                 /* 灰色 eyebrow, 不再彩色 */
-    font-size: 0.7rem;
-    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: none;
   }
   .chapter-card__title {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.05rem;
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    font-size: 1.04rem;
+    letter-spacing: -0.015em;
     color: var(--ink-strong);
   }
-  .chapter-card:hover .chapter-card__title { color: var(--accent); }
+  .chapter-card:hover .chapter-card__title { color: var(--ink-strong); }
 
-  /* —— Chapter section H2: 极简 — 灰底卡 + Meta Blue eyebrow —— */
+  /* —— Chapter section H2: 纯极简, 灰色 eyebrow + 黑标题 —— */
   .chapter-section > .chapter-h2 {
     background: transparent;
     border-left: none;
@@ -3083,57 +3074,62 @@ html[data-theme="meta"] {
     padding: 0;
     position: relative;
     overflow: visible;
-    margin: 2.6em 0 0.8em;
+    margin: 3em 0 0.8em;
   }
   .chapter-section > .chapter-h2::after { content: none; }
   .chapter-section > .chapter-h2::before {
-    color: var(--accent);
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    font-size: 0.74rem;
+    text-transform: uppercase;
     margin-bottom: 8px;
   }
 
-  /* —— TLDR Card: 收敛, 单色蓝, 不再每章不同色 —— */
+  /* —— TLDR Card: Threads 极简风, 0 彩色, 浅灰底白卡 —— */
   .tldr-card {
     border-radius: var(--radius-lg);
     border-left: none;
     background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
-    --card-band: var(--accent);          /* 强制覆盖 6 章不同色 */
+    border: 1px solid var(--line);
+    box-shadow: none;
+    --card-band: var(--ink-strong);
+    padding: 26px 28px 22px;
   }
   .tldr-card[data-band="1"],
   .tldr-card[data-band="2"],
   .tldr-card[data-band="3"],
   .tldr-card[data-band="4"],
   .tldr-card[data-band="5"],
-  .tldr-card[data-band="6"] { --card-band: var(--accent); }
-  .tldr-card::after {
-    background: radial-gradient(closest-side, var(--accent-fade), transparent 80%);
-  }
+  .tldr-card[data-band="6"] { --card-band: var(--ink-strong); }
+  .tldr-card::after { display: none; }
   .tldr-card__icon {
     border-radius: var(--radius-md);
-    background: var(--accent);
+    background: var(--ink-strong);
     color: #ffffff;
-    box-shadow: 0 4px 12px rgba(8, 102, 255, 0.25);
+    box-shadow: none;
   }
-  .tldr-card__eyebrow { color: var(--accent); }
+  .tldr-card__eyebrow {
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
   .tldr-card__bullet {
-    background: var(--accent-soft);
+    background: var(--surface);
     border: none;
-    color: var(--accent);
+    color: var(--ink-strong);
+    font-weight: 600;
   }
   .tldr-card__list li {
     border-top-color: var(--divider);
   }
 
-  /* —— Callout: 大圆角 + 浅蓝底 —— */
+  /* —— Callout: Threads 极简提示卡 —— */
   .callout {
     border-radius: var(--radius-md);
     border-left: none;
-    background: var(--accent-soft);
-    border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+    background: var(--surface);
+    border: 1px solid var(--line);
     position: relative;
     padding-left: 56px;
   }
@@ -3142,7 +3138,856 @@ html[data-theme="meta"] {
     position: absolute;
     left: 18px;
     top: 18px;
-    width: 4px;
+    width: 3px;
+    bottom: 18px;
+    border-radius: var(--radius-pill);
+    background: var(--ink-strong);
+  }
+  .callout__icon {
+    background: var(--ink-strong);
+    color: #ffffff;
+    border-radius: var(--radius-md);
+  }
+
+  /* —— Blockquote: 极简竖条, 灰底 —— */
+  blockquote {
+    border-left: 3px solid var(--ink-strong);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--surface);
+    box-shadow: none;
+  }
+  blockquote::before { display: none; }
+
+  /* —— 引用编号小角标: 灰 pill —— */
+  p > a[title] {
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    border: 1px solid var(--line);
+  }
+  p > a[title]:hover {
+    background: var(--ink-strong);
+    color: #ffffff;
+    border-color: var(--ink-strong);
+  }
+
+  /* —— 表格: Threads 极简风 —— */
+  .table-wrap {
+    border-radius: var(--radius-lg);
+    border-color: var(--line);
+  }
+  th {
+    background: var(--surface);
+    color: var(--ink-strong);
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  tbody tr:nth-child(even) td { background: rgba(0, 0, 0, 0.012); }
+  tbody tr:hover td { background: var(--surface); }
+
+  /* —— 代码块: 黑底白字 (Threads dark code) —— */
+  pre {
+    border-radius: var(--radius-md);
+    background: #0a0a0a;
+    border: none;
+  }
+  code {
+    border-radius: var(--radius-xs);
+    background: var(--surface);
+    color: var(--ink-strong);
+    border: none;
+    font-weight: 500;
+  }
+
+  /* —— Sidebar 目录: active 项 黑色实心 (Threads follow 风) —— */
+  .sidebar__inner {
+    border-radius: var(--radius-lg);
+    border-color: var(--line);
+    background: #ffffff;
+  }
+  .sidebar__list a {
+    border-left: none;
+    border-radius: var(--radius-md);
+    margin: 1px 0;
+    padding: 7px 12px;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+  .sidebar__list a:hover {
+    background: var(--surface);
+    border-left: none;
+    color: var(--ink-strong);
+  }
+  .sidebar__list a.is-active {
+    background: var(--ink-strong);
+    color: #ffffff;
+    border-left: none;
+    font-weight: 600;
+  }
+  .sidebar__list .lvl-3.is-active {
+    background: var(--surface);
+    color: var(--ink-strong);
+  }
+
+  /* —— 章节导航按钮: Threads 极简 —— */
+  .chapter-nav__btn {
+    border-radius: var(--radius-lg);
+    background: #ffffff;
+    border: 1px solid var(--line);
+    text-decoration: none;
+  }
+  .chapter-nav__btn:not(.is-disabled):hover {
+    border-color: var(--ink-strong);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    background: #ffffff;
+    transform: translateY(-1px);
+  }
+  .chapter-nav__dir { color: var(--muted); }
+
+  /* —— 返回顶部: 黑色圆 pill —— */
+  .back-to-top {
+    border-radius: var(--radius-pill);
+    background: var(--ink-strong);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .back-to-top:hover {
+    background: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  /* —— 阅读进度条: 黑色细线 —— */
+  .reading-progress { height: 2px; }
+  .reading-progress__bar {
+    background: var(--ink-strong);
+    box-shadow: none;
+  }
+
+  /* —— AI 划词气泡: 黑色 pill (不再渐变) —— */
+  .ai-bubble {
+    background: var(--ink-strong);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  .ai-bubble:hover {
+    background: #1a1a1a;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  }
+
+  /* —— 搜索框 —— */
+  .search-box {
+    border-radius: var(--radius-lg);
+    border-color: var(--line);
+  }
+  .search-result {
+    border-radius: var(--radius-md);
+    text-decoration: none;
+  }
+  .search-result:hover,
+  .search-result.is-active {
+    background: var(--surface);
+    color: var(--ink-strong);
+  }
+
+  /* —— Diagram caption b 标签: 灰 pill —— */
+  figure.diagram { border-radius: var(--radius-lg); border-color: var(--line); box-shadow: none; }
+  figure.diagram figcaption b {
+    background: var(--surface);
+    color: var(--ink-strong);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+  }
+
+  /* —— Lesson Card / Stack Card 等 6 章彩色卡: 收敛到黑白 —— */
+  aside.lesson-card,
+  .lesson-card { --card-band: var(--ink-strong) !important; }
+
+  /* ==========================================================
+     新组件 1: 导引文字 .lead-text
+     用在卡片组之前, 用一两句自然话引导读者点开下面的卡片
+     ========================================================== */
+  .lead-text {
+    font-size: 1.06rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 28px 0 14px;
+    max-width: 680px;
+    font-weight: 400;
+  }
+  .lead-text strong { color: var(--ink-strong); font-weight: 600; }
+  .lead-text + .term-stack,
+  .lead-text + .term-card { margin-top: 8px; }
+
+  /* ==========================================================
+     新组件 2: 术语卡片 .term-card (基于 <details>/<summary>)
+     折叠态: 1 行高白卡 + 灰边, 显示术语名 + "查看" 提示
+     展开态: 内容区滑出, 上方加分隔线
+     ========================================================== */
+  .term-card {
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    margin: 8px 0;
+    overflow: hidden;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  .term-card[open] {
+    border-color: var(--ink-strong);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  }
+  .term-card:hover { border-color: var(--ink-soft); }
+  .term-card[open]:hover { border-color: var(--ink-strong); }
+
+  .term-card > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .term-card > summary::-webkit-details-marker { display: none; }
+  .term-card > summary::marker { content: ""; }
+
+  .term-card__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--ink-strong);
+    letter-spacing: -0.015em;
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+  }
+  .term-card__name em {
+    font-style: normal;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 6px;
+    font-size: 0.92em;
+  }
+  .term-card__hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease;
+  }
+  .term-card__hint::after {
+    content: "↓";
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 0.92em;
+  }
+  .term-card[open] .term-card__hint { color: var(--ink-strong); }
+  .term-card[open] .term-card__hint::after { transform: rotate(180deg); }
+  .term-card > summary:hover .term-card__hint { color: var(--ink-strong); }
+
+  .term-card__body {
+    padding: 4px 20px 20px;
+    border-top: 1px solid var(--divider);
+    margin-top: 0;
+    color: var(--ink);
+    font-size: 0.96rem;
+    line-height: 1.72;
+  }
+  .term-card__body > *:first-child { margin-top: 14px; }
+  .term-card__body > *:last-child { margin-bottom: 0; }
+  .term-card__body p { margin: 0.6em 0; }
+  .term-card__body strong { color: var(--ink-strong); }
+
+  /* 卡片组容器, 让多张术语卡之间间距统一 */
+  .term-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0 28px;
+  }
+
+  /* ==========================================================
+     新组件 3: 行内术语注解 .term
+     用法: <span class="term">架构 <em>Software Architecture</em></span>
+     视觉: 中文术语下方有微细灰色虚线, 鼠标 hover 显示解释 tooltip
+     ========================================================== */
+  .term {
+    border-bottom: 1px dotted var(--muted-2);
+    cursor: help;
+  }
+  .term em {
+    font-style: normal;
+    color: var(--muted);
+    font-size: 0.88em;
+    margin-left: 4px;
+    font-weight: 400;
+  }
+}
+
+/* ============================================================
+   Dark 主题下 (Threads Dark Mode 风) 沿用大部分强化层规则
+   ============================================================ */
+html[data-theme="dark"] {
+  body {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.011em;
+  }
+  .topbar {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar__logo { background: #ffffff; box-shadow: none; }
+  .topbar__logo-cell { color: #000000; }
+  .topbar__logo-cell:nth-child(1) { background: #ffffff; }
+  .topbar__logo-cell:nth-child(2) { background: #d0d0d0; }
+  .topbar__logo-cell:nth-child(3) { background: #888888; }
+  .topbar__logo-cell:nth-child(4) { background: #5a5a5a; }
+  .reading-progress__bar { background: var(--ink-strong); box-shadow: none; }
+  .back-to-top { background: var(--ink-strong); color: #000000; }
+  .ai-bubble { background: var(--ink-strong); color: #000000; }
+  h1::after { content: none; }
+  h3::before { content: none; }
+  .hero__title em { background: none; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+  .hero__stat-num { color: var(--ink-strong); }
+  .topbar__actions a.icon-btn[href*="github"] {
+    background: var(--ink-strong);
+    color: #000000;
+  }
+  figure.diagram figcaption b {
+    background: var(--surface);
+    color: var(--ink-strong);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+  }
+  .term-card { background: var(--paper); border-color: var(--line); }
+  .term-card[open] { border-color: var(--ink-strong); }
+  .term-card__body { border-top-color: var(--divider); }
+  .menu__pill[aria-pressed="true"] { background: var(--ink-strong); color: #000000; }
+  .sidebar__list a.is-active { background: var(--ink-strong); color: #000000; }
+}
+
+/* ============================================================
+   ⬇⬇⬇  STUDIO STYLE 强化层 (新默认主题)  ⬇⬇⬇
+   - 仅在默认 (:root 无 data-theme) 与显式 [data-theme="studio"] 时生效
+   - 设计语言: 深色 SaaS Dashboard 风
+     - 深黑底 #0a0a0a + 卡片稍亮 #161616
+     - 蓝色 #4a90ff 唯一强调色
+     - 大圆角卡片 + Pill 按钮 + 大字蓝色数字
+   ============================================================ */
+html:not([data-theme]),
+html[data-theme="studio"] {
+
+  /* —— 全局: Inter, 深色环境调浅文字 + 抗锯齿 —— */
+  body {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  body p {
+    font-size: 1rem;
+    color: var(--ink);
+    line-height: 1.78;
+  }
+
+  /* —— 选中色: 蓝色高亮 —— */
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink-strong);
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--surface); border: none; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--surface-hover); }
+
+  /* —— 链接: 蓝色 + 微下划 —— */
+  a {
+    color: var(--accent);
+    border-bottom: none;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease, opacity 0.15s ease;
+  }
+  a:hover {
+    color: var(--accent-strong);
+    background: transparent;
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+    border-bottom: none;
+  }
+
+  /* —— 顶栏: 深色 dashboard 风 —— */
+  .topbar {
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar__inner { padding: 12px 24px; }
+  .topbar__brand {
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.018em;
+    color: var(--ink-strong);
+  }
+
+  /* —— SOLO Logo: 蓝色 dashboard 风四宫格 —— */
+  .topbar__logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--accent);
+    padding: 0;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.25);
+  }
+  .topbar__logo-cell { color: #ffffff; font-size: 11px; font-weight: 800; }
+  .topbar__logo-cell:nth-child(1) { background: #4a90ff; border-radius: 9px 0 0 0; }
+  .topbar__logo-cell:nth-child(2) { background: #2d7aef; border-radius: 0 9px 0 0; }
+  .topbar__logo-cell:nth-child(3) { background: #6ba5ff; border-radius: 0 0 0 9px; }
+  .topbar__logo-cell:nth-child(4) { background: #1f5fcc; border-radius: 0 0 9px 0; }
+  .topbar__brand:hover .topbar__logo {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(74, 144, 255, 0.4);
+  }
+
+  /* —— Topbar chip: 深色 pill —— */
+  .topbar__chip {
+    background: var(--surface);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    font-weight: 500;
+  }
+  .topbar__divider { display: none; }
+
+  /* —— Icon 按钮: 深色 Pill, hover 显蓝 —— */
+  .icon-btn {
+    border-radius: var(--radius-pill);
+    color: var(--ink-soft);
+    background: transparent;
+  }
+  .icon-btn:hover {
+    background: var(--surface);
+    color: var(--ink-strong);
+    border-color: transparent;
+  }
+  .icon-btn--wide {
+    background: var(--surface);
+    color: var(--ink-soft);
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    padding: 0 14px;
+  }
+  .icon-btn--wide:hover {
+    background: var(--surface-hover);
+    color: var(--ink-strong);
+  }
+
+  /* —— GitHub 按钮: 蓝色实心 pill (类似 Dashboard "Get started") —— */
+  .topbar__actions a.icon-btn[href*="github"] {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.3);
+  }
+  .topbar__actions a.icon-btn[href*="github"]:hover {
+    background: var(--accent-strong);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.4);
+  }
+
+  /* —— 设置弹层: 深色 popup —— */
+  .menu {
+    border-radius: var(--radius-lg);
+    background: var(--paper-elevated);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .menu__pill {
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    background: var(--surface);
+    border-color: transparent;
+    color: var(--ink-soft);
+  }
+  .menu__pill:hover {
+    background: var(--surface-hover);
+    color: var(--ink-strong);
+  }
+  .menu__pill[aria-pressed="true"] {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.35);
+  }
+
+  /* —— 主内容卡: 深色卡片底, 大圆角 —— */
+  .main {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 56px 64px 80px;
+    background: var(--paper);
+  }
+  .main::before {
+    background:
+      radial-gradient(900px 320px at -10% -10%, var(--accent-fade), transparent 60%),
+      radial-gradient(900px 280px at 110% 0%, var(--accent-fade), transparent 60%);
+  }
+  @media (max-width: 720px) {
+    .main { padding: 28px 20px 48px; border-radius: var(--radius-lg); }
+  }
+
+  /* —— 标题: Inter 700, 白色, 紧字距 —— */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    line-height: 1.22;
+    color: var(--ink-strong);
+  }
+  h1 {
+    font-size: clamp(2rem, 2.8vw + 1rem, 2.7rem);
+    border-bottom: none;
+    padding-bottom: 0;
+    font-weight: 700;
+    letter-spacing: -0.028em;
+    margin-top: 0.4em;
+    margin-bottom: 0.6em;
+  }
+  h1::after { content: none; }
+  h2 {
+    font-size: clamp(1.4rem, 1.4vw + 0.9rem, 1.75rem);
+    border-left: none;
+    padding: 0;
+    margin: 2.6em 0 0.7em;
+    font-weight: 700;
+  }
+  h3 {
+    font-size: clamp(1.08rem, 0.5vw + 1rem, 1.22rem);
+    border-left: none;
+    padding-left: 0;
+    color: var(--ink-strong);
+    font-weight: 600;
+    margin-top: 2em;
+  }
+  h3::before { content: none; }
+  h4 {
+    font-weight: 600;
+    color: var(--ink-strong);
+    margin-top: 1.6em;
+  }
+
+  /* —— Hero: Dashboard 风 — 深底 + 蓝色光晕 + 大字 —— */
+  .hero {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 64px 56px 56px;
+    overflow: hidden;
+    position: relative;
+  }
+  /* 蓝色辐射光晕 - 模拟截图右上方"AI Assistant"3D 球 */
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(closest-side,
+      rgba(74, 144, 255, 0.28) 0%,
+      rgba(74, 144, 255, 0.10) 35%,
+      transparent 70%);
+    pointer-events: none;
+    filter: blur(20px);
+  }
+  .hero::after {
+    width: 320px;
+    height: 320px;
+    left: -100px;
+    bottom: -100px;
+    top: auto;
+    right: auto;
+    background: radial-gradient(closest-side,
+      rgba(74, 144, 255, 0.14),
+      transparent 70%);
+    filter: blur(16px);
+  }
+
+  .hero__badges { gap: 8px; margin-bottom: 24px; }
+  .hero__badge {
+    background: var(--surface);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+  }
+  .hero__badge--accent {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.3);
+  }
+
+  .hero__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.4rem, 3.6vw + 1rem, 4rem);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    margin: 0 0 20px;
+    color: var(--ink-strong);
+  }
+  .hero__title em {
+    font-style: normal;
+    color: var(--accent);
+    -webkit-text-fill-color: var(--accent);
+    background: none;
+    display: inline;
+  }
+  .hero__subtitle {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    max-width: 640px;
+    font-weight: 400;
+  }
+  .hero__author {
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .hero__author strong { color: var(--ink-strong); }
+
+  /* —— Hero 蓝色 3D 装饰球: 仅 Studio 显示, 致敬截图 AI Assistant 元素 —— */
+  .hero__orb {
+    display: block;
+    position: absolute;
+    top: 28px;
+    right: 36px;
+    width: 220px;
+    height: 220px;
+    pointer-events: none;
+    z-index: 1;
+    filter: drop-shadow(0 12px 40px rgba(74, 144, 255, 0.35));
+    animation: orbFloat 6s ease-in-out infinite;
+  }
+  @keyframes orbFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.02); }
+  }
+  /* hero 内部内容浮在 orb 之上 */
+  .hero > *:not(.hero__orb) { position: relative; z-index: 2; }
+  @media (max-width: 900px) {
+    .hero__orb { width: 160px; height: 160px; right: 16px; top: 16px; opacity: 0.5; }
+  }
+  @media (max-width: 540px) {
+    .hero__orb { display: none; }
+  }
+
+  /* —— Hero stat: Dashboard 风的"大蓝数字"卡 —— */
+  .hero__stat {
+    background: var(--paper-elevated);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    transition: border-color 0.18s ease, transform 0.18s ease;
+  }
+  .hero__stat-num {
+    font-family: var(--font-display);
+    font-size: 1.95rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .hero__stat-label {
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .hero__stat:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 255, 0.12);
+  }
+
+  @media (max-width: 720px) {
+    .hero { padding: 40px 22px 32px; border-radius: var(--radius-lg); }
+    .hero__title { font-size: clamp(2rem, 7vw + 0.4rem, 2.6rem); }
+  }
+
+  /* —— 章节卡片: 深色 dashboard 风 (4 边一致 1px, 无左侧色带) —— */
+  .chapter-card {
+    border-radius: var(--radius-md);
+    background: var(--paper-elevated);
+    border: 1px solid var(--line) !important;       /* 强制覆盖 mobile.css */
+    border-left-width: 1px !important;
+    border-left-style: solid !important;
+    border-left-color: var(--line) !important;
+    padding: 18px 20px 16px;
+    position: relative;
+    box-shadow: none;
+    overflow: hidden;
+    transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  }
+  .chapter-card::before { content: none; }
+  /* hover: 显蓝色细描边 + 右下角"进入 →" pill 指示器 */
+  .chapter-card::after {
+    content: "进入 →";
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+  }
+  .chapter-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent) !important;
+    border-left-color: var(--accent) !important;
+    background: var(--paper-elevated);
+  }
+  /* 移动端 active 状态: 不要变彩色背景 */
+  .chapter-card:active {
+    background: var(--paper-elevated);
+  }
+  .chapter-card:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .chapter-card__num {
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: none;
+  }
+  .chapter-card__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.04rem;
+    letter-spacing: -0.015em;
+    color: var(--ink-strong);
+  }
+  .chapter-card:hover .chapter-card__title { color: var(--accent); }
+  .chapter-card__desc { color: var(--ink-soft); }
+
+  /* —— Chapter map: 加 dashboard "view all" 按钮风 —— */
+  .chapter-map__head h2 { color: var(--ink-strong); }
+  .chapter-map__head p { color: var(--muted); }
+
+  /* —— Chapter section H2: 简洁灰 eyebrow + 白标题 —— */
+  .chapter-section > .chapter-h2 {
+    background: transparent;
+    border-left: none;
+    border-radius: 0;
+    padding: 0;
+    position: relative;
+    overflow: visible;
+    margin: 3em 0 0.8em;
+  }
+  .chapter-section > .chapter-h2::after { content: none; }
+  .chapter-section > .chapter-h2::before {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* —— TLDR Card: 深色 dashboard 风 —— */
+  .tldr-card {
+    border-radius: var(--radius-lg);
+    border-left: none;
+    background: var(--paper-elevated);
+    border: 1px solid var(--line);
+    box-shadow: none;
+    --card-band: var(--accent);
+    padding: 26px 28px 22px;
+  }
+  .tldr-card[data-band="1"],
+  .tldr-card[data-band="2"],
+  .tldr-card[data-band="3"],
+  .tldr-card[data-band="4"],
+  .tldr-card[data-band="5"],
+  .tldr-card[data-band="6"] { --card-band: var(--accent); }
+  .tldr-card::after { display: none; }
+  .tldr-card__icon {
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.25);
+  }
+  .tldr-card__eyebrow {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .tldr-card__title { color: var(--ink-strong); }
+  .tldr-card__bullet {
+    background: var(--accent-soft);
+    border: none;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .tldr-card__list li {
+    border-top-color: var(--divider);
+    color: var(--ink);
+  }
+  .tldr-card__foot { color: var(--muted); }
+
+  /* —— Callout: 深色提示卡 + 蓝色 bar —— */
+  .callout {
+    border-radius: var(--radius-md);
+    border-left: none;
+    background: var(--paper-elevated);
+    border: 1px solid var(--line);
+    position: relative;
+    padding-left: 56px;
+    color: var(--ink);
+  }
+  .callout::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    top: 18px;
+    width: 3px;
     bottom: 18px;
     border-radius: var(--radius-pill);
     background: var(--accent);
@@ -3153,198 +3998,840 @@ html[data-theme="meta"] {
     border-radius: var(--radius-md);
   }
 
-  /* —— Blockquote: 去掉花哨引号, 改极简竖条 —— */
+  /* —— Blockquote: 深色 + 蓝色 bar —— */
   blockquote {
-    border-left: 4px solid var(--accent);
+    border-left: 3px solid var(--accent);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background: var(--accent-soft);
+    background: var(--paper-elevated);
     box-shadow: none;
+    color: var(--ink);
   }
   blockquote::before { display: none; }
+  blockquote strong { color: var(--accent); }
 
-  /* —— 引用编号小角标: pill 化 —— */
+  /* —— 引用编号小角标: 深色 pill + 蓝色字 —— */
   p > a[title] {
-    background: var(--accent);
-    color: #ffffff;
+    background: var(--surface);
+    color: var(--accent);
     font-weight: 600;
     padding: 1px 8px;
     border-radius: var(--radius-pill);
+    text-decoration: none;
+    border: 1px solid var(--line);
   }
   p > a[title]:hover {
-    background: var(--accent-strong);
+    background: var(--accent);
     color: #ffffff;
+    border-color: var(--accent);
   }
 
-  /* —— 表格: 现代化风 —— */
+  /* —— 表格: Dashboard 风 (修复对比度) —— */
   .table-wrap {
     border-radius: var(--radius-lg);
-    border-color: rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--line);
+    background: var(--paper-elevated);
+    overflow: hidden;
   }
+  table { background: var(--paper-elevated); }
+  /* 表头比卡片底色更深, 形成"沉下去"的视觉区隔 */
   th {
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    font-weight: 700;
+    background: #050505;
+    color: var(--ink-strong);
+    font-weight: 600;
     text-transform: none;
     letter-spacing: 0;
+    border-bottom: 1px solid var(--line) !important;
+    padding: 14px 16px;
+    font-size: 0.86rem;
   }
-  tbody tr:nth-child(even) td { background: rgba(0, 0, 0, 0.015); }
+  td {
+    color: var(--ink);
+    border-bottom: 1px solid var(--line) !important;  /* hairline 提亮, 行间能看清 */
+    padding: 14px 16px;
+  }
+  td strong { color: var(--ink-strong); font-weight: 600; }
+  /* 雨马反差: 偶数行用更明显的灰 */
+  tbody tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.025);
+  }
+  tbody tr:hover td {
+    background: var(--accent-soft);
+    color: var(--ink-strong);
+  }
+  tbody tr:last-child td { border-bottom: none !important; }
 
-  /* —— 代码块: 圆角更大 + Meta dark code —— */
+  /* —— 代码块: 极深底 —— */
   pre {
     border-radius: var(--radius-md);
-    background: #1c1e21;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
   }
   code {
     border-radius: var(--radius-xs);
-    background: var(--accent-soft);
-    color: var(--accent-strong);
+    background: var(--code-inline-bg);
+    color: var(--code-inline-ink);
     border: none;
     font-weight: 500;
   }
 
-  /* —— Sidebar 目录: active 项 Meta blue 实心 —— */
+  /* —— Sidebar: 深色 dashboard 侧栏 + 蓝色 active —— */
   .sidebar__inner {
     border-radius: var(--radius-lg);
-    border-color: rgba(0, 0, 0, 0.06);
-    background: #ffffff;
+    border-color: var(--line);
+    background: var(--paper);
   }
+  .sidebar__title { color: var(--muted); }
   .sidebar__list a {
     border-left: none;
     border-radius: var(--radius-md);
-    margin: 2px 0;
+    margin: 1px 0;
     padding: 7px 12px;
+    text-decoration: none;
+    color: var(--ink-soft);
   }
   .sidebar__list a:hover {
-    background: var(--accent-fade);
+    background: var(--surface);
     border-left: none;
-    color: var(--accent);
+    color: var(--ink-strong);
   }
   .sidebar__list a.is-active {
     background: var(--accent);
     color: #ffffff;
     border-left: none;
     font-weight: 600;
+    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.3);
   }
   .sidebar__list .lvl-3.is-active {
     background: var(--accent-soft);
-    color: var(--accent-strong);
-  }
-
-  /* —— 章节导航按钮: Pill 化 —— */
-  .chapter-nav__btn {
-    border-radius: var(--radius-lg);
-    background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-  }
-  .chapter-nav__btn:not(.is-disabled):hover {
-    border-color: transparent;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06), 0 0 0 1.5px var(--accent);
-    background: #ffffff;
-  }
-
-  /* —— 返回顶部: Meta Blue 单色 —— */
-  .back-to-top {
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    box-shadow: 0 8px 24px rgba(8, 102, 255, 0.3);
-  }
-  .back-to-top:hover { background: var(--accent-strong); transform: translateY(-2px); }
-
-  /* —— 阅读进度条: Meta Blue 单色, 不再彩虹 —— */
-  .reading-progress__bar {
-    background: var(--accent);
+    color: var(--accent);
     box-shadow: none;
   }
 
-  /* —— AI 划词气泡: 保留渐变 (这是产品 brand mark) —— */
-  .ai-bubble {
-    background: var(--meta-gradient);
-    box-shadow: 0 8px 24px rgba(8, 102, 255, 0.35), 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* —— 章节导航按钮: Dashboard 风 —— */
+  .chapter-nav__btn {
+    border-radius: var(--radius-lg);
+    background: var(--paper-elevated);
+    border: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .chapter-nav__btn:not(.is-disabled):hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.15);
+    background: var(--paper-elevated);
+    transform: translateY(-1px);
+  }
+  .chapter-nav__dir { color: var(--accent); }
+  .chapter-nav__title { color: var(--ink-strong); }
+
+  /* —— 返回顶部: 蓝色 pill —— */
+  .back-to-top {
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(74, 144, 255, 0.4);
+  }
+  .back-to-top:hover {
+    background: var(--accent-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 144, 255, 0.5);
   }
 
-  /* —— 搜索框: 圆角更大 —— */
+  /* —— 阅读进度条: 蓝色细线 —— */
+  .reading-progress { height: 2px; }
+  .reading-progress__bar {
+    background: var(--accent);
+    box-shadow: 0 0 12px rgba(74, 144, 255, 0.6);
+  }
+
+  /* —— AI 划词气泡: 蓝色 pill —— */
+  .ai-bubble {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(74, 144, 255, 0.4);
+  }
+  .ai-bubble:hover {
+    background: var(--accent-strong);
+    box-shadow: 0 6px 20px rgba(74, 144, 255, 0.5);
+  }
+
+  /* —— 搜索 modal: 深色 —— */
+  .search-modal { background: rgba(0, 0, 0, 0.7); }
   .search-box {
     border-radius: var(--radius-lg);
-    border-color: rgba(0, 0, 0, 0.06);
+    border-color: var(--line);
+    background: var(--paper-elevated);
   }
+  .search-box__input { color: var(--ink-strong); }
+  .search-box__input::placeholder { color: var(--muted); }
   .search-result {
     border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .search-result:hover,
+  .search-result.is-active {
+    background: var(--accent-soft);
+    color: var(--accent);
   }
 
-  /* —— Diagram caption b 标签: Meta 风 —— */
-  figure.diagram { border-radius: var(--radius-lg); border-color: rgba(0, 0, 0, 0.06); }
+  /* —— Diagram: 深色 + 蓝色边框 (修复对比度) —— */
+  figure.diagram {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--paper-elevated);
+    box-shadow: none;
+    padding: 32px 28px 22px;
+  }
+  figure.diagram figcaption {
+    color: var(--ink-soft);                    /* 比 muted 更亮 */
+    border-top-color: var(--line);
+    padding-top: 14px;
+  }
   figure.diagram figcaption b {
-    background: var(--meta-gradient);
-    color: #ffffff;
+    background: var(--accent-soft);
+    color: var(--accent);
     border-radius: var(--radius-pill);
     padding: 3px 10px;
+    border: none;
+    font-weight: 600;
+  }
+  /* SVG 内部颜色: 强制提亮所有文字与描边, 让深底图清晰 */
+  figure.diagram svg text {
+    fill: #c8c8c8;                              /* 默认文字提亮 */
+  }
+  figure.diagram svg .dia-label-strong {
+    fill: #ffffff !important;
+    font-weight: 700;
+  }
+  figure.diagram svg .dia-label-soft {
+    fill: #9aa4b8 !important;                  /* 比 muted 亮, 比 ink-soft 弱, 用蓝灰 */
+  }
+  figure.diagram svg .dia-stroke {
+    stroke: #444b5a !important;                /* 比 line-strong 亮一点 */
+  }
+  figure.diagram svg .dia-stroke-accent {
+    stroke: var(--accent) !important;
+  }
+  /* 关键修复: 把 SVG 里所有 inline 透明度 0.13 的色块统一提到 0.18-0.20 */
+  figure.diagram svg rect[style*="fill-opacity"] {
+    fill-opacity: 0.18 !important;
+    stroke-opacity: 0.85 !important;
+    stroke-width: 1.5px !important;
   }
 
-  /* —— Hero stat 在 Meta 主题下用渐变描边 —— */
-  .hero__stat:hover {
-    border-color: transparent;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06), 0 0 0 1.5px var(--accent);
-    transform: translateY(-2px);
+  /* —— Lesson Card 等 6 章彩色卡: 收敛到深色蓝 —— */
+  aside.lesson-card,
+  .lesson-card {
+    --card-band: var(--accent) !important;
+    background: var(--paper-elevated);
+    border-color: var(--line);
+    color: var(--ink);
   }
+
+  /* —— Stack Card / day-list 也要深色 —— */
+  .stack-card, .day-list, .stack-grid > * {
+    background: var(--paper-elevated);
+    border-color: var(--line);
+    color: var(--ink);
+  }
+
+  /* —— 加强: <strong> 标签 / <em> 标签 在深色下不丢色 —— */
+  strong { color: var(--ink-strong); }
+  em { color: var(--ink); }
+
+  /* ==========================================================
+     新组件: Lead Text + Term Card (深色 dashboard 风)
+     ========================================================== */
+  .lead-text {
+    font-size: 1.06rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 28px 0 14px;
+    max-width: 680px;
+    font-weight: 400;
+  }
+  .lead-text strong { color: var(--ink-strong); font-weight: 600; }
+  .lead-text + .term-stack,
+  .lead-text + .term-card { margin-top: 8px; }
+
+  .term-card {
+    background: var(--paper-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    margin: 8px 0;
+    overflow: hidden;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .term-card[open] {
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px rgba(74, 144, 255, 0.15);
+  }
+  .term-card:hover { border-color: var(--line-strong); }
+  .term-card[open]:hover { border-color: var(--accent); }
+
+  .term-card > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .term-card > summary::-webkit-details-marker { display: none; }
+  .term-card > summary::marker { content: ""; }
+
+  .term-card__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--ink-strong);
+    letter-spacing: -0.015em;
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+  }
+  .term-card__name em {
+    font-style: normal;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 6px;
+    font-size: 0.92em;
+  }
+  .term-card__hint {
+    font-size: 0.78rem;
+    color: var(--accent);
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease;
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+  }
+  .term-card__hint::after {
+    content: "↓";
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 0.92em;
+  }
+  .term-card[open] .term-card__hint::after { transform: rotate(180deg); }
+
+  .term-card__body {
+    padding: 4px 20px 20px;
+    border-top: 1px solid var(--divider);
+    color: var(--ink);
+    font-size: 0.96rem;
+    line-height: 1.74;
+  }
+  .term-card__body > *:first-child { margin-top: 14px; }
+  .term-card__body > *:last-child { margin-bottom: 0; }
+  .term-card__body p { margin: 0.6em 0; }
+  .term-card__body strong { color: var(--accent); }
+
+  .term-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0 28px;
+  }
+
+  /* —— 切换提示: 适配 light <img> 等可能的元素 —— */
+  img {
+    background: var(--paper-elevated);
+    border-color: var(--line);
+  }
+
+  /* —— 数据 metric 标签 (短数据徽章, ≤12 字符) —— */
+  .metric {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    font-weight: 600;
+    font-size: 0.88em;
+    line-height: 1.5;
+    word-break: keep-all;
+    white-space: nowrap;                     /* 短徽章不换行 */
+    text-align: center;
+    vertical-align: baseline;
+  }
+  .metric--ok { background: rgba(34, 197, 94, 0.14); color: #4ade80; border-color: rgba(34, 197, 94, 0.25); }
+  .metric--warn { background: rgba(234, 179, 8, 0.14); color: #facc15; border-color: rgba(234, 179, 8, 0.30); }
+  .metric--bad { background: rgba(239, 68, 68, 0.14); color: #f87171; border-color: rgba(239, 68, 68, 0.30); }
+
+  /* —— Studio 主题下 .cost-chip 颜色调亮以适配深底 —— */
+  .cost-chip--ok   { color: #4ade80; background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.28); }
+  .cost-chip--warn { color: #facc15; background: rgba(234, 179, 8, 0.14); border-color: rgba(234, 179, 8, 0.32); }
+  .cost-chip--bad  { color: #f87171; background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.30); }
+
+  /* ==========================================================
+     富文本特效组件 (用于打散大段文字, 帮助 ADHD 友好阅读)
+     ========================================================== */
+
+  /* 关键句行内高亮 — 半透明蓝底 + 微妙下划 */
+  .highlight {
+    background: linear-gradient(
+      180deg,
+      transparent 60%,
+      rgba(74, 144, 255, 0.22) 60%
+    );
+    color: var(--ink-strong);
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  /* 关键决断行内 pill — 比 .highlight 更强, 用于"必须记住的判断" */
+  .key-point {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: 0.92em;
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .key-point::before {
+    content: "★";
+    font-size: 0.8em;
+    line-height: 1;
+  }
+
+  /* ==========================================================
+     章节摘要卡 .section-summary
+     用法: 放在大段散文前, 列出 3 个要点抓手
+     ========================================================== */
+  .section-summary {
+    background: var(--paper-elevated);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 22px 26px 18px;
+    margin: 22px 0 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .section-summary::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 22px;
+    bottom: 22px;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  }
+  .section-summary__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section-summary__eyebrow::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--accent);
+    box-shadow: 0 2px 6px rgba(74, 144, 255, 0.3);
+  }
+  .section-summary__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--ink-strong);
+    letter-spacing: -0.018em;
+    margin: 0 0 14px;
+    line-height: 1.45;
+  }
+  .section-summary__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: ss;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .section-summary__list li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    counter-increment: ss;
+    color: var(--ink);
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+  .section-summary__list li::before {
+    content: counter(ss);
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    line-height: 1;
+  }
+  .section-summary__list li strong { color: var(--ink-strong); font-weight: 600; }
+  .section-summary__foot {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--divider);
+    font-size: 0.84rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-summary__foot a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .section-summary__foot a:hover { text-decoration: underline; }
 }
 
 /* ============================================================
-   Dark 主题下也是 FB Dark Mode 风, 沿用 Meta 强化层的部分
+   富文本组件在非 Studio 主题下的 fallback 样式
    ============================================================ */
-html[data-theme="dark"] {
-  body {
-    font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
+.highlight {
+  background: linear-gradient(180deg, transparent 60%, rgba(255, 220, 80, 0.45) 60%);
+  padding: 0 2px;
+}
+.key-point {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.92em;
+}
+.key-point::before { content: "★"; font-size: 0.8em; }
+
+.section-summary {
+  background: var(--paper-elevated, #fff);
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 16px;
+  padding: 22px 26px 18px;
+  margin: 22px 0 28px;
+  position: relative;
+}
+.section-summary::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 22px;
+  bottom: 22px;
+  width: 3px;
+  background: var(--accent, #000);
+  border-radius: 0 999px 999px 0;
+}
+.section-summary__eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent, #000);
+  margin-bottom: 8px;
+  display: block;
+}
+.section-summary__title {
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 14px;
+  line-height: 1.45;
+}
+.section-summary__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: ss;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.section-summary__list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  counter-increment: ss;
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+.section-summary__list li::before {
+  content: counter(ss);
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  background: var(--accent-soft, #f0f0f0);
+  color: var(--accent, #000);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  line-height: 1;
+}
+.section-summary__foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--divider, #efefef);
+  font-size: 0.84rem;
+  color: var(--muted, #666);
+}
+
+/* ============================================================
+   ADHD 学习模式组件
+   - learning-deck: 章节卡导航 + 勾选进度
+   - focus-text: 长段落自动折叠/展开
+   ============================================================ */
+.learning-deck {
+  display: none;
+  margin: 24px 0 30px;
+  padding: 22px 24px 18px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 16px;
+  background: var(--paper-elevated, #fff);
+}
+.learning-deck__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.learning-deck__head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  border: none;
+  padding: 0;
+}
+.learning-deck__progress {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--muted);
+  font-family: "Inter", "PingFang SC", sans-serif;
+}
+.learning-deck__lead {
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+.learning-deck__controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.learning-deck__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.learning-empty {
+  padding: 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+.learning-card {
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 14px;
+  background: var(--paper-elevated, #fff);
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 168px;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.learning-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent, #000);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+.learning-card.is-done {
+  opacity: 0.9;
+  border-color: color-mix(in srgb, var(--accent, #000) 35%, var(--line, #ddd));
+}
+.learning-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.learning-card__chapter {
+  font-family: "Inter", "PingFang SC", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.learning-card__done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  user-select: none;
+}
+.learning-card__done input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+.learning-card__title {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: var(--ink-strong);
+  font-family: "Inter", "PingFang SC", sans-serif;
+}
+.learning-card__summary {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  flex: 1;
+}
+.learning-card__meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 20px;
+}
+.learning-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  font-family: "Inter", "PingFang SC", sans-serif;
+  white-space: nowrap;
+}
+.learning-card__go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface, #f4f4f4);
+  color: var(--ink-strong);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: "Inter", "PingFang SC", sans-serif;
+}
+.learning-card__go:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  text-decoration: none;
+}
+
+/* 长段落折叠 */
+.focus-text__toggle {
+  display: none;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-family: "Inter", "PingFang SC", sans-serif;
+  cursor: pointer;
+  margin: -2px 0 12px;
+}
+.focus-text__toggle:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: var(--accent-soft);
+}
+
+html[data-readmode="focus"] .learning-deck {
+  display: block;
+}
+html[data-readmode="focus"] .sidebar {
+  display: none !important;
+}
+html[data-readmode="focus"] .page {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-readmode="focus"] .term-intro {
+  display: none;
+}
+html[data-readmode="focus"] #book-content p.focus-text {
+  position: relative;
+  max-height: 5.4em;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+html[data-readmode="focus"] #book-content p.focus-text:not(.is-expanded)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2.4em;
+  background: linear-gradient(to bottom, transparent, var(--paper, #fff));
+  pointer-events: none;
+}
+html[data-readmode="focus"] #book-content p.focus-text.is-expanded {
+  max-height: none;
+}
+html[data-readmode="focus"] #book-content p.focus-text + .focus-text__toggle {
+  display: inline-flex;
+}
+
+@media (max-width: 768px) {
+  .learning-deck {
+    padding: 14px 14px 12px;
+    border-radius: 14px;
   }
-  .topbar {
-    background: rgba(36, 37, 38, 0.85);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  .learning-deck__grid {
+    grid-template-columns: 1fr;
   }
-  .topbar__logo {
-    background: var(--meta-gradient);
-    box-shadow: 0 4px 16px rgba(46, 137, 255, 0.4);
-  }
-  .topbar__logo-cell:nth-child(1) { background: #4a9aff; }
-  .topbar__logo-cell:nth-child(2) { background: #a78bfa; }
-  .topbar__logo-cell:nth-child(3) { background: #f472b6; }
-  .topbar__logo-cell:nth-child(4) { background: #fb923c; }
-  .reading-progress__bar { background: var(--meta-gradient); }
-  .back-to-top { background: var(--meta-gradient); }
-  .ai-bubble { background: var(--meta-gradient); }
-  h1::after {
-    content: "";
-    display: block;
-    width: 64px;
-    height: 5px;
-    margin-top: 18px;
-    border-radius: var(--radius-pill);
-    background: var(--meta-gradient);
-  }
-  .hero__title em {
-    background: var(--meta-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-  }
-  .hero__stat-num {
-    background: var(--meta-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-  }
-  .topbar__actions a.icon-btn[href*="github"] {
-    background: var(--accent);
-    color: #ffffff;
-  }
-  figure.diagram figcaption b {
-    background: var(--meta-gradient);
-    color: #ffffff;
-    border-radius: var(--radius-pill);
-    padding: 3px 10px;
+  .learning-card {
+    min-height: 0;
   }
 }
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0866ff" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#18191a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
   <meta name="description" content="一本面向 2026 年现实环境的开源教材：把『看懂系统 → 做对架构 → 用 AI 落地 → 经营成一人公司』完整串成一条线。" />
   <meta name="author" content="PENG" />
   <meta name="keywords" content="软件架构, 敏捷, AI 原生开发, vibe coding, 一人公司, 一人产品, Cursor, 平台工程" />
@@ -18,8 +18,8 @@
 
   <title>一人公司·从 0 到 1 · 软件架构 × 敏捷 × AI 原生开发 × 一人商业化</title>
 
-  <!-- Favicon (inline SVG, SOLO 四宫格 - Meta 四彩渐变, 任何设备无需额外文件) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><clipPath id='c'><rect width='64' height='64' rx='14'/></clipPath></defs><g clip-path='url(%23c)'><rect width='32' height='32' x='0' y='0' fill='%230866ff'/><rect width='32' height='32' x='32' y='0' fill='%238b5cf6'/><rect width='32' height='32' x='0' y='32' fill='%23ec4899'/><rect width='32' height='32' x='32' y='32' fill='%23f97316'/><g font-family='Inter,Helvetica,sans-serif' font-weight='900' font-size='22' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'><text x='16' y='17'>S</text><text x='48' y='17'>O</text><text x='16' y='49'>L</text><text x='48' y='49'>O</text></g></g></svg>" />
+  <!-- Favicon (inline SVG, SOLO 四宫格 - 蓝色 Studio 风) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><clipPath id='c'><rect width='64' height='64' rx='14'/></clipPath></defs><g clip-path='url(%23c)'><rect width='32' height='32' x='0' y='0' fill='%234a90ff'/><rect width='32' height='32' x='32' y='0' fill='%232d7aef'/><rect width='32' height='32' x='0' y='32' fill='%236ba5ff'/><rect width='32' height='32' x='32' y='32' fill='%231f5fcc'/><g font-family='Inter,Helvetica,sans-serif' font-weight='800' font-size='22' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'><text x='16' y='17'>S</text><text x='48' y='17'>O</text><text x='16' y='49'>L</text><text x='48' y='49'>O</text></g></g></svg>" />
 
   <!-- Fonts (优雅降级，离线时回退到系统字体) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -46,6 +46,8 @@
         if (t && t !== "auto") document.documentElement.setAttribute("data-theme", t);
         var f = localStorage.getItem("yrgs.fontSize");
         if (f) document.documentElement.setAttribute("data-fontsize", f);
+        var rm = localStorage.getItem("yrgs.readMode");
+        if (rm) document.documentElement.setAttribute("data-readmode", rm);
       } catch (e) {}
     })();
   </script>
@@ -93,10 +95,10 @@
       <div class="menu__title">主题</div>
       <div class="menu__row" role="group" aria-label="主题切换">
         <button class="menu__pill" type="button" data-theme-pill="auto" aria-pressed="true">跟随系统</button>
-        <button class="menu__pill" type="button" data-theme-pill="meta" aria-pressed="false">Meta</button>
+        <button class="menu__pill" type="button" data-theme-pill="studio" aria-pressed="false">Studio</button>
+        <button class="menu__pill" type="button" data-theme-pill="threads" aria-pressed="false">Threads</button>
         <button class="menu__pill" type="button" data-theme-pill="paper" aria-pressed="false">纸感</button>
         <button class="menu__pill" type="button" data-theme-pill="dark" aria-pressed="false">深夜</button>
-        <button class="menu__pill" type="button" data-theme-pill="sepia" aria-pressed="false">护眼</button>
       </div>
       <div class="menu__title">字号</div>
       <div class="menu__row" role="group" aria-label="字号切换">
@@ -105,10 +107,15 @@
         <button class="menu__pill" type="button" data-font-pill="l" aria-pressed="false">大</button>
         <button class="menu__pill" type="button" data-font-pill="xl" aria-pressed="false">特大</button>
       </div>
+      <div class="menu__title">学习模式</div>
+      <div class="menu__row" role="group" aria-label="学习模式切换">
+        <button class="menu__pill" type="button" data-readmode-pill="book" aria-pressed="true">教材</button>
+        <button class="menu__pill" type="button" data-readmode-pill="focus" aria-pressed="false">ADHD</button>
+      </div>
       <div class="menu__title">快捷键</div>
       <div style="padding: 6px 8px 8px; font-family: 'Inter', sans-serif; font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
         <kbd>⌘/Ctrl + K</kbd> 或 <kbd>/</kbd> 搜索<br/>
-        <kbd>T</kbd> 切换主题 · <kbd>G</kbd> 回到顶部
+        <kbd>T</kbd> 切换主题 · <kbd>F</kbd> 切学习模式 · <kbd>G</kbd> 回到顶部
       </div>
     </div>
   </header>
@@ -138,6 +145,38 @@
     <main class="main" id="content">
       <!-- 英雄区 -->
       <section class="hero" aria-labelledby="hero-title">
+        <!-- Studio 主题专属: 蓝色 3D 装饰球, 致敬截图右侧 AI Assistant 视觉锚点 -->
+        <svg class="hero__orb" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="orbCore" cx="35%" cy="32%" r="68%">
+              <stop offset="0%" stop-color="#a8c8ff" stop-opacity="0.95" />
+              <stop offset="40%" stop-color="#4a90ff" stop-opacity="0.85" />
+              <stop offset="100%" stop-color="#0d3a8a" stop-opacity="0.95" />
+            </radialGradient>
+            <radialGradient id="orbHalo" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#4a90ff" stop-opacity="0.5" />
+              <stop offset="60%" stop-color="#4a90ff" stop-opacity="0.18" />
+              <stop offset="100%" stop-color="#4a90ff" stop-opacity="0" />
+            </radialGradient>
+            <radialGradient id="orbHighlight" cx="30%" cy="25%" r="40%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+          <!-- 外层光晕 -->
+          <circle cx="100" cy="100" r="98" fill="url(#orbHalo)" />
+          <!-- 主球体 -->
+          <circle cx="100" cy="100" r="62" fill="url(#orbCore)" />
+          <!-- 顶部高光 -->
+          <ellipse cx="82" cy="80" rx="22" ry="14" fill="url(#orbHighlight)" />
+          <!-- 数据点装饰 -->
+          <circle cx="40" cy="50" r="2" fill="#4a90ff" opacity="0.6" />
+          <circle cx="170" cy="65" r="1.5" fill="#6ba5ff" opacity="0.7" />
+          <circle cx="160" cy="155" r="2.5" fill="#4a90ff" opacity="0.5" />
+          <circle cx="35" cy="160" r="1.8" fill="#a8c8ff" opacity="0.6" />
+          <circle cx="180" cy="105" r="1.2" fill="#4a90ff" opacity="0.5" />
+        </svg>
+
         <div class="hero__badges">
           <span class="hero__badge hero__badge--accent">★ 开源学习项目</span>
           <span class="hero__badge">软件架构</span>
@@ -170,10 +209,86 @@
             <span class="hero__stat-label">预计阅读</span>
           </div>
           <div class="hero__stat">
-            <span class="hero__stat-num">3</span>
+            <span class="hero__stat-num">4</span>
             <span class="hero__stat-label">阅读主题</span>
           </div>
         </div>
+      </section>
+
+      <!-- 开篇术语速览 — 进章节前先把 4 个核心术语点开看看, 后面的章节会顺很多 -->
+      <section class="term-intro" aria-labelledby="term-intro-title">
+        <h2 id="term-intro-title" class="visually-grouped-title" style="margin-top:2.4em;">先认这四个词，再读后面会顺很多</h2>
+        <p class="lead-text">
+          这本教材反复回到 <strong>四个术语</strong>。它们不是新词，但每个都被很多文章用糊了——把它们重新对齐一次，
+          后面 16 章里出现的 <strong>ADR</strong>、<strong>平台工程</strong>、<strong>可观测性</strong>、<strong>Agent 编排</strong>
+          这些更具体的概念才会落到对的位置。点开你拿不准的那一张就好。
+        </p>
+        <div class="term-stack">
+
+          <details class="term-card">
+            <summary>
+              <span class="term-card__name">软件架构工程 <em>Software Architecture Engineering</em></span>
+              <span class="term-card__hint">查看简释</span>
+            </summary>
+            <div class="term-card__body">
+              <p>架构 <strong>不是画图</strong>，而是<strong>管理那些一旦做错、改回来代价很大的决策</strong>——比如要不要拆服务、用哪种数据库、AI 模型放本地还是 API、团队按业务还是按技术划分。</p>
+              <p>架构工程的产物不是漂亮的方框图，而是 <strong>一组被记下来、能被复盘的决策</strong>（这就是 ADR — Architecture Decision Record 的来源）。第 2 章会展开。</p>
+            </div>
+          </details>
+
+          <details class="term-card">
+            <summary>
+              <span class="term-card__name">敏捷项目管理 <em>Agile Project Management</em></span>
+              <span class="term-card__hint">查看简释</span>
+            </summary>
+            <div class="term-card__body">
+              <p>大多数人把"敏捷"理解成 <strong>站会 + 看板 + 两周冲刺</strong>，这是<strong>仪式化敏捷</strong>，最容易翻车。</p>
+              <p>本教材里"敏捷"指的是另一件事：<strong>承认架构和需求都会演进，所以提前把"反馈、修正、再交付"做成系统能力</strong>——它是复杂架构落地的<strong>承接机制</strong>，不是项目流程的装饰。第 7 章会专门把它放回正确位置。</p>
+            </div>
+          </details>
+
+          <details class="term-card">
+            <summary>
+              <span class="term-card__name">AI 原生开发 <em>AI-Native Development</em></span>
+              <span class="term-card__hint">查看简释</span>
+            </summary>
+            <div class="term-card__body">
+              <p>AI 原生开发<strong>不等于"用 Copilot 写代码"</strong>。它指<strong>整个开发流程围绕 AI 重新组织</strong>：上下文怎么准备、任务怎么切、AI 改完怎么验证、出错怎么回滚、上线后怎么观察。</p>
+              <p>判断标准很简单：<strong>能不能让一个人完成原本需要三五人的事，且代码不烂、能维护</strong>。第 13–14 章会把整套流水线拆开讲。</p>
+            </div>
+          </details>
+
+          <details class="term-card">
+            <summary>
+              <span class="term-card__name">vibe coding <em>氛围编程 · 跟着 AI "感觉走"的编码方式</em></span>
+              <span class="term-card__hint">查看简释</span>
+            </summary>
+            <div class="term-card__body">
+              <p>vibe coding 由 Andrej Karpathy 提出，原意是<strong>"接受 AI 给的代码、不细看、跑通就用"</strong>——在小玩具项目里很爽，在生产系统里通常很贵。</p>
+              <p>本教材的立场是 <strong>"受控的 vibe coding"</strong>：保留它的效率（让 AI 大量生成草稿），但用<strong>评审、测试、版本回滚和可观测性</strong>把代价压住。第 13 章给了 5 条 PENG 亲自踩过的失败教训。</p>
+            </div>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- ADHD 学习导航：在 focus 模式显示，用章节卡做交互学习入口 -->
+      <section id="learningDeck" class="learning-deck" aria-labelledby="learning-deck-title">
+        <div class="learning-deck__head">
+          <h2 id="learning-deck-title">ADHD 学习导航 · 先选一张卡再读</h2>
+          <p id="learningDeckProgress" class="learning-deck__progress">完成进度 0/0</p>
+        </div>
+        <p class="learning-deck__lead">
+          你不需要顺序读完整本教材。先选一章，完成后勾选 <strong>已读</strong>，再走下一章。
+          如果注意力波动，建议先筛选 <strong>有图解</strong> 或 <strong>有表格</strong> 的章节。
+        </p>
+        <div class="learning-deck__controls" role="group" aria-label="学习卡筛选">
+          <button class="menu__pill learning-filter" type="button" data-learning-filter="all" aria-pressed="true">全部章节</button>
+          <button class="menu__pill learning-filter" type="button" data-learning-filter="figure" aria-pressed="false">有图解</button>
+          <button class="menu__pill learning-filter" type="button" data-learning-filter="table" aria-pressed="false">有表格</button>
+          <button class="menu__pill learning-filter" type="button" data-learning-filter="callout" aria-pressed="false">有要点卡</button>
+        </div>
+        <div id="learningDeckGrid" class="learning-deck__grid"></div>
       </section>
 
       <!-- 章节地图 -->
@@ -394,12 +509,36 @@
 </tbody>
 </table>
 <h2 id="_5">本卷说明</h2>
-<p>本卷是教材第一版正文，定位为<strong>课程主教材与总论卷</strong>。它的职责不是穷尽一切实现细节，而是在一本可教学、可复用、可继续扩展的文稿中，把现代复杂软件系统的主要对象、关键矛盾与交叉学科方法建立起来。当前版本已经扩展至十六章，除总论、组织协同、平台工程、前沿基础设施与技术栈深描外，还新增了 <strong>AI 原生开发、Cursor 风格工程流、一人开发、一人商业化与一人公司</strong> 这条面向 2026 年现实环境的重要主线，因此它既可以独立用于一天密集课程，也可以作为后续分册教材的总纲。</p>
+
+<aside class="section-summary" aria-label="本卷判断摘要">
+  <span class="section-summary__eyebrow">本卷判断</span>
+  <h3 class="section-summary__title">读这一节之前，先记住三件事</h3>
+  <ol class="section-summary__list">
+    <li>这是<strong>课程主教材与总论卷</strong>，不是细节手册——它的职责是建立完整地图，不是穷尽实现。</li>
+    <li>16 章覆盖：总论 → 组织协同 → 平台工程 → 前沿基础设施 → 技术栈 → <strong>AI 原生开发 / Cursor 工程流 / 一人公司</strong> 这条 2026 主线。</li>
+    <li>它既能<strong>一天密集课程</strong>讲完，也能作为<strong>后续分册教材</strong>的总纲。</li>
+  </ol>
+  <div class="section-summary__foot">不想看长文？以上 3 句就是本节核心。</div>
+</aside>
+
+<p>本卷是教材第一版正文，定位为<strong>课程主教材与总论卷</strong>。它的职责<span class="highlight">不是穷尽一切实现细节</span>，而是在一本可教学、可复用、可继续扩展的文稿中，把现代复杂软件系统的主要对象、关键矛盾与交叉学科方法建立起来。当前版本已经扩展至十六章，除总论、组织协同、平台工程、前沿基础设施与技术栈深描外，还新增了 <strong>AI 原生开发、Cursor 风格工程流、一人开发、一人商业化与一人公司</strong> 这条面向 2026 年现实环境的重要主线，因此它既可以独立用于一天密集课程，也可以作为后续分册教材的总纲。</p>
 <hr />
 <h2 id="_6">前言</h2>
-<p>这不是一本把“架构”和“敏捷”简单拼接在一起的教材。传统教材经常把软件架构写成静态设计问题，把敏捷项目管理写成流程执行问题，于是读者最后得到两套彼此分离的知识：一套用于讨论系统该如何设计，另一套用于讨论团队该如何开会、排期与推进。然而，真实世界中的复杂软件系统从来不是这样运行的。一个现代软件系统之所以成功，通常不是因为它单独拥有某种先进技术，也不是因为它机械遵循了某种流程，而是因为它在<strong>技术栈、架构边界、平台能力、组织结构、反馈机制与演进节奏</strong>之间建立了可持续的耦合关系。</p>
-<p>本教材因此采用一个更符合现实的软件工程视角：<strong>软件架构工程是主轴，敏捷项目管理是复杂系统实施与演进的承接机制</strong>。在这个框架下，CPU、GPU、网络、容器、Kubernetes、数据库、缓存、消息队列、可观测性、平台工程、Team Topologies、DORA 指标、AI 基础设施、RAG 系统和多团队路线图，不再属于不同课程中的孤立章节，而共同构成同一个对象——现代复杂软件系统。<a href="https://dora.dev/capabilities/platform-engineering/" title="DORA | Capabilities: Platform engineering">1</a> <a href="https://learn.microsoft.com/en-us/platform-engineering/case-study" title="Microsoft Learn - Case Studies: Customer Platform Engineering Implementations">3</a> <a href="https://learn.microsoft.com/en-us/platform-engineering/case-study" title="Microsoft Learn - Case Studies: Three platform engineering implementations">5</a></p>
-<p>这本教材的目标，不是让你在几小时内记住更多术语，而是让你形成一种能在真实项目中工作的解释框架。当你面对一个电商平台、一个全球化 SaaS、一个 AI 原生协作系统，或者一个工业边缘平台时，你应当能够同时回答以下问题：系统为什么必须这样分层；技术栈为什么不能只看流行度；服务边界为什么会决定团队边界；平台工程为什么是研发组织扩张后的必需品；AI 时代的软件架构为什么开始受到 GPU 调度、模型服务和向量检索的反向塑造；以及敏捷管理究竟如何帮助这些复杂结构真正落地，而不是变成一种仪式化的安慰剂。</p>
+
+<aside class="section-summary" aria-label="前言判断摘要">
+  <span class="section-summary__eyebrow">前言判断</span>
+  <h3 class="section-summary__title">如果只看一段，看这三个判断就够</h3>
+  <ol class="section-summary__list">
+    <li>架构和敏捷不能拆开教——<strong>它们解决的是同一个问题的两面</strong>：一个回答"系统该长什么样"，一个回答"团队怎么把它真正做出来"。</li>
+    <li>本教材的视角是 <span class="key-point">软件架构工程是主轴，敏捷是承接机制</span>。这是后面 16 章的底层判断。</li>
+    <li>读完后你应该能在真实项目里回答<strong>"为什么必须这样分层""为什么不能只看流行度""为什么平台工程不是奢侈品"</strong>这一类问题——而不是只多记几个术语。</li>
+  </ol>
+  <div class="section-summary__foot">下面三段散文是把这三个判断展开的论证。</div>
+</aside>
+
+<p>这不是一本把"架构"和"敏捷"简单拼接在一起的教材。<span class="highlight">传统教材经常把软件架构写成静态设计问题，把敏捷项目管理写成流程执行问题</span>，于是读者最后得到两套彼此分离的知识：一套用于讨论系统该如何设计，另一套用于讨论团队该如何开会、排期与推进。然而，真实世界中的复杂软件系统从来不是这样运行的。一个现代软件系统之所以成功，通常不是因为它单独拥有某种先进技术，也不是因为它机械遵循了某种流程，而是因为它在<strong>技术栈、架构边界、平台能力、组织结构、反馈机制与演进节奏</strong>之间建立了可持续的耦合关系。</p>
+<p>本教材因此采用一个更符合现实的软件工程视角：<span class="highlight">软件架构工程是主轴，敏捷项目管理是复杂系统实施与演进的承接机制</span>。在这个框架下，CPU、GPU、网络、容器、Kubernetes、数据库、缓存、消息队列、可观测性 (Observability)、平台工程 (Platform Engineering)、Team Topologies (团队拓扑模型)、DORA 指标 (DevOps Research and Assessment 的四大研发效能指标)、AI 基础设施、RAG 系统 (Retrieval-Augmented Generation，检索增强生成) 和多团队路线图，不再属于不同课程中的孤立章节，而共同构成同一个对象——现代复杂软件系统。<a href="https://dora.dev/capabilities/platform-engineering/" title="DORA | Capabilities: Platform engineering">1</a> <a href="https://learn.microsoft.com/en-us/platform-engineering/case-study" title="Microsoft Learn - Case Studies: Customer Platform Engineering Implementations">3</a> <a href="https://learn.microsoft.com/en-us/platform-engineering/case-study" title="Microsoft Learn - Case Studies: Three platform engineering implementations">5</a></p>
+<p>这本教材的目标，<span class="highlight">不是让你在几小时内记住更多术语，而是让你形成一种能在真实项目中工作的解释框架</span>。当你面对一个电商平台、一个全球化 SaaS、一个 AI 原生协作系统，或者一个工业边缘平台时，你应当能够同时回答以下问题：系统为什么必须这样分层；技术栈为什么不能只看流行度；服务边界为什么会决定团队边界；平台工程为什么是研发组织扩张后的必需品；AI 时代的软件架构为什么开始受到 GPU 调度、模型服务和向量检索的反向塑造；以及敏捷管理究竟如何帮助这些复杂结构真正落地，而不是变成一种仪式化的安慰剂。</p>
 <table>
 <thead>
 <tr>
@@ -3225,7 +3364,7 @@
 <td>Stripe Billing</td>
 <td>试用、按量、Coupon、Proration、发票、Tax、Customer Portal 全套</td>
 <td>Lemon Squeezy (含税) · Polar.sh · Paddle</td>
-<td><span class="metric metric--ok">2.9% + $0.30 / 笔</span></td>
+<td><span class="cost-chip cost-chip--ok">2.9% + $0.30 / 笔</span></td>
 </tr>
 <tr>
 <td><strong>事务邮件</strong></td>
@@ -3246,7 +3385,7 @@
 <td>PostHog (免费档)</td>
 <td>事件 + Session Replay + Feature Flag + A/B 一站式</td>
 <td>Mixpanel · Amplitude</td>
-<td><span class="metric metric--ok">$0 (1M event/月免费)</span></td>
+<td><span class="cost-chip cost-chip--ok">$0 (1M event/月免费)</span></td>
 </tr>
 <tr>
 <td><strong>账务 / 税务 / 发票</strong></td>
@@ -3595,37 +3734,37 @@
 <td><strong>① 选题</strong></td>
 <td>我做的事情是不是用户真的有人愿意付钱解决？</td>
 <td>① 周访谈数（≥3）<br/>② 候选 idea 列表长度（≥5）<br/>③ 已验证 idea 的"愿付费指标"（如预购、deposit）</td>
-<td><span class="metric metric--bad">连续 4 周访谈 = 0 → 项目方向危险</span></td>
+<td><span class="cost-chip cost-chip--bad">连续 4 周访谈 = 0 → 项目方向危险</span></td>
 </tr>
 <tr>
 <td><strong>② 产品</strong></td>
 <td>核心动作是否真的能在 60 秒内被新用户完成？</td>
 <td>① TTV (time-to-first-value)<br/>② 激活转化（注册→首次完成核心动作）<br/>③ 7 日留存</td>
-<td><span class="metric metric--warn">激活率 &lt; 30% → onboarding 出问题</span></td>
+<td><span class="cost-chip cost-chip--warn">激活率 &lt; 30% → onboarding 出问题</span></td>
 </tr>
 <tr>
 <td><strong>③ 分发</strong></td>
 <td>有没有一条不依赖广告投放的可重复获客通路？</td>
 <td>① 周新增访问<br/>② 渠道集中度（最大渠道占比）<br/>③ 内容产出（周发文 / 周活动数）</td>
-<td><span class="metric metric--bad">单一渠道 &gt; 70% → 渠道风险</span></td>
+<td><span class="cost-chip cost-chip--bad">单一渠道 &gt; 70% → 渠道风险</span></td>
 </tr>
 <tr>
 <td><strong>④ 转化</strong></td>
 <td>访客 → 注册 → 付费的漏斗是不是在收敛？</td>
 <td>① 访问→注册转化<br/>② 注册→付费转化<br/>③ ARPU (每用户平均收入)</td>
-<td><span class="metric metric--warn">注册→付费 &lt; 2% → 定价 / 价值传递有问题</span></td>
+<td><span class="cost-chip cost-chip--warn">注册→付费 &lt; 2% → 定价 / 价值传递有问题</span></td>
 </tr>
 <tr>
 <td><strong>⑤ 交付</strong></td>
 <td>系统能不能在我不在场时也把价值送给用户？</td>
 <td>① Uptime %<br/>② P95 响应时间<br/>③ 客服响应中位数（自助 + 人工）</td>
-<td><span class="metric metric--bad">月故障 &gt; 3 次 OR 单次 &gt; 30min → 必须复盘</span></td>
+<td><span class="cost-chip cost-chip--bad">月故障 &gt; 3 次 OR 单次 &gt; 30min → 必须复盘</span></td>
 </tr>
 <tr>
 <td><strong>⑥ 复购</strong></td>
 <td>付费用户是否在持续付费？</td>
 <td>① 月度 churn rate<br/>② NRR (净收入留存)<br/>③ 推荐 / NPS / Reviews</td>
-<td><span class="metric metric--bad">月 churn &gt; 8% → 产品价值不达期望</span></td>
+<td><span class="cost-chip cost-chip--bad">月 churn &gt; 8% → 产品价值不达期望</span></td>
 </tr>
 </tbody>
 </table>
