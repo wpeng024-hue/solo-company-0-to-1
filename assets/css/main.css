@@ -34,6 +34,25 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
+/* 暗色主题用 sans-serif: 衬线在低亮度背景上 anti-aliasing 会糊,
+   GitHub/Linear/Notion/Vercel 的暗模式都是 sans. 浅色主题保留衬线. */
+[data-theme="studio"] body,
+[data-theme="dark"] body {
+  font-family: "Inter", "SF Pro Text", "PingFang SC", "Microsoft YaHei",
+    "Helvetica Neue", system-ui, sans-serif;
+  font-feature-settings: "kern", "liga", "tnum";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 暗模式下正文段落: 行高拉开 + 中文字距加大,
+   让"一段散文"不再像一堵墙. 只动 .main 内的 p, 不影响卡片/表格里的 p. */
+[data-theme="studio"] .main p,
+[data-theme="dark"] .main p {
+  line-height: 1.95;
+  letter-spacing: 0.012em;
+}
+
 body {
   min-height: 100vh;
   overflow-x: hidden;
@@ -555,11 +574,15 @@ h4:hover .heading-anchor {
 
 p {
   font-size: 1.02rem;
-  margin: 0.85em 0;
+  margin: 1.2em 0;          /* 段距 0.85em → 1.2em, 让眼睛在段落之间能"呼吸" */
   color: var(--ink);
   word-wrap: break-word;
 }
 strong { color: var(--ink-strong); font-weight: 700; }
+
+/* 暗模式下 strong 多一点笔画重量, 黑底上 700 偶尔会显瘦 */
+[data-theme="studio"] strong,
+[data-theme="dark"] strong { font-weight: 800; }
 
 blockquote {
   margin: 1.5em 0;

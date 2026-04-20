@@ -33,25 +33,27 @@
    ============================================================ */
 :root,
 [data-theme="studio"] {
-  /* 背景层级 (深色 dashboard 关键: 三层灰阶) */
-  --bg: #0a0a0a;                    /* 主底, 近纯黑 */
-  --bg-soft: #131313;
-  --paper: #161616;                 /* 卡片底, 比 bg 略亮 */
-  --paper-elevated: #1c1c1c;        /* 上层卡片, 更亮 */
-  --surface: #232323;               /* icon button / chip 底 */
-  --surface-hover: #2a2a2a;
+  /* 背景层级 — 缓和眩光: bg 从 #0a0a0a 抬到 #111114, 三层灰阶之间用更细的台阶
+     研究: 长文阅读时纯黑 #000-#0a 会让瞳孔反复调节, 17:1 对比度刺眼;
+            GitHub/Linear/Vercel 都用 #0d/#11/#13 这一档而非纯黑. */
+  --bg: #111114;                    /* 主底, 接近 GitHub Dark */
+  --bg-soft: #16171a;
+  --paper: #1a1b1e;                 /* 卡片底, 比 bg 抬一档 */
+  --paper-elevated: #1f2024;        /* 上层卡片, 再抬一档 */
+  --surface: #25262b;               /* icon button / chip 底 */
+  --surface-hover: #2c2d33;
 
-  /* 文字 — 浅色, 有层次 */
-  --ink: #e5e5e5;
-  --ink-strong: #ffffff;
-  --ink-soft: #a8a8a8;
-  --muted: #6e6e6e;
-  --muted-2: #4a4a4a;
+  /* 文字 — 降一档对比度, 17:1 → 11:1 (依然过 WCAG AAA, 但不眩) */
+  --ink: #d0d0d0;                   /* 正文: 米白偏暖 */
+  --ink-strong: #ffffff;            /* 强调/标题保持纯白, 让 strong 凸出 */
+  --ink-soft: #9aa0a6;              /* 副文本提一档可读性 */
+  --muted: #6e7480;
+  --muted-2: #484c54;
 
   /* 线条 — 深色 hairline */
-  --line: #2a2a2a;
-  --line-strong: #3a3a3a;
-  --divider: #1f1f1f;
+  --line: #2a2c32;
+  --line-strong: #3a3d44;
+  --divider: #1f2126;
 
   /* 主色 — 夜空蓝 (Dashboard 风的强调蓝) */
   --accent: #4a90ff;
@@ -61,20 +63,22 @@
   --accent-ring: rgba(74, 144, 255, 0.4);
 
   /* 语义色 */
-  --quote-bg: #161616;
+  --quote-bg: #1a1b1e;
   --quote-bar: var(--accent);
-  --code-bg: #050505;
+  --code-bg: #0a0a0c;
   --code-ink: #f5f5f5;
-  --code-inline-bg: #232323;
-  --code-inline-ink: #4a90ff;
+  --code-inline-bg: #25262b;
+  --code-inline-ink: #6ba5ff;
 
-  /* 6 色带统一蓝色 (Dashboard 不靠彩色分类) */
-  --band-1: #4a90ff;
-  --band-2: #4a90ff;
-  --band-3: #4a90ff;
-  --band-4: #4a90ff;
-  --band-5: #4a90ff;
-  --band-6: #4a90ff;
+  /* 6 色带 — 同明度同饱和度, hue 错开
+     OKLCH(72% 0.10 hue): 同等感知亮度 + 低饱和, 既有节奏又不刺眼
+     翻页时章节锚点重新生效, 但仍是 dashboard 克制感 */
+  --band-1: oklch(72% 0.10 200);    /* 青蓝 — 系统认知 */
+  --band-2: oklch(72% 0.10 245);    /* 蓝 — 架构 */
+  --band-3: oklch(72% 0.10 285);    /* 紫 — 协调 */
+  --band-4: oklch(72% 0.10 325);    /* 粉 — 平台 */
+  --band-5: oklch(72% 0.10 35);     /* 暖橙 — 前沿 */
+  --band-6: oklch(72% 0.10 80);     /* 黄绿 — 一人公司 */
 
   /* 阴影 (深色环境用更深的阴影) */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
