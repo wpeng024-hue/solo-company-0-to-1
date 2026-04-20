@@ -98,7 +98,7 @@ a:focus-visible {
 }
 
 ::selection {
-  background: var(--accent-soft);
+  background: var(--selection-bg);
   color: var(--ink-strong);
 }
 

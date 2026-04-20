@@ -116,6 +116,7 @@
   --accent-soft: rgba(0, 102, 204, 0.08);
   --accent-fade: rgba(0, 102, 204, 0.04);
   --accent-ring: rgba(0, 102, 204, 0.35);
+  --selection-bg: rgba(0, 122, 255, 0.28); /* Apple system text-selection blue */
 
   /* 语义色 */
   --quote-bg: #f5f5f7;
@@ -177,6 +178,7 @@
   --accent-soft: rgba(41, 151, 255, 0.14);
   --accent-fade: rgba(41, 151, 255, 0.06);
   --accent-ring: rgba(41, 151, 255, 0.4);
+  --selection-bg: rgba(10, 132, 255, 0.45); /* Apple dark-mode selection blue, 更浓以对抗黑底 */
 
   /* 语义色 */
   --quote-bg: #1d1d1f;
@@ -230,6 +232,7 @@
     --accent-soft: rgba(41, 151, 255, 0.14);
     --accent-fade: rgba(41, 151, 255, 0.06);
     --accent-ring: rgba(41, 151, 255, 0.4);
+    --selection-bg: rgba(10, 132, 255, 0.45);
     --quote-bg: #1d1d1f;
     --code-bg: #0a0a0a;
     --code-inline-bg: #2c2c2e;
