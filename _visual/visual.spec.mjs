@@ -28,7 +28,7 @@ async function setTheme(page, theme) {
   await ready(page);
 }
 
-const THEMES = ["studio", "threads", "paper", "dark"];
+const THEMES = ["light", "dark"];
 
 /* ============================================================
    Group A: 各主题下 Hero 区截图
@@ -131,7 +131,7 @@ test.describe("章节摘要卡截图", () => {
 test.describe("视觉 Contract 断言", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await setTheme(page, "studio");
+    await setTheme(page, "light");
   });
 
   test(".metric 高度必须 ≤ 单行 (32px) 否则就是塞了长文本", async ({ page }) => {
@@ -151,7 +151,7 @@ test.describe("视觉 Contract 断言", () => {
 
   test(".cost-chip 高度 ≥ 22px 且 ≤ 120px (合理区间)", async ({ page }) => {
     await page.goto("/#_106");
-    await setTheme(page, "studio");
+    await setTheme(page, "light");
     const chips = page.locator(".cost-chip");
     const count = await chips.count();
     expect(count).toBeGreaterThan(0);
@@ -170,40 +170,36 @@ test.describe("视觉 Contract 断言", () => {
     expect(fontSize, `Hero 标题字号 ${fontSize}px < 32px`).toBeGreaterThanOrEqual(32);
   });
 
-  test("章节卡 4 边 border 宽度一致 (修复图 4 丑边框)", async ({ page }) => {
+  test("章节卡: 三边 (右下左) border 宽度一致 (顶部 ::before 是 chapter band 不算)", async ({ page }) => {
     const card = page.locator(".chapter-card").first();
     const borders = await card.evaluate((el) => {
       const s = getComputedStyle(el);
       return {
-        top: parseFloat(s.borderTopWidth),
         right: parseFloat(s.borderRightWidth),
         bottom: parseFloat(s.borderBottomWidth),
         left: parseFloat(s.borderLeftWidth),
       };
     });
-    expect(borders.top, "上边").toBe(borders.right);
     expect(borders.right, "右边").toBe(borders.bottom);
     expect(borders.bottom, "下边").toBe(borders.left);
     expect(borders.left, "左边宽度 (检查 mobile.css 5px 是否泄漏)").toBeLessThanOrEqual(2);
   });
 
-  test("Studio 主题: 默认无 data-theme 时 body 背景必须是深色", async ({ page }) => {
+  test("默认 (无 data-theme): 背景应跟随系统 prefers-color-scheme; Apple 风没有强制色板", async ({ page }) => {
+    // light 模式下默认背景应是 #ffffff (R+G+B == 765)
+    await page.emulateMedia({ colorScheme: "light" });
     await page.evaluate(() => localStorage.removeItem("yrgs.theme"));
     await page.reload();
     await ready(page);
     const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    // 解析 rgb 并断言是深色 (R + G + B < 90, 即明显深底)
     const m = bg.match(/\d+/g);
     expect(m, `背景色解析失败: ${bg}`).toBeTruthy();
     const sum = m.slice(0, 3).reduce((a, b) => a + parseInt(b, 10), 0);
-    expect(sum, `Studio 默认背景 ${bg} 不够深, 不像 dashboard`).toBeLessThan(90);
+    expect(sum, `light 默认背景 ${bg} 不够亮, 不像 Apple Docs`).toBeGreaterThan(700);
   });
 
-  test("Hero 蓝色 3D 球必须显示 (Studio 标志元素)", async ({ page }) => {
+  test("Hero 内不再有 3D 球或装饰背景 (Apple Deference 原则)", async ({ page }) => {
     const orb = page.locator(".hero__orb");
-    await expect(orb).toBeVisible();
-    const box = await orb.boundingBox();
-    expect(box.width, "Orb 宽度").toBeGreaterThan(100);
-    expect(box.height, "Orb 高度").toBeGreaterThan(100);
+    await expect(orb).toHaveCount(0);
   });
 });

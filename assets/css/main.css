@@ -26,31 +26,26 @@ body {
   padding: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC",
-    "Times New Roman", Georgia, serif;
-  font-size: 17px;
-  line-height: 1.85;
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   font-feature-settings: "kern", "liga", "ss01";
-  transition: background-color 0.4s ease, color 0.4s ease;
-}
-
-/* 暗色主题用 sans-serif: 衬线在低亮度背景上 anti-aliasing 会糊,
-   GitHub/Linear/Notion/Vercel 的暗模式都是 sans. 浅色主题保留衬线. */
-[data-theme="studio"] body,
-[data-theme="dark"] body {
-  font-family: "Inter", "SF Pro Text", "PingFang SC", "Microsoft YaHei",
-    "Helvetica Neue", system-ui, sans-serif;
-  font-feature-settings: "kern", "liga", "tnum";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--duration-base) var(--ease-apple),
+              color var(--duration-base) var(--ease-apple);
 }
 
-/* 暗模式下正文段落: 行高拉开 + 中文字距加大,
-   让"一段散文"不再像一堵墙. 只动 .main 内的 p, 不影响卡片/表格里的 p. */
-[data-theme="studio"] .main p,
+/* 暗模式正文换 sans-serif: 衬线在 #000 上 anti-alias 会糊,
+   Apple developer.apple.com/Linear/GitHub Dark 全是 sans 正文 */
+[data-theme="dark"] body {
+  font-family: var(--font-body);
+  font-feature-settings: "kern", "liga", "tnum";
+  letter-spacing: -0.005em;
+}
 [data-theme="dark"] .main p {
-  line-height: 1.95;
-  letter-spacing: 0.012em;
+  line-height: 1.75;
+  letter-spacing: 0.008em;
 }
 
 body {
@@ -75,27 +70,35 @@ body {
   background: var(--accent);
 }
 
-::selection {
-  background: var(--accent);
-  color: var(--paper-elevated);
-}
-
 a {
-  color: var(--accent-strong);
+  color: var(--accent);
   text-decoration: none;
-  border-bottom: 1px dashed var(--accent);
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  border: none;
+  transition: color var(--duration-fast) var(--ease-apple),
+              text-decoration-color var(--duration-fast) var(--ease-apple);
 }
 a:hover {
-  color: var(--accent);
-  border-bottom-style: solid;
-  background: var(--accent-fade);
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 3px;
+  border-radius: 3px;
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 2px solid var(--accent-ring);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink-strong);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -145,11 +148,11 @@ html[data-fontsize="xl"] body { font-size: 20px; line-height: 1.95; }
   position: sticky;
   top: 0;
   z-index: 80;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-  backdrop-filter: saturate(160%) blur(14px);
-  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--divider);
-  transition: background 0.3s ease;
+  transition: background var(--duration-fast) var(--ease-apple);
 }
 .topbar__inner {
   max-width: 1280px;
@@ -489,66 +492,70 @@ html[data-fontsize="xl"] body { font-size: 20px; line-height: 1.95; }
 /* ------------------------------------------------------------
    主内容卡片
    ------------------------------------------------------------ */
+/* .main: Apple Docs 风, 直接让位给内容; 不再是带 elevation 的卡片 */
 .main {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 56px 64px 72px;
-  box-shadow: var(--shadow-md);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: var(--space-7) 0 var(--space-9);
+  box-shadow: none;
   position: relative;
-  overflow: hidden;
-}
-.main::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(1100px 360px at -10% -10%, var(--accent-fade), transparent 60%),
-    radial-gradient(900px 320px at 110% 0%, color-mix(in srgb, var(--band-5) 14%, transparent), transparent 60%);
 }
 .main > * { position: relative; }
 
 @media (max-width: 720px) {
   .main {
-    padding: 28px 20px 44px;
-    border-radius: 14px;
+    padding: var(--space-5) 0 var(--space-7);
   }
 }
 
 /* ------------------------------------------------------------
-   排版：标题、段落、引文
+   排版: Apple HIG type scale 严格化
+   - 标题用 var(--font-display) (SF Pro Display)
+   - 字号档位严格 var(--text-h1..--text-body)
+   - 不用 border 装饰, 用 weight + spacing 区分层级
    ------------------------------------------------------------ */
 h1, h2, h3, h4 {
-  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-display);
   color: var(--ink-strong);
-  line-height: 1.32;
-  margin: 1.7em 0 0.55em;
-  scroll-margin-top: 80px;
+  scroll-margin-top: 88px;
   position: relative;
+  text-wrap: balance;
 }
 h1 {
-  font-size: clamp(1.85rem, 2.4vw + 1rem, 2.5rem);
-  border-bottom: 3px solid var(--accent);
-  padding-bottom: 0.35em;
-  margin-top: 0.4em;
-  letter-spacing: -0.01em;
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  margin: 0 0 var(--space-5);
+  border: none;
+  padding: 0;
 }
 h2 {
-  font-size: clamp(1.4rem, 1.4vw + 0.9rem, 1.75rem);
-  border-left: 6px solid var(--accent);
-  padding: 4px 0 4px 14px;
-  margin-top: 2.1em;
+  font-size: var(--text-h1);
+  font-weight: 700;
+  line-height: var(--leading-h);
+  letter-spacing: var(--tracking-h);
+  margin: var(--space-8) 0 var(--space-4);
+  border: none;
+  padding: 0;
 }
 h3 {
-  font-size: clamp(1.1rem, 0.5vw + 1rem, 1.28rem);
-  color: var(--ink);
-  padding-left: 12px;
-  border-left: 3px solid var(--line-strong);
+  font-size: var(--text-h2);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-h);
+  margin: var(--space-7) 0 var(--space-3);
+  color: var(--ink-strong);
+  border: none;
+  padding: 0;
 }
 h4 {
-  font-size: 1.05rem;
-  color: var(--ink);
+  font-size: var(--text-h3);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  margin: var(--space-6) 0 var(--space-3);
+  color: var(--ink-strong);
 }
 
 /* 锚点复制按钮 */
@@ -573,16 +580,29 @@ h4:hover .heading-anchor {
 .heading-anchor.copied { color: var(--band-4); opacity: 1; }
 
 p {
-  font-size: 1.02rem;
-  margin: 1.2em 0;          /* 段距 0.85em → 1.2em, 让眼睛在段落之间能"呼吸" */
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  margin: 0 0 var(--space-5);
   color: var(--ink);
   word-wrap: break-word;
+  max-width: var(--measure);     /* 行长 ~38 中文字, Bringhurst 阅读最舒适区 */
+  text-wrap: pretty;
 }
-strong { color: var(--ink-strong); font-weight: 700; }
+/* 卡片/表格/特殊容器内的 p 不限宽度 (会撑爆 layout) */
+.tldr-card p,
+.lesson-card p,
+.callout p,
+.section-summary p,
+.term-card p,
+td p, th p,
+.ai-stash-card p,
+.section-summary__list p,
+blockquote p,
+.hero p,
+.chapter-map p { max-width: none; }
 
-/* 暗模式下 strong 多一点笔画重量, 黑底上 700 偶尔会显瘦 */
-[data-theme="studio"] strong,
-[data-theme="dark"] strong { font-weight: 800; }
+strong { color: var(--ink-strong); font-weight: 600; }
 
 blockquote {
   margin: 1.5em 0;
@@ -764,117 +784,109 @@ p > a[title]:hover {
 }
 
 /* ------------------------------------------------------------
-   英雄区（Hero）
+   英雄区（Hero）— Apple HIG 风
+   设计原则: 内容是英雄, 不是装饰. 无背景色块/无 3D 球/无渐变高亮.
+   只用 typography hierarchy 和留白讲故事.
    ------------------------------------------------------------ */
 .hero {
-  position: relative;
-  background: linear-gradient(140deg,
-    color-mix(in srgb, var(--band-2) 14%, var(--paper)),
-    color-mix(in srgb, var(--band-5) 10%, var(--paper)) 60%,
-    color-mix(in srgb, var(--band-6) 12%, var(--paper)));
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 48px 56px 40px;
-  margin: 0 0 32px;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
+  padding: var(--space-9) 0 var(--space-8);
+  margin: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  max-width: 760px;
 }
-.hero::after {
-  content: "";
-  position: absolute;
-  right: -80px;
-  top: -80px;
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(closest-side, var(--accent-fade), transparent 75%);
-  pointer-events: none;
-}
-.hero__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-.hero__badge {
-  font-family: "Inter", sans-serif;
-  font-size: 0.74rem;
+.hero__eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--paper-elevated);
-  color: var(--ink-soft);
-  border: 1px solid var(--line);
-  letter-spacing: 0.02em;
-}
-.hero__badge--accent {
-  background: var(--accent);
-  color: var(--paper-elevated);
-  border-color: var(--accent);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 var(--space-4);
 }
 .hero__title {
-  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: clamp(1.9rem, 2.6vw + 1rem, 2.85rem);
-  font-weight: 800;
-  line-height: 1.18;
-  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
   color: var(--ink-strong);
-  letter-spacing: -0.015em;
+  margin: 0 0 var(--space-5);
   border: none;
   padding: 0;
-}
-.hero__title em {
-  font-style: normal;
-  background: linear-gradient(90deg, var(--band-2), var(--band-6));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  text-wrap: balance;
 }
 .hero__subtitle {
-  font-size: 1.06rem;
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  line-height: 1.5;
   color: var(--ink-soft);
-  margin: 0 0 24px;
-  max-width: 680px;
-  line-height: 1.7;
+  margin: 0 0 var(--space-5);
+  max-width: 38em;
+  text-wrap: pretty;
 }
-.hero__author {
-  font-family: "Inter", sans-serif;
-  font-size: 0.85rem;
+.hero__subtitle strong {
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+.hero__meta-line {
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
   color: var(--muted);
+  margin: 0 0 var(--space-6);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: baseline;
 }
-.hero__meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 14px;
-  margin-top: 28px;
+.hero__meta-line strong {
+  color: var(--ink-strong);
+  font-weight: 600;
+  font-feature-settings: "tnum"; /* 等宽数字 */
 }
-.hero__stat {
-  background: color-mix(in srgb, var(--paper-elevated) 80%, transparent);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px 16px;
+.hero__cta-row {
+  display: flex;
+  gap: var(--space-3);
+  margin: 0;
+  flex-wrap: wrap;
 }
-.hero__stat-num {
-  font-family: "Inter", sans-serif;
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: var(--accent-strong);
-  line-height: 1;
-  display: block;
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background var(--duration-fast) var(--ease-apple),
+              border-color var(--duration-fast) var(--ease-apple),
+              color var(--duration-fast) var(--ease-apple);
 }
-.hero__stat-label {
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin-top: 6px;
-  display: block;
-  letter-spacing: 0.04em;
+.hero__cta--primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+.hero__cta--primary:hover {
+  background: var(--accent-strong);
+  color: #ffffff;
+}
+.hero__cta--ghost {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--line-strong);
+}
+.hero__cta--ghost:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 @media (max-width: 720px) {
-  .hero { padding: 32px 22px 28px; }
+  .hero { padding: var(--space-7) 0 var(--space-6); }
+  .hero__subtitle { font-size: 1.0625rem; }
 }
-
-/* Hero 蓝色 3D 装饰球: 默认隐藏, 只在 Studio 主题下被强化层 display 出来 */
-.hero__orb { display: none; }
 
 /* ------------------------------------------------------------
    章节卡片（学习地图）
@@ -909,41 +921,56 @@ p > a[title]:hover {
 .chapter-card {
   position: relative;
   display: block;
-  padding: 18px 18px 18px 22px;
+  padding: var(--space-5);
   background: var(--paper-elevated);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  border-left: 4px solid var(--band, var(--accent));
+  border-radius: var(--radius-md);
   color: var(--ink);
-  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-display);
   text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
   overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-apple),
+              background var(--duration-fast) var(--ease-apple),
+              transform var(--duration-fast) var(--ease-apple);
+}
+/* 顶部 3px 章节 band hairline (代替原来的左侧粗 4px 彩条) */
+.chapter-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--band, var(--accent));
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  opacity: 0.85;
+  transition: opacity var(--duration-fast) var(--ease-apple);
 }
 .chapter-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-  background: var(--paper-elevated);
-  border-color: var(--line-strong);
+  border-color: var(--ink-soft);
+  background: var(--paper);
+  transform: translateY(-1px);
 }
+.chapter-card:hover::before { opacity: 1; }
 .chapter-card__num {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-size: var(--text-caption);
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--band, var(--accent));
-  font-weight: 700;
-  margin-bottom: 6px;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
   display: block;
 }
 .chapter-card__title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--text-headline);
+  font-weight: 600;
   color: var(--ink-strong);
-  line-height: 1.4;
-  margin: 2px 0 8px;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-h);
+  margin: 2px 0 var(--space-2);
 }
 .chapter-card__desc {
-  font-size: 0.84rem;
+  font-size: var(--text-callout);
   color: var(--muted);
   line-height: 1.55;
   margin: 0;
@@ -1190,14 +1217,17 @@ p > a[title]:hover {
 }
 
 /* ------------------------------------------------------------
-   章节节段（<section data-band>）+ 章首色带
+   章节 (<section data-band>) — Apple HIG 编辑风
+   不用大彩条/底色块, 用 Eyebrow + 大字标题 (Apple Newsroom 风)
+   data-band 仅保留为 var, 在 .chapter-card 顶部细线还会用
    ------------------------------------------------------------ */
 .chapter-section {
   --chapter-band: var(--accent);
   position: relative;
-  padding-top: 4px;
-  margin-top: 1em;
+  padding-top: 0;
+  margin-top: var(--space-9);
 }
+.chapter-section:first-of-type { margin-top: var(--space-6); }
 .chapter-section[data-band="1"] { --chapter-band: var(--band-1); }
 .chapter-section[data-band="2"] { --chapter-band: var(--band-2); }
 .chapter-section[data-band="3"] { --chapter-band: var(--band-3); }
@@ -1206,57 +1236,43 @@ p > a[title]:hover {
 .chapter-section[data-band="6"] { --chapter-band: var(--band-6); }
 
 .chapter-section > .chapter-h2 {
-  border-left-color: var(--chapter-band);
   position: relative;
-  padding: 16px 22px 16px 22px;
-  margin: 1.6em 0 0.6em;
-  background: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--chapter-band) 14%, transparent),
-    transparent 45%
-  );
-  border-radius: 0 12px 12px 0;
-  border-left: 6px solid var(--chapter-band);
+  padding: 0;
+  margin: 0 0 var(--space-5);
+  background: none;
+  border: none;
+  border-radius: 0;
 }
-/* 章节编号作为上方的 eyebrow（小字头标），不再叠在标题上 */
+/* 章节 eyebrow: "CHAPTER 01" 小字头标, Apple Newsroom 风 */
 .chapter-section > .chapter-h2::before {
-  content: "Chapter " attr(data-chapter);
+  content: "CHAPTER " attr(data-chapter);
   display: block;
-  font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
   font-weight: 700;
   letter-spacing: 0.16em;
   color: var(--chapter-band);
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-3);
   line-height: 1;
-  opacity: 0.92;
-}
-
-@media (max-width: 720px) {
-  .chapter-section > .chapter-h2 {
-    padding: 14px 16px 14px 16px;
-  }
+  opacity: 1;
 }
 
 /* ------------------------------------------------------------
-   TL;DR 章首卡片
+   TL;DR 章首卡片 — Apple Docs Callout 风
+   纯 paper-elevated 底, 顶部 3px hairline 用章节 band, 不再有 gradient/装饰圆/阴影
    ------------------------------------------------------------ */
 .tldr-card {
   --card-band: var(--accent);
-  margin: 22px 0 26px;
-  padding: 22px 24px 20px;
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--card-band) 18%, var(--paper-elevated)),
-    var(--paper-elevated) 60%
-  );
-  border: 1px solid color-mix(in srgb, var(--card-band) 30%, var(--line));
-  border-left: 5px solid var(--card-band);
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
+  margin: var(--space-6) 0 var(--space-7);
+  padding: var(--space-5) var(--space-6);
+  background: var(--paper-elevated);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--card-band);
+  border-radius: var(--radius-md);
+  box-shadow: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 .tldr-card[data-band="1"] { --card-band: var(--band-1); }
 .tldr-card[data-band="2"] { --card-band: var(--band-2); }
@@ -1265,54 +1281,39 @@ p > a[title]:hover {
 .tldr-card[data-band="5"] { --card-band: var(--band-5); }
 .tldr-card[data-band="6"] { --card-band: var(--band-6); }
 
-.tldr-card::after {
-  content: "";
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 140px;
-  height: 140px;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--card-band) 25%, transparent),
-    transparent 80%
-  );
-  pointer-events: none;
-}
 .tldr-card__head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-  position: relative;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 .tldr-card__icon {
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
   background: var(--card-band);
-  color: var(--paper-elevated);
+  color: var(--paper);
   display: grid;
   place-items: center;
-  font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 .tldr-card__eyebrow {
-  font-family: "Inter", sans-serif;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--card-band);
 }
 .tldr-card__title {
-  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 600;
   color: var(--ink-strong);
   margin-top: 2px;
+  letter-spacing: var(--tracking-h);
 }
 .tldr-card__list {
   list-style: none;
@@ -1322,48 +1323,50 @@ p > a[title]:hover {
 }
 .tldr-card__list li {
   display: flex;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px dashed color-mix(in srgb, var(--card-band) 30%, var(--line));
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--divider);
   counter-increment: tldr;
   align-items: flex-start;
-  font-size: 0.98rem;
+  font-size: var(--text-body);
   color: var(--ink);
-  line-height: 1.65;
+  line-height: var(--leading-body);
+  max-width: none;
 }
 .tldr-card__list li:first-child {
   border-top: none;
-  padding-top: 4px;
+  padding-top: 0;
 }
 .tldr-card__bullet {
-  flex: 0 0 24px;
-  width: 24px;
-  height: 24px;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--card-band) 18%, transparent);
-  color: var(--card-band);
+  background: var(--surface);
+  color: var(--ink-soft);
   display: grid;
   place-items: center;
-  font-family: "Inter", sans-serif;
-  font-weight: 700;
-  font-size: 0.78rem;
-  margin-top: 2px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-feature-settings: "tnum";
 }
 .tldr-card__bullet::before {
   content: counter(tldr);
 }
 .tldr-card__foot {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid color-mix(in srgb, var(--card-band) 22%, var(--line));
-  font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 0.82rem;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--divider);
+  font-family: var(--font-display);
+  font-size: var(--text-footnote);
   color: var(--muted);
 }
 .tldr-card__foot em {
   font-style: normal;
-  color: var(--card-band);
-  font-weight: 600;
+  color: var(--ink-strong);
+  font-weight: 500;
   margin: 0 2px;
 }
 
@@ -2497,13 +2500,15 @@ ol.numbered-list > li > strong:first-child {
 /* 大数字徽章 (用于成本表 / MRR 里程碑) */
 .metric {
   display: inline-block;
-  font-family: "Inter", sans-serif;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-weight: 600;
   color: var(--accent-strong);
   background: var(--accent-fade);
   padding: 1px 8px;
   border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  white-space: nowrap;       /* pill 宁可溢出, 不允许 wrap (wrap 后 pill 形状会变形) */
+  font-feature-settings: "tnum";
 }
 .metric--ok { color: var(--band-4); background: color-mix(in srgb, var(--band-4) 15%, transparent); border-color: color-mix(in srgb, var(--band-4) 30%, transparent); }
 .metric--warn { color: var(--band-1); background: color-mix(in srgb, var(--band-1) 18%, transparent); border-color: color-mix(in srgb, var(--band-1) 35%, transparent); }
@@ -2778,1764 +2783,6 @@ ol.numbered-list > li > strong:first-child {
   .hero::after { display: none; }
 }
 
-/* ============================================================
-   ⬇⬇⬇  THREADS STYLE 强化层  ⬇⬇⬇
-   - 仅在显式 [data-theme="threads"] 和兼容旧 localStorage 的 [data-theme="meta"] 时生效
-   - 设计原则: 纯黑白灰, 0 彩色装饰, 大留白, Inter regular/medium
-   ============================================================ */
-html[data-theme="threads"],
-html[data-theme="meta"] {
-
-  /* —— 全局: 字体切到 Inter, 大行距 + 大字号 + 抗锯齿 —— */
-  body {
-    font-family: var(--font-body);
-    font-size: 17px;
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.011em;     /* SF 风的微微负字距 */
-  }
-  body p {
-    font-size: 1rem;
-    color: var(--ink);
-    line-height: 1.75;
-  }
-
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: var(--line-strong); }
-
-  /* —— 链接: Threads 风, 黑色 + 下划 + 微微上移 hover —— */
-  a {
-    border-bottom: none;
-    color: var(--ink-strong);
-    font-weight: 500;
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 3px;
-    text-decoration-thickness: 1px;
-  }
-  a:hover {
-    color: var(--ink-strong);
-    background: transparent;
-    text-decoration-color: var(--ink-strong);
-    border-bottom: none;
-  }
-
-  /* —— 顶栏: Threads 纯白底, 1px 极淡灰边, 不用 blur —— */
-  .topbar {
-    background: rgba(250, 250, 250, 0.92);
-    backdrop-filter: saturate(160%) blur(12px);
-    -webkit-backdrop-filter: saturate(160%) blur(12px);
-    border-bottom: 1px solid var(--line);
-  }
-  .topbar__inner { padding: 14px 24px; }
-  .topbar__brand {
-    font-weight: 700;
-    font-size: 0.98rem;
-    letter-spacing: -0.015em;
-    color: var(--ink-strong);
-  }
-
-  /* —— SOLO Logo: 4 阶灰度 (Threads 风, 0 彩色) —— */
-  .topbar__logo {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: #000000;
-    padding: 0;
-    gap: 0;
-    box-shadow: none;
-  }
-  .topbar__logo-cell { color: #ffffff; font-size: 11px; font-weight: 700; }
-  .topbar__logo-cell:nth-child(1) { background: #000000; border-radius: 10px 0 0 0; }
-  .topbar__logo-cell:nth-child(2) { background: #2a2a2a; border-radius: 0 10px 0 0; }
-  .topbar__logo-cell:nth-child(3) { background: #5a5a5a; border-radius: 0 0 0 10px; }
-  .topbar__logo-cell:nth-child(4) { background: #888888; border-radius: 0 0 10px 0; }
-  .topbar__brand:hover .topbar__logo {
-    transform: scale(1.04);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  }
-
-  /* —— Topbar chip: Threads 风极淡灰 pill —— */
-  .topbar__chip {
-    background: var(--surface);
-    color: var(--muted);
-    border: 1px solid var(--line);
-    font-weight: 500;
-  }
-  .topbar__divider { display: none; }
-
-  /* —— Icon 按钮: Pill, 黑色 hover —— */
-  .icon-btn {
-    border-radius: var(--radius-pill);
-    color: var(--ink-strong);
-  }
-  .icon-btn:hover {
-    background: var(--surface);
-    color: var(--ink-strong);
-    border-color: transparent;
-  }
-  .icon-btn--wide {
-    background: var(--surface);
-    color: var(--ink);
-    font-weight: 500;
-  }
-
-  /* —— GitHub 按钮: 黑色 pill, Threads 主站 follow 按钮风 —— */
-  .topbar__actions a.icon-btn[href*="github"] {
-    background: var(--ink-strong);
-    color: #ffffff;
-    box-shadow: none;
-  }
-  .topbar__actions a.icon-btn[href*="github"]:hover {
-    background: #1a1a1a;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  /* —— 设置弹层 —— */
-  .menu {
-    border-radius: var(--radius-lg);
-    background: #ffffff;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    border: 1px solid var(--line);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-  }
-  .menu__pill {
-    border-radius: var(--radius-pill);
-    font-weight: 500;
-    background: var(--surface);
-    border-color: transparent;
-    color: var(--ink-soft);
-  }
-  .menu__pill:hover {
-    background: var(--surface-hover);
-    color: var(--ink-strong);
-  }
-  .menu__pill[aria-pressed="true"] {
-    background: var(--ink-strong);
-    color: #ffffff;
-    border-color: transparent;
-    box-shadow: none;
-  }
-
-  /* —— 主内容卡: 极简白底, 1px 灰边, 大留白 —— */
-  .main {
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--line);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-    padding: 64px 72px 88px;
-    background: #ffffff;
-  }
-  .main::before { background: none; }   /* 去掉所有彩色光晕 */
-  @media (max-width: 720px) {
-    .main { padding: 28px 20px 48px; border-radius: var(--radius-lg); }
-  }
-
-  /* —— 标题: Inter 700, 字距收紧, Threads 风 (不要 900 黑体) —— */
-  h1, h2, h3, h4 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.022em;
-    line-height: 1.2;
-    color: var(--ink-strong);
-  }
-  h1 {
-    font-size: clamp(2rem, 2.8vw + 1rem, 2.7rem);
-    border-bottom: none;
-    padding-bottom: 0;
-    font-weight: 700;
-    letter-spacing: -0.028em;
-    margin-top: 0.4em;
-    margin-bottom: 0.6em;
-  }
-  h1::after { content: none; }
-  h2 {
-    font-size: clamp(1.45rem, 1.4vw + 0.9rem, 1.8rem);
-    border-left: none;
-    padding: 0;
-    margin: 2.6em 0 0.7em;
-    font-weight: 700;
-  }
-  h3 {
-    font-size: clamp(1.1rem, 0.5vw + 1rem, 1.25rem);
-    border-left: none;
-    padding-left: 0;
-    color: var(--ink-strong);
-    font-weight: 600;
-    margin-top: 2em;
-  }
-  h3::before { content: none; }       /* 去掉蓝色竖条 */
-  h4 {
-    font-weight: 600;
-    color: var(--ink-strong);
-    margin-top: 1.6em;
-  }
-
-  /* —— Hero: Threads 风 — 纯白底, 0 渐变光晕, 大字 —— */
-  .hero {
-    background: #ffffff;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-    padding: 72px 56px 56px;
-    overflow: hidden;
-  }
-  .hero::before { content: none; }
-  .hero::after { display: none; }      /* 全部彩色光晕清零 */
-
-  .hero__badges { gap: 8px; margin-bottom: 24px; }
-  .hero__badge {
-    background: var(--surface);
-    backdrop-filter: none;
-    border: 1px solid var(--line);
-    color: var(--ink);
-    font-weight: 500;
-    padding: 5px 12px;
-    border-radius: var(--radius-pill);
-  }
-  .hero__badge--accent {
-    background: var(--ink-strong);
-    color: #ffffff;
-    border: none;
-    box-shadow: none;
-  }
-
-  .hero__title {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(2.4rem, 3.6vw + 1rem, 4rem);
-    line-height: 1.08;
-    letter-spacing: -0.035em;
-    margin: 0 0 20px;
-    color: var(--ink-strong);
-  }
-  .hero__title em {
-    font-style: normal;
-    background: none;
-    color: var(--muted);
-    -webkit-text-fill-color: var(--muted);
-    display: inline;
-  }
-  .hero__subtitle {
-    font-size: 1.08rem;
-    color: var(--ink-soft);
-    line-height: 1.65;
-    max-width: 620px;
-    font-weight: 400;
-  }
-  .hero__author {
-    font-weight: 500;
-    color: var(--muted);
-  }
-
-  .hero__stat {
-    background: var(--surface);
-    backdrop-filter: none;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    padding: 16px 18px;
-  }
-  .hero__stat-num {
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: var(--ink-strong);
-    letter-spacing: -0.025em;
-  }
-  .hero__stat-label { font-weight: 500; color: var(--muted); }
-  .hero__stat:hover {
-    border-color: var(--ink-strong);
-    box-shadow: none;
-    transform: none;
-  }
-
-  @media (max-width: 720px) {
-    .hero { padding: 40px 22px 32px; border-radius: var(--radius-lg); }
-    .hero__title { font-size: clamp(2rem, 7vw + 0.4rem, 2.6rem); }
-  }
-
-  /* —— 章节卡片: Threads 风, 极简白卡, 0 装饰 —— */
-  .chapter-card {
-    border-radius: var(--radius-md);
-    background: #ffffff;
-    border: 1px solid var(--line);
-    border-left: none;
-    padding: 20px 20px 18px;
-    position: relative;
-    box-shadow: none;
-    overflow: hidden;
-  }
-  .chapter-card::before { content: none; }
-  .chapter-card:hover {
-    transform: translateY(-1px);
-    border-color: var(--ink-strong);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  }
-  .chapter-card__num {
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    font-size: 0.72rem;
-    text-transform: none;
-  }
-  .chapter-card__title {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 1.04rem;
-    letter-spacing: -0.015em;
-    color: var(--ink-strong);
-  }
-  .chapter-card:hover .chapter-card__title { color: var(--ink-strong); }
-
-  /* —— Chapter section H2: 纯极简, 灰色 eyebrow + 黑标题 —— */
-  .chapter-section > .chapter-h2 {
-    background: transparent;
-    border-left: none;
-    border-radius: 0;
-    padding: 0;
-    position: relative;
-    overflow: visible;
-    margin: 3em 0 0.8em;
-  }
-  .chapter-section > .chapter-h2::after { content: none; }
-  .chapter-section > .chapter-h2::before {
-    color: var(--muted);
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    font-size: 0.74rem;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  /* —— TLDR Card: Threads 极简风, 0 彩色, 浅灰底白卡 —— */
-  .tldr-card {
-    border-radius: var(--radius-lg);
-    border-left: none;
-    background: #ffffff;
-    border: 1px solid var(--line);
-    box-shadow: none;
-    --card-band: var(--ink-strong);
-    padding: 26px 28px 22px;
-  }
-  .tldr-card[data-band="1"],
-  .tldr-card[data-band="2"],
-  .tldr-card[data-band="3"],
-  .tldr-card[data-band="4"],
-  .tldr-card[data-band="5"],
-  .tldr-card[data-band="6"] { --card-band: var(--ink-strong); }
-  .tldr-card::after { display: none; }
-  .tldr-card__icon {
-    border-radius: var(--radius-md);
-    background: var(--ink-strong);
-    color: #ffffff;
-    box-shadow: none;
-  }
-  .tldr-card__eyebrow {
-    color: var(--muted);
-    font-weight: 500;
-    letter-spacing: 0.05em;
-  }
-  .tldr-card__bullet {
-    background: var(--surface);
-    border: none;
-    color: var(--ink-strong);
-    font-weight: 600;
-  }
-  .tldr-card__list li {
-    border-top-color: var(--divider);
-  }
-
-  /* —— Callout: Threads 极简提示卡 —— */
-  .callout {
-    border-radius: var(--radius-md);
-    border-left: none;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    position: relative;
-    padding-left: 56px;
-  }
-  .callout::before {
-    content: "";
-    position: absolute;
-    left: 18px;
-    top: 18px;
-    width: 3px;
-    bottom: 18px;
-    border-radius: var(--radius-pill);
-    background: var(--ink-strong);
-  }
-  .callout__icon {
-    background: var(--ink-strong);
-    color: #ffffff;
-    border-radius: var(--radius-md);
-  }
-
-  /* —— Blockquote: 极简竖条, 灰底 —— */
-  blockquote {
-    border-left: 3px solid var(--ink-strong);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background: var(--surface);
-    box-shadow: none;
-  }
-  blockquote::before { display: none; }
-
-  /* —— 引用编号小角标: 灰 pill —— */
-  p > a[title] {
-    background: var(--surface);
-    color: var(--ink-soft);
-    font-weight: 500;
-    padding: 1px 7px;
-    border-radius: var(--radius-pill);
-    text-decoration: none;
-    border: 1px solid var(--line);
-  }
-  p > a[title]:hover {
-    background: var(--ink-strong);
-    color: #ffffff;
-    border-color: var(--ink-strong);
-  }
-
-  /* —— 表格: Threads 极简风 —— */
-  .table-wrap {
-    border-radius: var(--radius-lg);
-    border-color: var(--line);
-  }
-  th {
-    background: var(--surface);
-    color: var(--ink-strong);
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  tbody tr:nth-child(even) td { background: rgba(0, 0, 0, 0.012); }
-  tbody tr:hover td { background: var(--surface); }
-
-  /* —— 代码块: 黑底白字 (Threads dark code) —— */
-  pre {
-    border-radius: var(--radius-md);
-    background: #0a0a0a;
-    border: none;
-  }
-  code {
-    border-radius: var(--radius-xs);
-    background: var(--surface);
-    color: var(--ink-strong);
-    border: none;
-    font-weight: 500;
-  }
-
-  /* —— Sidebar 目录: active 项 黑色实心 (Threads follow 风) —— */
-  .sidebar__inner {
-    border-radius: var(--radius-lg);
-    border-color: var(--line);
-    background: #ffffff;
-  }
-  .sidebar__list a {
-    border-left: none;
-    border-radius: var(--radius-md);
-    margin: 1px 0;
-    padding: 7px 12px;
-    text-decoration: none;
-    color: var(--ink-soft);
-  }
-  .sidebar__list a:hover {
-    background: var(--surface);
-    border-left: none;
-    color: var(--ink-strong);
-  }
-  .sidebar__list a.is-active {
-    background: var(--ink-strong);
-    color: #ffffff;
-    border-left: none;
-    font-weight: 600;
-  }
-  .sidebar__list .lvl-3.is-active {
-    background: var(--surface);
-    color: var(--ink-strong);
-  }
-
-  /* —— 章节导航按钮: Threads 极简 —— */
-  .chapter-nav__btn {
-    border-radius: var(--radius-lg);
-    background: #ffffff;
-    border: 1px solid var(--line);
-    text-decoration: none;
-  }
-  .chapter-nav__btn:not(.is-disabled):hover {
-    border-color: var(--ink-strong);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    background: #ffffff;
-    transform: translateY(-1px);
-  }
-  .chapter-nav__dir { color: var(--muted); }
-
-  /* —— 返回顶部: 黑色圆 pill —— */
-  .back-to-top {
-    border-radius: var(--radius-pill);
-    background: var(--ink-strong);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  .back-to-top:hover {
-    background: #1a1a1a;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  /* —— 阅读进度条: 黑色细线 —— */
-  .reading-progress { height: 2px; }
-  .reading-progress__bar {
-    background: var(--ink-strong);
-    box-shadow: none;
-  }
-
-  /* —— AI 划词气泡: 黑色 pill (不再渐变) —— */
-  .ai-bubble {
-    background: var(--ink-strong);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-  .ai-bubble:hover {
-    background: #1a1a1a;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  }
-
-  /* —— 搜索框 —— */
-  .search-box {
-    border-radius: var(--radius-lg);
-    border-color: var(--line);
-  }
-  .search-result {
-    border-radius: var(--radius-md);
-    text-decoration: none;
-  }
-  .search-result:hover,
-  .search-result.is-active {
-    background: var(--surface);
-    color: var(--ink-strong);
-  }
-
-  /* —— Diagram caption b 标签: 灰 pill —— */
-  figure.diagram { border-radius: var(--radius-lg); border-color: var(--line); box-shadow: none; }
-  figure.diagram figcaption b {
-    background: var(--surface);
-    color: var(--ink-strong);
-    border-radius: var(--radius-pill);
-    padding: 3px 10px;
-    border: 1px solid var(--line);
-  }
-
-  /* —— Lesson Card / Stack Card 等 6 章彩色卡: 收敛到黑白 —— */
-  aside.lesson-card,
-  .lesson-card { --card-band: var(--ink-strong) !important; }
-
-  /* ==========================================================
-     新组件 1: 导引文字 .lead-text
-     用在卡片组之前, 用一两句自然话引导读者点开下面的卡片
-     ========================================================== */
-  .lead-text {
-    font-size: 1.06rem;
-    line-height: 1.7;
-    color: var(--ink-soft);
-    margin: 28px 0 14px;
-    max-width: 680px;
-    font-weight: 400;
-  }
-  .lead-text strong { color: var(--ink-strong); font-weight: 600; }
-  .lead-text + .term-stack,
-  .lead-text + .term-card { margin-top: 8px; }
-
-  /* ==========================================================
-     新组件 2: 术语卡片 .term-card (基于 <details>/<summary>)
-     折叠态: 1 行高白卡 + 灰边, 显示术语名 + "查看" 提示
-     展开态: 内容区滑出, 上方加分隔线
-     ========================================================== */
-  .term-card {
-    background: #ffffff;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    margin: 8px 0;
-    overflow: hidden;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-  }
-  .term-card[open] {
-    border-color: var(--ink-strong);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  }
-  .term-card:hover { border-color: var(--ink-soft); }
-  .term-card[open]:hover { border-color: var(--ink-strong); }
-
-  .term-card > summary {
-    list-style: none;
-    cursor: pointer;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .term-card > summary::-webkit-details-marker { display: none; }
-  .term-card > summary::marker { content: ""; }
-
-  .term-card__name {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--ink-strong);
-    letter-spacing: -0.015em;
-    line-height: 1.4;
-    flex: 1;
-    min-width: 0;
-  }
-  .term-card__name em {
-    font-style: normal;
-    color: var(--muted);
-    font-weight: 400;
-    margin-left: 6px;
-    font-size: 0.92em;
-  }
-  .term-card__hint {
-    font-size: 0.78rem;
-    color: var(--muted);
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.15s ease;
-  }
-  .term-card__hint::after {
-    content: "↓";
-    display: inline-block;
-    transition: transform 0.2s ease;
-    font-size: 0.92em;
-  }
-  .term-card[open] .term-card__hint { color: var(--ink-strong); }
-  .term-card[open] .term-card__hint::after { transform: rotate(180deg); }
-  .term-card > summary:hover .term-card__hint { color: var(--ink-strong); }
-
-  .term-card__body {
-    padding: 4px 20px 20px;
-    border-top: 1px solid var(--divider);
-    margin-top: 0;
-    color: var(--ink);
-    font-size: 0.96rem;
-    line-height: 1.72;
-  }
-  .term-card__body > *:first-child { margin-top: 14px; }
-  .term-card__body > *:last-child { margin-bottom: 0; }
-  .term-card__body p { margin: 0.6em 0; }
-  .term-card__body strong { color: var(--ink-strong); }
-
-  /* 卡片组容器, 让多张术语卡之间间距统一 */
-  .term-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 14px 0 28px;
-  }
-
-  /* ==========================================================
-     新组件 3: 行内术语注解 .term
-     用法: <span class="term">架构 <em>Software Architecture</em></span>
-     视觉: 中文术语下方有微细灰色虚线, 鼠标 hover 显示解释 tooltip
-     ========================================================== */
-  .term {
-    border-bottom: 1px dotted var(--muted-2);
-    cursor: help;
-  }
-  .term em {
-    font-style: normal;
-    color: var(--muted);
-    font-size: 0.88em;
-    margin-left: 4px;
-    font-weight: 400;
-  }
-}
-
-/* ============================================================
-   Dark 主题下 (Threads Dark Mode 风) 沿用大部分强化层规则
-   ============================================================ */
-html[data-theme="dark"] {
-  body {
-    font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
-    letter-spacing: -0.011em;
-  }
-  .topbar {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: saturate(160%) blur(12px);
-    -webkit-backdrop-filter: saturate(160%) blur(12px);
-    border-bottom: 1px solid var(--line);
-  }
-  .topbar__logo { background: #ffffff; box-shadow: none; }
-  .topbar__logo-cell { color: #000000; }
-  .topbar__logo-cell:nth-child(1) { background: #ffffff; }
-  .topbar__logo-cell:nth-child(2) { background: #d0d0d0; }
-  .topbar__logo-cell:nth-child(3) { background: #888888; }
-  .topbar__logo-cell:nth-child(4) { background: #5a5a5a; }
-  .reading-progress__bar { background: var(--ink-strong); box-shadow: none; }
-  .back-to-top { background: var(--ink-strong); color: #000000; }
-  .ai-bubble { background: var(--ink-strong); color: #000000; }
-  h1::after { content: none; }
-  h3::before { content: none; }
-  .hero__title em { background: none; color: var(--muted); -webkit-text-fill-color: var(--muted); }
-  .hero__stat-num { color: var(--ink-strong); }
-  .topbar__actions a.icon-btn[href*="github"] {
-    background: var(--ink-strong);
-    color: #000000;
-  }
-  figure.diagram figcaption b {
-    background: var(--surface);
-    color: var(--ink-strong);
-    border-radius: var(--radius-pill);
-    padding: 3px 10px;
-    border: 1px solid var(--line);
-  }
-  .term-card { background: var(--paper); border-color: var(--line); }
-  .term-card[open] { border-color: var(--ink-strong); }
-  .term-card__body { border-top-color: var(--divider); }
-  .menu__pill[aria-pressed="true"] { background: var(--ink-strong); color: #000000; }
-  .sidebar__list a.is-active { background: var(--ink-strong); color: #000000; }
-}
-
-/* ============================================================
-   ⬇⬇⬇  STUDIO STYLE 强化层 (新默认主题)  ⬇⬇⬇
-   - 仅在默认 (:root 无 data-theme) 与显式 [data-theme="studio"] 时生效
-   - 设计语言: 深色 SaaS Dashboard 风
-     - 深黑底 #0a0a0a + 卡片稍亮 #161616
-     - 蓝色 #4a90ff 唯一强调色
-     - 大圆角卡片 + Pill 按钮 + 大字蓝色数字
-   ============================================================ */
-html:not([data-theme]),
-html[data-theme="studio"] {
-
-  /* —— 全局: Inter, 深色环境调浅文字 + 抗锯齿 —— */
-  body {
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.011em;
-    color: var(--ink);
-    background: var(--bg);
-  }
-  body p {
-    font-size: 1rem;
-    color: var(--ink);
-    line-height: 1.78;
-  }
-
-  /* —— 选中色: 蓝色高亮 —— */
-  ::selection {
-    background: var(--accent-soft);
-    color: var(--ink-strong);
-  }
-
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: var(--surface); border: none; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--surface-hover); }
-
-  /* —— 链接: 蓝色 + 微下划 —— */
-  a {
-    color: var(--accent);
-    border-bottom: none;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.15s ease, opacity 0.15s ease;
-  }
-  a:hover {
-    color: var(--accent-strong);
-    background: transparent;
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 3px;
-    border-bottom: none;
-  }
-
-  /* —— 顶栏: 深色 dashboard 风 —— */
-  .topbar {
-    background: rgba(10, 10, 10, 0.85);
-    backdrop-filter: saturate(180%) blur(16px);
-    -webkit-backdrop-filter: saturate(180%) blur(16px);
-    border-bottom: 1px solid var(--line);
-  }
-  .topbar__inner { padding: 12px 24px; }
-  .topbar__brand {
-    font-weight: 700;
-    font-size: 0.98rem;
-    letter-spacing: -0.018em;
-    color: var(--ink-strong);
-  }
-
-  /* —— SOLO Logo: 蓝色 dashboard 风四宫格 —— */
-  .topbar__logo {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    background: var(--accent);
-    padding: 0;
-    gap: 0;
-    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.25);
-  }
-  .topbar__logo-cell { color: #ffffff; font-size: 11px; font-weight: 800; }
-  .topbar__logo-cell:nth-child(1) { background: #4a90ff; border-radius: 9px 0 0 0; }
-  .topbar__logo-cell:nth-child(2) { background: #2d7aef; border-radius: 0 9px 0 0; }
-  .topbar__logo-cell:nth-child(3) { background: #6ba5ff; border-radius: 0 0 0 9px; }
-  .topbar__logo-cell:nth-child(4) { background: #1f5fcc; border-radius: 0 0 9px 0; }
-  .topbar__brand:hover .topbar__logo {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(74, 144, 255, 0.4);
-  }
-
-  /* —— Topbar chip: 深色 pill —— */
-  .topbar__chip {
-    background: var(--surface);
-    color: var(--ink-soft);
-    border: 1px solid var(--line);
-    font-weight: 500;
-  }
-  .topbar__divider { display: none; }
-
-  /* —— Icon 按钮: 深色 Pill, hover 显蓝 —— */
-  .icon-btn {
-    border-radius: var(--radius-pill);
-    color: var(--ink-soft);
-    background: transparent;
-  }
-  .icon-btn:hover {
-    background: var(--surface);
-    color: var(--ink-strong);
-    border-color: transparent;
-  }
-  .icon-btn--wide {
-    background: var(--surface);
-    color: var(--ink-soft);
-    border-radius: var(--radius-pill);
-    font-weight: 500;
-    padding: 0 14px;
-  }
-  .icon-btn--wide:hover {
-    background: var(--surface-hover);
-    color: var(--ink-strong);
-  }
-
-  /* —— GitHub 按钮: 蓝色实心 pill (类似 Dashboard "Get started") —— */
-  .topbar__actions a.icon-btn[href*="github"] {
-    background: var(--accent);
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.3);
-  }
-  .topbar__actions a.icon-btn[href*="github"]:hover {
-    background: var(--accent-strong);
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.4);
-  }
-
-  /* —— 设置弹层: 深色 popup —— */
-  .menu {
-    border-radius: var(--radius-lg);
-    background: var(--paper-elevated);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--line);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
-  }
-  .menu__pill {
-    border-radius: var(--radius-pill);
-    font-weight: 500;
-    background: var(--surface);
-    border-color: transparent;
-    color: var(--ink-soft);
-  }
-  .menu__pill:hover {
-    background: var(--surface-hover);
-    color: var(--ink-strong);
-  }
-  .menu__pill[aria-pressed="true"] {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.35);
-  }
-
-  /* —— 主内容卡: 深色卡片底, 大圆角 —— */
-  .main {
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--line);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
-    padding: 56px 64px 80px;
-    background: var(--paper);
-  }
-  .main::before {
-    background:
-      radial-gradient(900px 320px at -10% -10%, var(--accent-fade), transparent 60%),
-      radial-gradient(900px 280px at 110% 0%, var(--accent-fade), transparent 60%);
-  }
-  @media (max-width: 720px) {
-    .main { padding: 28px 20px 48px; border-radius: var(--radius-lg); }
-  }
-
-  /* —— 标题: Inter 700, 白色, 紧字距 —— */
-  h1, h2, h3, h4 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.022em;
-    line-height: 1.22;
-    color: var(--ink-strong);
-  }
-  h1 {
-    font-size: clamp(2rem, 2.8vw + 1rem, 2.7rem);
-    border-bottom: none;
-    padding-bottom: 0;
-    font-weight: 700;
-    letter-spacing: -0.028em;
-    margin-top: 0.4em;
-    margin-bottom: 0.6em;
-  }
-  h1::after { content: none; }
-  h2 {
-    font-size: clamp(1.4rem, 1.4vw + 0.9rem, 1.75rem);
-    border-left: none;
-    padding: 0;
-    margin: 2.6em 0 0.7em;
-    font-weight: 700;
-  }
-  h3 {
-    font-size: clamp(1.08rem, 0.5vw + 1rem, 1.22rem);
-    border-left: none;
-    padding-left: 0;
-    color: var(--ink-strong);
-    font-weight: 600;
-    margin-top: 2em;
-  }
-  h3::before { content: none; }
-  h4 {
-    font-weight: 600;
-    color: var(--ink-strong);
-    margin-top: 1.6em;
-  }
-
-  /* —— Hero: Dashboard 风 — 深底 + 蓝色光晕 + 大字 —— */
-  .hero {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
-    padding: 64px 56px 56px;
-    overflow: hidden;
-    position: relative;
-  }
-  /* 蓝色辐射光晕 - 模拟截图右上方"AI Assistant"3D 球 */
-  .hero::before {
-    content: "";
-    position: absolute;
-    top: -120px;
-    right: -120px;
-    width: 480px;
-    height: 480px;
-    background: radial-gradient(closest-side,
-      rgba(74, 144, 255, 0.28) 0%,
-      rgba(74, 144, 255, 0.10) 35%,
-      transparent 70%);
-    pointer-events: none;
-    filter: blur(20px);
-  }
-  .hero::after {
-    width: 320px;
-    height: 320px;
-    left: -100px;
-    bottom: -100px;
-    top: auto;
-    right: auto;
-    background: radial-gradient(closest-side,
-      rgba(74, 144, 255, 0.14),
-      transparent 70%);
-    filter: blur(16px);
-  }
-
-  .hero__badges { gap: 8px; margin-bottom: 24px; }
-  .hero__badge {
-    background: var(--surface);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--line);
-    color: var(--ink-soft);
-    font-weight: 500;
-    padding: 5px 12px;
-    border-radius: var(--radius-pill);
-  }
-  .hero__badge--accent {
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.3);
-  }
-
-  .hero__title {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(2.4rem, 3.6vw + 1rem, 4rem);
-    line-height: 1.08;
-    letter-spacing: -0.035em;
-    margin: 0 0 20px;
-    color: var(--ink-strong);
-  }
-  .hero__title em {
-    font-style: normal;
-    color: var(--accent);
-    -webkit-text-fill-color: var(--accent);
-    background: none;
-    display: inline;
-  }
-  .hero__subtitle {
-    font-size: 1.08rem;
-    color: var(--ink-soft);
-    line-height: 1.65;
-    max-width: 640px;
-    font-weight: 400;
-  }
-  .hero__author {
-    font-weight: 500;
-    color: var(--ink-soft);
-  }
-  .hero__author strong { color: var(--ink-strong); }
-
-  /* —— Hero 蓝色 3D 装饰球: 仅 Studio 显示, 致敬截图 AI Assistant 元素 —— */
-  .hero__orb {
-    display: block;
-    position: absolute;
-    top: 28px;
-    right: 36px;
-    width: 220px;
-    height: 220px;
-    pointer-events: none;
-    z-index: 1;
-    filter: drop-shadow(0 12px 40px rgba(74, 144, 255, 0.35));
-    animation: orbFloat 6s ease-in-out infinite;
-  }
-  @keyframes orbFloat {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-12px) scale(1.02); }
-  }
-  /* hero 内部内容浮在 orb 之上 */
-  .hero > *:not(.hero__orb) { position: relative; z-index: 2; }
-  @media (max-width: 900px) {
-    .hero__orb { width: 160px; height: 160px; right: 16px; top: 16px; opacity: 0.5; }
-  }
-  @media (max-width: 540px) {
-    .hero__orb { display: none; }
-  }
-
-  /* —— Hero stat: Dashboard 风的"大蓝数字"卡 —— */
-  .hero__stat {
-    background: var(--paper-elevated);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    padding: 18px 20px;
-    transition: border-color 0.18s ease, transform 0.18s ease;
-  }
-  .hero__stat-num {
-    font-family: var(--font-display);
-    font-size: 1.95rem;
-    font-weight: 800;
-    color: var(--accent);
-    letter-spacing: -0.03em;
-    line-height: 1;
-  }
-  .hero__stat-label {
-    font-weight: 500;
-    color: var(--muted);
-    font-size: 0.74rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    margin-top: 8px;
-  }
-  .hero__stat:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(74, 144, 255, 0.12);
-  }
-
-  @media (max-width: 720px) {
-    .hero { padding: 40px 22px 32px; border-radius: var(--radius-lg); }
-    .hero__title { font-size: clamp(2rem, 7vw + 0.4rem, 2.6rem); }
-  }
-
-  /* —— 章节卡片: 深色 dashboard 风 (4 边一致 1px, 无左侧色带) —— */
-  .chapter-card {
-    border-radius: var(--radius-md);
-    background: var(--paper-elevated);
-    border: 1px solid var(--line) !important;       /* 强制覆盖 mobile.css */
-    border-left-width: 1px !important;
-    border-left-style: solid !important;
-    border-left-color: var(--line) !important;
-    padding: 18px 20px 16px;
-    position: relative;
-    box-shadow: none;
-    overflow: hidden;
-    transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
-  }
-  .chapter-card::before { content: none; }
-  /* hover: 显蓝色细描边 + 右下角"进入 →" pill 指示器 */
-  .chapter-card::after {
-    content: "进入 →";
-    position: absolute;
-    right: 14px;
-    bottom: 14px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 2px 10px;
-    border-radius: var(--radius-pill);
-    opacity: 0;
-    transform: translateY(4px);
-    transition: opacity 0.18s ease, transform 0.18s ease;
-    pointer-events: none;
-  }
-  .chapter-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent) !important;
-    border-left-color: var(--accent) !important;
-    background: var(--paper-elevated);
-  }
-  /* 移动端 active 状态: 不要变彩色背景 */
-  .chapter-card:active {
-    background: var(--paper-elevated);
-  }
-  .chapter-card:hover::after {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .chapter-card__num {
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    font-size: 0.72rem;
-    text-transform: none;
-  }
-  .chapter-card__title {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 1.04rem;
-    letter-spacing: -0.015em;
-    color: var(--ink-strong);
-  }
-  .chapter-card:hover .chapter-card__title { color: var(--accent); }
-  .chapter-card__desc { color: var(--ink-soft); }
-
-  /* —— Chapter map: 加 dashboard "view all" 按钮风 —— */
-  .chapter-map__head h2 { color: var(--ink-strong); }
-  .chapter-map__head p { color: var(--muted); }
-
-  /* —— Chapter section H2: 简洁灰 eyebrow + 白标题 —— */
-  .chapter-section > .chapter-h2 {
-    background: transparent;
-    border-left: none;
-    border-radius: 0;
-    padding: 0;
-    position: relative;
-    overflow: visible;
-    margin: 3em 0 0.8em;
-  }
-  .chapter-section > .chapter-h2::after { content: none; }
-  .chapter-section > .chapter-h2::before {
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    font-size: 0.74rem;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  /* —— TLDR Card: 深色 dashboard 风 —— */
-  .tldr-card {
-    border-radius: var(--radius-lg);
-    border-left: none;
-    background: var(--paper-elevated);
-    border: 1px solid var(--line);
-    box-shadow: none;
-    --card-band: var(--accent);
-    padding: 26px 28px 22px;
-  }
-  .tldr-card[data-band="1"],
-  .tldr-card[data-band="2"],
-  .tldr-card[data-band="3"],
-  .tldr-card[data-band="4"],
-  .tldr-card[data-band="5"],
-  .tldr-card[data-band="6"] { --card-band: var(--accent); }
-  .tldr-card::after { display: none; }
-  .tldr-card__icon {
-    border-radius: var(--radius-md);
-    background: var(--accent);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.25);
-  }
-  .tldr-card__eyebrow {
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-  }
-  .tldr-card__title { color: var(--ink-strong); }
-  .tldr-card__bullet {
-    background: var(--accent-soft);
-    border: none;
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .tldr-card__list li {
-    border-top-color: var(--divider);
-    color: var(--ink);
-  }
-  .tldr-card__foot { color: var(--muted); }
-
-  /* —— Callout: 深色提示卡 + 蓝色 bar —— */
-  .callout {
-    border-radius: var(--radius-md);
-    border-left: none;
-    background: var(--paper-elevated);
-    border: 1px solid var(--line);
-    position: relative;
-    padding-left: 56px;
-    color: var(--ink);
-  }
-  .callout::before {
-    content: "";
-    position: absolute;
-    left: 18px;
-    top: 18px;
-    width: 3px;
-    bottom: 18px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-  }
-  .callout__icon {
-    background: var(--accent);
-    color: #ffffff;
-    border-radius: var(--radius-md);
-  }
-
-  /* —— Blockquote: 深色 + 蓝色 bar —— */
-  blockquote {
-    border-left: 3px solid var(--accent);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background: var(--paper-elevated);
-    box-shadow: none;
-    color: var(--ink);
-  }
-  blockquote::before { display: none; }
-  blockquote strong { color: var(--accent); }
-
-  /* —— 引用编号小角标: 深色 pill + 蓝色字 —— */
-  p > a[title] {
-    background: var(--surface);
-    color: var(--accent);
-    font-weight: 600;
-    padding: 1px 8px;
-    border-radius: var(--radius-pill);
-    text-decoration: none;
-    border: 1px solid var(--line);
-  }
-  p > a[title]:hover {
-    background: var(--accent);
-    color: #ffffff;
-    border-color: var(--accent);
-  }
-
-  /* —— 表格: Dashboard 风 (修复对比度) —— */
-  .table-wrap {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
-    background: var(--paper-elevated);
-    overflow: hidden;
-  }
-  table { background: var(--paper-elevated); }
-  /* 表头比卡片底色更深, 形成"沉下去"的视觉区隔 */
-  th {
-    background: #050505;
-    color: var(--ink-strong);
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: 0;
-    border-bottom: 1px solid var(--line) !important;
-    padding: 14px 16px;
-    font-size: 0.86rem;
-  }
-  td {
-    color: var(--ink);
-    border-bottom: 1px solid var(--line) !important;  /* hairline 提亮, 行间能看清 */
-    padding: 14px 16px;
-  }
-  td strong { color: var(--ink-strong); font-weight: 600; }
-  /* 雨马反差: 偶数行用更明显的灰 */
-  tbody tr:nth-child(even) td {
-    background: rgba(255, 255, 255, 0.025);
-  }
-  tbody tr:hover td {
-    background: var(--accent-soft);
-    color: var(--ink-strong);
-  }
-  tbody tr:last-child td { border-bottom: none !important; }
-
-  /* —— 代码块: 极深底 —— */
-  pre {
-    border-radius: var(--radius-md);
-    background: var(--code-bg);
-    border: 1px solid var(--line);
-  }
-  code {
-    border-radius: var(--radius-xs);
-    background: var(--code-inline-bg);
-    color: var(--code-inline-ink);
-    border: none;
-    font-weight: 500;
-  }
-
-  /* —— Sidebar: 深色 dashboard 侧栏 + 蓝色 active —— */
-  .sidebar__inner {
-    border-radius: var(--radius-lg);
-    border-color: var(--line);
-    background: var(--paper);
-  }
-  .sidebar__title { color: var(--muted); }
-  .sidebar__list a {
-    border-left: none;
-    border-radius: var(--radius-md);
-    margin: 1px 0;
-    padding: 7px 12px;
-    text-decoration: none;
-    color: var(--ink-soft);
-  }
-  .sidebar__list a:hover {
-    background: var(--surface);
-    border-left: none;
-    color: var(--ink-strong);
-  }
-  .sidebar__list a.is-active {
-    background: var(--accent);
-    color: #ffffff;
-    border-left: none;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(74, 144, 255, 0.3);
-  }
-  .sidebar__list .lvl-3.is-active {
-    background: var(--accent-soft);
-    color: var(--accent);
-    box-shadow: none;
-  }
-
-  /* —— 章节导航按钮: Dashboard 风 —— */
-  .chapter-nav__btn {
-    border-radius: var(--radius-lg);
-    background: var(--paper-elevated);
-    border: 1px solid var(--line);
-    text-decoration: none;
-    color: var(--ink);
-  }
-  .chapter-nav__btn:not(.is-disabled):hover {
-    border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(74, 144, 255, 0.15);
-    background: var(--paper-elevated);
-    transform: translateY(-1px);
-  }
-  .chapter-nav__dir { color: var(--accent); }
-  .chapter-nav__title { color: var(--ink-strong); }
-
-  /* —— 返回顶部: 蓝色 pill —— */
-  .back-to-top {
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: #ffffff;
-    box-shadow: 0 4px 16px rgba(74, 144, 255, 0.4);
-  }
-  .back-to-top:hover {
-    background: var(--accent-strong);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(74, 144, 255, 0.5);
-  }
-
-  /* —— 阅读进度条: 蓝色细线 —— */
-  .reading-progress { height: 2px; }
-  .reading-progress__bar {
-    background: var(--accent);
-    box-shadow: 0 0 12px rgba(74, 144, 255, 0.6);
-  }
-
-  /* —— AI 划词气泡: 蓝色 pill —— */
-  .ai-bubble {
-    background: var(--accent);
-    color: #ffffff;
-    box-shadow: 0 4px 16px rgba(74, 144, 255, 0.4);
-  }
-  .ai-bubble:hover {
-    background: var(--accent-strong);
-    box-shadow: 0 6px 20px rgba(74, 144, 255, 0.5);
-  }
-
-  /* —— 搜索 modal: 深色 —— */
-  .search-modal { background: rgba(0, 0, 0, 0.7); }
-  .search-box {
-    border-radius: var(--radius-lg);
-    border-color: var(--line);
-    background: var(--paper-elevated);
-  }
-  .search-box__input { color: var(--ink-strong); }
-  .search-box__input::placeholder { color: var(--muted); }
-  .search-result {
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    color: var(--ink);
-  }
-  .search-result:hover,
-  .search-result.is-active {
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-
-  /* —— Diagram: 深色 + 蓝色边框 (修复对比度) —— */
-  figure.diagram {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
-    background: var(--paper-elevated);
-    box-shadow: none;
-    padding: 32px 28px 22px;
-  }
-  figure.diagram figcaption {
-    color: var(--ink-soft);                    /* 比 muted 更亮 */
-    border-top-color: var(--line);
-    padding-top: 14px;
-  }
-  figure.diagram figcaption b {
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-radius: var(--radius-pill);
-    padding: 3px 10px;
-    border: none;
-    font-weight: 600;
-  }
-  /* SVG 内部颜色: 强制提亮所有文字与描边, 让深底图清晰 */
-  figure.diagram svg text {
-    fill: #c8c8c8;                              /* 默认文字提亮 */
-  }
-  figure.diagram svg .dia-label-strong {
-    fill: #ffffff !important;
-    font-weight: 700;
-  }
-  figure.diagram svg .dia-label-soft {
-    fill: #9aa4b8 !important;                  /* 比 muted 亮, 比 ink-soft 弱, 用蓝灰 */
-  }
-  figure.diagram svg .dia-stroke {
-    stroke: #444b5a !important;                /* 比 line-strong 亮一点 */
-  }
-  figure.diagram svg .dia-stroke-accent {
-    stroke: var(--accent) !important;
-  }
-  /* 关键修复: 把 SVG 里所有 inline 透明度 0.13 的色块统一提到 0.18-0.20 */
-  figure.diagram svg rect[style*="fill-opacity"] {
-    fill-opacity: 0.18 !important;
-    stroke-opacity: 0.85 !important;
-    stroke-width: 1.5px !important;
-  }
-
-  /* —— Lesson Card 等 6 章彩色卡: 收敛到深色蓝 —— */
-  aside.lesson-card,
-  .lesson-card {
-    --card-band: var(--accent) !important;
-    background: var(--paper-elevated);
-    border-color: var(--line);
-    color: var(--ink);
-  }
-
-  /* —— Stack Card / day-list 也要深色 —— */
-  .stack-card, .day-list, .stack-grid > * {
-    background: var(--paper-elevated);
-    border-color: var(--line);
-    color: var(--ink);
-  }
-
-  /* —— 加强: <strong> 标签 / <em> 标签 在深色下不丢色 —— */
-  strong { color: var(--ink-strong); }
-  em { color: var(--ink); }
-
-  /* ==========================================================
-     新组件: Lead Text + Term Card (深色 dashboard 风)
-     ========================================================== */
-  .lead-text {
-    font-size: 1.06rem;
-    line-height: 1.7;
-    color: var(--ink-soft);
-    margin: 28px 0 14px;
-    max-width: 680px;
-    font-weight: 400;
-  }
-  .lead-text strong { color: var(--ink-strong); font-weight: 600; }
-  .lead-text + .term-stack,
-  .lead-text + .term-card { margin-top: 8px; }
-
-  .term-card {
-    background: var(--paper-elevated);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    margin: 8px 0;
-    overflow: hidden;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease;
-  }
-  .term-card[open] {
-    border-color: var(--accent);
-    box-shadow: 0 4px 16px rgba(74, 144, 255, 0.15);
-  }
-  .term-card:hover { border-color: var(--line-strong); }
-  .term-card[open]:hover { border-color: var(--accent); }
-
-  .term-card > summary {
-    list-style: none;
-    cursor: pointer;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .term-card > summary::-webkit-details-marker { display: none; }
-  .term-card > summary::marker { content: ""; }
-
-  .term-card__name {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--ink-strong);
-    letter-spacing: -0.015em;
-    line-height: 1.4;
-    flex: 1;
-    min-width: 0;
-  }
-  .term-card__name em {
-    font-style: normal;
-    color: var(--muted);
-    font-weight: 400;
-    margin-left: 6px;
-    font-size: 0.92em;
-  }
-  .term-card__hint {
-    font-size: 0.78rem;
-    color: var(--accent);
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.15s ease;
-    background: var(--accent-soft);
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    font-weight: 600;
-  }
-  .term-card__hint::after {
-    content: "↓";
-    display: inline-block;
-    transition: transform 0.2s ease;
-    font-size: 0.92em;
-  }
-  .term-card[open] .term-card__hint::after { transform: rotate(180deg); }
-
-  .term-card__body {
-    padding: 4px 20px 20px;
-    border-top: 1px solid var(--divider);
-    color: var(--ink);
-    font-size: 0.96rem;
-    line-height: 1.74;
-  }
-  .term-card__body > *:first-child { margin-top: 14px; }
-  .term-card__body > *:last-child { margin-bottom: 0; }
-  .term-card__body p { margin: 0.6em 0; }
-  .term-card__body strong { color: var(--accent); }
-
-  .term-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 14px 0 28px;
-  }
-
-  /* —— 切换提示: 适配 light <img> 等可能的元素 —— */
-  img {
-    background: var(--paper-elevated);
-    border-color: var(--line);
-  }
-
-  /* —— 数据 metric 标签 (短数据徽章, ≤12 字符) —— */
-  .metric {
-    display: inline-block;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-    border-radius: var(--radius-sm);
-    padding: 2px 8px;
-    font-weight: 600;
-    font-size: 0.88em;
-    line-height: 1.5;
-    word-break: keep-all;
-    white-space: nowrap;                     /* 短徽章不换行 */
-    text-align: center;
-    vertical-align: baseline;
-  }
-  .metric--ok { background: rgba(34, 197, 94, 0.14); color: #4ade80; border-color: rgba(34, 197, 94, 0.25); }
-  .metric--warn { background: rgba(234, 179, 8, 0.14); color: #facc15; border-color: rgba(234, 179, 8, 0.30); }
-  .metric--bad { background: rgba(239, 68, 68, 0.14); color: #f87171; border-color: rgba(239, 68, 68, 0.30); }
-
-  /* —— Studio 主题下 .cost-chip 颜色调亮以适配深底 —— */
-  .cost-chip--ok   { color: #4ade80; background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.28); }
-  .cost-chip--warn { color: #facc15; background: rgba(234, 179, 8, 0.14); border-color: rgba(234, 179, 8, 0.32); }
-  .cost-chip--bad  { color: #f87171; background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.30); }
-
-  /* ==========================================================
-     富文本特效组件 (用于打散大段文字, 帮助 ADHD 友好阅读)
-     ========================================================== */
-
-  /* 关键句行内高亮 — 半透明蓝底 + 微妙下划 */
-  .highlight {
-    background: linear-gradient(
-      180deg,
-      transparent 60%,
-      rgba(74, 144, 255, 0.22) 60%
-    );
-    color: var(--ink-strong);
-    padding: 0 2px;
-    border-radius: 2px;
-    font-weight: 500;
-  }
-
-  /* 关键决断行内 pill — 比 .highlight 更强, 用于"必须记住的判断" */
-  .key-point {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 2px 10px;
-    border-radius: var(--radius-pill);
-    font-weight: 600;
-    font-size: 0.92em;
-    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  }
-  .key-point::before {
-    content: "★";
-    font-size: 0.8em;
-    line-height: 1;
-  }
-
-  /* ==========================================================
-     章节摘要卡 .section-summary
-     用法: 放在大段散文前, 列出 3 个要点抓手
-     ========================================================== */
-  .section-summary {
-    background: var(--paper-elevated);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: 22px 26px 18px;
-    margin: 22px 0 28px;
-    position: relative;
-    overflow: hidden;
-  }
-  .section-summary::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 22px;
-    bottom: 22px;
-    width: 3px;
-    background: var(--accent);
-    border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
-  }
-  .section-summary__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-display);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-  .section-summary__eyebrow::before {
-    content: "";
-    width: 14px;
-    height: 14px;
-    border-radius: 4px;
-    background: var(--accent);
-    box-shadow: 0 2px 6px rgba(74, 144, 255, 0.3);
-  }
-  .section-summary__title {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--ink-strong);
-    letter-spacing: -0.018em;
-    margin: 0 0 14px;
-    line-height: 1.45;
-  }
-  .section-summary__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    counter-reset: ss;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .section-summary__list li {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    counter-increment: ss;
-    color: var(--ink);
-    font-size: 0.96rem;
-    line-height: 1.65;
-  }
-  .section-summary__list li::before {
-    content: counter(ss);
-    flex: 0 0 24px;
-    width: 24px;
-    height: 24px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-radius: 50%;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.78rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 2px;
-    line-height: 1;
-  }
-  .section-summary__list li strong { color: var(--ink-strong); font-weight: 600; }
-  .section-summary__foot {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--divider);
-    font-size: 0.84rem;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-summary__foot a {
-    color: var(--accent);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .section-summary__foot a:hover { text-decoration: underline; }
-}
 
 /* ============================================================
    富文本组件在非 Studio 主题下的 fallback 样式

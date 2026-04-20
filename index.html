@@ -95,10 +95,8 @@
       <div class="menu__title">主题</div>
       <div class="menu__row" role="group" aria-label="主题切换">
         <button class="menu__pill" type="button" data-theme-pill="auto" aria-pressed="true">跟随系统</button>
-        <button class="menu__pill" type="button" data-theme-pill="studio" aria-pressed="false">Studio</button>
-        <button class="menu__pill" type="button" data-theme-pill="threads" aria-pressed="false">Threads</button>
-        <button class="menu__pill" type="button" data-theme-pill="paper" aria-pressed="false">纸感</button>
-        <button class="menu__pill" type="button" data-theme-pill="dark" aria-pressed="false">深夜</button>
+        <button class="menu__pill" type="button" data-theme-pill="light" aria-pressed="false">浅色</button>
+        <button class="menu__pill" type="button" data-theme-pill="dark" aria-pressed="false">深色</button>
       </div>
       <div class="menu__title">字号</div>
       <div class="menu__row" role="group" aria-label="字号切换">
@@ -145,74 +143,24 @@
     <main class="main" id="content">
       <!-- 英雄区 -->
       <section class="hero" aria-labelledby="hero-title">
-        <!-- Studio 主题专属: 蓝色 3D 装饰球, 致敬截图右侧 AI Assistant 视觉锚点 -->
-        <svg class="hero__orb" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
-          <defs>
-            <radialGradient id="orbCore" cx="35%" cy="32%" r="68%">
-              <stop offset="0%" stop-color="#a8c8ff" stop-opacity="0.95" />
-              <stop offset="40%" stop-color="#4a90ff" stop-opacity="0.85" />
-              <stop offset="100%" stop-color="#0d3a8a" stop-opacity="0.95" />
-            </radialGradient>
-            <radialGradient id="orbHalo" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#4a90ff" stop-opacity="0.5" />
-              <stop offset="60%" stop-color="#4a90ff" stop-opacity="0.18" />
-              <stop offset="100%" stop-color="#4a90ff" stop-opacity="0" />
-            </radialGradient>
-            <radialGradient id="orbHighlight" cx="30%" cy="25%" r="40%">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7" />
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-            </radialGradient>
-          </defs>
-          <!-- 外层光晕 -->
-          <circle cx="100" cy="100" r="98" fill="url(#orbHalo)" />
-          <!-- 主球体 -->
-          <circle cx="100" cy="100" r="62" fill="url(#orbCore)" />
-          <!-- 顶部高光 -->
-          <ellipse cx="82" cy="80" rx="22" ry="14" fill="url(#orbHighlight)" />
-          <!-- 数据点装饰 -->
-          <circle cx="40" cy="50" r="2" fill="#4a90ff" opacity="0.6" />
-          <circle cx="170" cy="65" r="1.5" fill="#6ba5ff" opacity="0.7" />
-          <circle cx="160" cy="155" r="2.5" fill="#4a90ff" opacity="0.5" />
-          <circle cx="35" cy="160" r="1.8" fill="#a8c8ff" opacity="0.6" />
-          <circle cx="180" cy="105" r="1.2" fill="#4a90ff" opacity="0.5" />
-        </svg>
-
-        <div class="hero__badges">
-          <span class="hero__badge hero__badge--accent">★ 开源学习项目</span>
-          <span class="hero__badge">软件架构</span>
-          <span class="hero__badge">敏捷管理</span>
-          <span class="hero__badge">AI 原生开发</span>
-          <span class="hero__badge">一人公司</span>
-          <span class="hero__badge" title="本项目为 ADHD 用户优化了易读性">ADHD 友好阅读</span>
-        </div>
-        <h1 id="hero-title" class="hero__title">从 <em>0</em> 到 <em>1</em>，做出有竞争力的<br/>一人产品与一人公司</h1>
+        <p class="hero__eyebrow">开源中文教材 · 2026 年版</p>
+        <h1 id="hero-title" class="hero__title">从 0 到 1，做出有竞争力的一人产品与一人公司</h1>
         <p class="hero__subtitle">
-          一本面向 2026 年现实环境的开源教材：把<strong>看懂系统 → 做对架构 → 用 AI 落地 → 经营成公司</strong>完整串成一条线。
-          覆盖软件架构工程、敏捷项目管理、Cursor 风格 AI 原生开发，以及一人产品化与商业化全流程。
+          把<strong>看懂系统 → 做对架构 → 用 AI 落地 → 经营成公司</strong>完整串成一条线。覆盖软件架构工程、敏捷项目管理、Cursor 风 AI 原生开发，以及一人产品化与商业化全流程。
         </p>
-        <p class="hero__author">
-          作者 <strong>PENG</strong> · 独立 Agent 开发者 · 把试错的学费折算成你能直接拿走的判断 ·
-          <a href="#about-author">关于作者与学习小组 →</a>
+        <p class="hero__meta-line">
+          <span><strong>16</strong> 章</span>
+          <span aria-hidden="true">·</span>
+          <span><strong id="statWords">—</strong> 字</span>
+          <span aria-hidden="true">·</span>
+          <span><strong id="statMinutes">—</strong> 分钟阅读</span>
+          <span aria-hidden="true">·</span>
+          <span>作者 <strong>PENG</strong></span>
         </p>
-        <p class="hero__author hero__author--meta">许可：MIT (代码) / CC BY-NC-SA 4.0 (正文)</p>
-        <div class="hero__meta">
-          <div class="hero__stat">
-            <span class="hero__stat-num">16</span>
-            <span class="hero__stat-label">章节</span>
-          </div>
-          <div class="hero__stat">
-            <span class="hero__stat-num" id="statWords">—</span>
-            <span class="hero__stat-label">字数</span>
-          </div>
-          <div class="hero__stat">
-            <span class="hero__stat-num"><span id="statMinutes">—</span> 分钟</span>
-            <span class="hero__stat-label">预计阅读</span>
-          </div>
-          <div class="hero__stat">
-            <span class="hero__stat-num">4</span>
-            <span class="hero__stat-label">阅读主题</span>
-          </div>
-        </div>
+        <p class="hero__cta-row">
+          <a class="hero__cta hero__cta--primary" href="#chapter-map">开始阅读 <span aria-hidden="true">→</span></a>
+          <a class="hero__cta hero__cta--ghost" href="#about-author">关于作者</a>
+        </p>
       </section>
 
       <!-- 开篇术语速览 — 进章节前先把 4 个核心术语点开看看, 后面的章节会顺很多 -->
@@ -292,7 +240,7 @@
       </section>
 
       <!-- 章节地图 -->
-      <section class="chapter-map" aria-labelledby="chapter-map-title">
+      <section id="chapter-map" class="chapter-map" aria-labelledby="chapter-map-title">
         <div class="chapter-map__head">
           <h2 id="chapter-map-title">学习地图 · 一目了然</h2>
           <p>按学习路径色带分组：系统认知 → 架构 → 协调与平台 → 技术深描 → AI 原生 → 一人公司</p>

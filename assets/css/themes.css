@@ -1,402 +1,256 @@
 /* ============================================================
-   一人公司·从 0 到 1 — 主题色板
-   四套主题：threads(默认 · Threads 极简) / paper(温润纸感) / dark(深夜) / sepia(护眼)
-   颜色统一通过 CSS Variables 暴露给 main.css
+   一人公司·从 0 到 1 — 设计系统
+   ------------------------------------------------------------
+   两套主题 (Apple HIG 标准):
+     light  — 默认, 仿 Apple Developer Documentation
+     dark   — 仿 Apple developer.apple.com Dark Mode
+   并向后兼容历史 localStorage 值:
+     studio → dark
+     threads / meta / paper / sepia → light
    ============================================================ */
 
 /* ------------------------------------------------------------
-   全局形状 / 字体变量（不随主题变）
+   全局 Tokens — 不随主题变化的设计语言
    ------------------------------------------------------------ */
 :root {
-  /* 圆角语言 */
+  /* Type Scale — Apple HIG 翻译为 Web (基准 17px = iOS Body) */
+  --text-display: clamp(2.25rem, 1.25rem + 2.5vw, 3.25rem); /* Hero: 36-52px */
+  --text-h1:      clamp(1.75rem, 1.25rem + 1.4vw, 2.25rem); /* 章节 H2: 28-36px */
+  --text-h2:      clamp(1.375rem, 1rem + 1vw, 1.75rem);     /* 节 H3: 22-28px */
+  --text-h3:      clamp(1.125rem, 0.95rem + 0.5vw, 1.3125rem); /* 子节 H4: 18-21px */
+  --text-headline: 1.0625rem; /* Headline = Body 加重: 17px */
+  --text-body:    1.0625rem;  /* 正文: 17px */
+  --text-callout: 0.9375rem;  /* 副文本: 15px */
+  --text-footnote: 0.8125rem; /* 注脚: 13px */
+  --text-caption: 0.75rem;    /* 标签 / Eyebrow: 12px */
+
+  /* Leading (line-height) */
+  --leading-display: 1.07;
+  --leading-h:       1.2;
+  --leading-body:    1.65;
+  --leading-tight:   1.3;
+  --leading-loose:   1.85;
+
+  /* Letter spacing — Apple 习惯负值 tracking 在大字号上 */
+  --tracking-display: -0.022em;
+  --tracking-h:       -0.012em;
+  --tracking-body:    0;
+  --tracking-eyebrow: 0.08em;
+
+  /* 8pt Grid spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Radius */
   --radius-xs: 6px;
   --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-pill: 999px;
 
-  /* 字体家族 — Threads 用 SF Pro Display, 我们用 Inter 替代 */
-  --font-display: "Inter", "SF Pro Display", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
-  --font-body: "Inter", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
-  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "Times New Roman", Georgia, serif;
-  --font-mono: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, monospace;
+  /* Easing — Apple 标准 spring */
+  --ease-apple: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out:   cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-fast: 0.18s;
+  --duration-base: 0.32s;
+  --duration-slow: 0.5s;
+
+  /* Reading max-width — 阅读舒适区 (~38 中文字 / ~70 拉丁字符) */
+  --measure: 38em;
+
+  /* Font Families
+     - display/body: SF Pro 优先, system-ui 兜底, 中文 PingFang
+     - serif: 正文长文用, 中文教材传统衬线
+     - mono: 代码 */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC",
+    "Iowan Old Style", "Apple Garamond", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code",
+    "SFMono-Regular", Consolas, monospace;
 }
 
 /* ============================================================
-   STUDIO 主题（默认）—— 深色 SaaS Dashboard 风
-   设计语言:
-   - 深黑底 #0A0A0A + 卡片稍亮 #161616, 像 Vercel/Linear/现代 SaaS
-   - 蓝色 #4A90FF 作为唯一强调色 (用在数字/CTA/链接/聚焦)
-   - 大圆角卡片 + Pill 按钮
-   - 大字蓝色数字, 灰色辅助文字, 白色主标题
+   LIGHT (默认) — Apple Developer Documentation 视觉
    ============================================================ */
 :root,
-[data-theme="studio"] {
-  /* 背景层级 — 缓和眩光: bg 从 #0a0a0a 抬到 #111114, 三层灰阶之间用更细的台阶
-     研究: 长文阅读时纯黑 #000-#0a 会让瞳孔反复调节, 17:1 对比度刺眼;
-            GitHub/Linear/Vercel 都用 #0d/#11/#13 这一档而非纯黑. */
-  --bg: #111114;                    /* 主底, 接近 GitHub Dark */
-  --bg-soft: #16171a;
-  --paper: #1a1b1e;                 /* 卡片底, 比 bg 抬一档 */
-  --paper-elevated: #1f2024;        /* 上层卡片, 再抬一档 */
-  --surface: #25262b;               /* icon button / chip 底 */
-  --surface-hover: #2c2d33;
+[data-theme="light"],
+[data-theme="paper"],
+[data-theme="threads"],
+[data-theme="meta"],
+[data-theme="sepia"] {
+  /* 背景层级 */
+  --bg: #ffffff;                    /* 主底, Apple white */
+  --bg-soft: #fbfbfd;               /* sidebar 底, Apple lightest gray */
+  --paper: #ffffff;                 /* 卡片, 与 bg 同 */
+  --paper-elevated: #f5f5f7;        /* 抬一档卡片 / 表面 */
+  --surface: #f5f5f7;               /* chip / icon-btn 底 */
+  --surface-hover: #e8e8ed;
 
-  /* 文字 — 降一档对比度, 17:1 → 11:1 (依然过 WCAG AAA, 但不眩) */
-  --ink: #d0d0d0;                   /* 正文: 米白偏暖 */
-  --ink-strong: #ffffff;            /* 强调/标题保持纯白, 让 strong 凸出 */
-  --ink-soft: #9aa0a6;              /* 副文本提一档可读性 */
-  --muted: #6e7480;
-  --muted-2: #484c54;
+  /* 文字 — Apple 标志 #1d1d1f 偏暖深灰 */
+  --ink: #1d1d1f;
+  --ink-strong: #000000;
+  --ink-soft: #424245;
+  --muted: #6e6e73;                 /* Apple system gray */
+  --muted-2: #86868b;
 
-  /* 线条 — 深色 hairline */
-  --line: #2a2c32;
-  --line-strong: #3a3d44;
-  --divider: #1f2126;
+  /* 线条 — Apple separator hairline */
+  --line: #d2d2d7;
+  --line-strong: #b0b0b5;
+  --divider: #e5e5ea;
 
-  /* 主色 — 夜空蓝 (Dashboard 风的强调蓝) */
-  --accent: #4a90ff;
-  --accent-strong: #6ba5ff;
-  --accent-soft: rgba(74, 144, 255, 0.12);
-  --accent-fade: rgba(74, 144, 255, 0.06);
-  --accent-ring: rgba(74, 144, 255, 0.4);
+  /* 主色 — Apple Documentation Blue */
+  --accent: #0066cc;
+  --accent-strong: #0050a3;
+  --accent-soft: rgba(0, 102, 204, 0.08);
+  --accent-fade: rgba(0, 102, 204, 0.04);
+  --accent-ring: rgba(0, 102, 204, 0.35);
 
   /* 语义色 */
-  --quote-bg: #1a1b1e;
+  --quote-bg: #f5f5f7;
   --quote-bar: var(--accent);
-  --code-bg: #0a0a0c;
-  --code-ink: #f5f5f5;
-  --code-inline-bg: #25262b;
-  --code-inline-ink: #6ba5ff;
+  --code-bg: #1d1d1f;               /* 深色代码块 (无论亮模式) */
+  --code-ink: #f5f5f7;
+  --code-inline-bg: #f5f5f7;
+  --code-inline-ink: #c7254e;       /* 类 Apple docs 关键字 */
 
-  /* 6 色带 — 同明度同饱和度, hue 错开
-     OKLCH(72% 0.10 hue): 同等感知亮度 + 低饱和, 既有节奏又不刺眼
-     翻页时章节锚点重新生效, 但仍是 dashboard 克制感 */
-  --band-1: oklch(72% 0.10 200);    /* 青蓝 — 系统认知 */
-  --band-2: oklch(72% 0.10 245);    /* 蓝 — 架构 */
-  --band-3: oklch(72% 0.10 285);    /* 紫 — 协调 */
-  --band-4: oklch(72% 0.10 325);    /* 粉 — 平台 */
-  --band-5: oklch(72% 0.10 35);     /* 暖橙 — 前沿 */
-  --band-6: oklch(72% 0.10 80);     /* 黄绿 — 一人公司 */
+  /* 6 章色带 — 几乎无饱和, 只是色相微差, 用作锚点不抢戏 */
+  --band-1: oklch(50% 0.06 200);
+  --band-2: oklch(50% 0.06 245);
+  --band-3: oklch(50% 0.06 285);
+  --band-4: oklch(50% 0.06 325);
+  --band-5: oklch(50% 0.06 35);
+  --band-6: oklch(50% 0.06 80);
 
-  /* 阴影 (深色环境用更深的阴影) */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.7);
+  /* 阴影 — 几乎不用. Apple 用 hairline + 抬层级 (paper-elevated) 替代 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.08);
 
-  /* 渐变变量 (用蓝色辉光替代彩虹) */
-  --meta-gradient: linear-gradient(135deg, #4a90ff 0%, #2563eb 100%);
-  --meta-gradient-soft: rgba(74, 144, 255, 0.06);
-
-  --is-meta: 1;
-  --color-scheme: dark;
-}
-
-/* ============================================================
-   THREADS 主题 —— 黑白灰极简 + 大留白 + 0 彩色装饰
-   ============================================================ */
-[data-theme="threads"] {
-  /* 背景与表面 — Threads 浅灰底 + 白卡 */
-  --bg: #fafafa;
-  --bg-soft: #f3f3f3;
-  --paper: #ffffff;
-  --paper-elevated: #ffffff;
-  --surface: #f5f5f5;
-  --surface-hover: #ebebeb;
-
-  /* 文字 — 纯黑统治 */
-  --ink: #0a0a0a;
-  --ink-strong: #000000;
-  --ink-soft: #4a4a4a;
-  --muted: #888888;
-  --muted-2: #b0b0b0;
-
-  /* 线条 — 极淡 */
-  --line: #e6e6e6;
-  --line-strong: #d0d0d0;
-  --divider: #efefef;
-
-  /* 主色 / 强调 — 黑色 (Threads 真正的"主色") */
-  --accent: #000000;
-  --accent-strong: #000000;
-  --accent-soft: #f0f0f0;
-  --accent-fade: rgba(0, 0, 0, 0.04);
-  --accent-ring: rgba(0, 0, 0, 0.4);
-
-  /* 语义色 */
-  --quote-bg: #f5f5f5;
-  --quote-bar: #000000;
-  --code-bg: #0a0a0a;
-  --code-ink: #f5f5f5;
-  --code-inline-bg: #f0f0f0;
-  --code-inline-ink: #000000;
-
-  /* 章节色带 — 全部纯黑, Threads 不用色彩区分 */
-  --band-1: #000000;
-  --band-2: #000000;
-  --band-3: #000000;
-  --band-4: #000000;
-  --band-5: #000000;
-  --band-6: #000000;
-
-  /* 阴影 — 几乎不可见 */
-  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.08);
-
-  /* "渐变"已废弃，但保留变量为单色黑以兼容旧引用 */
-  --meta-gradient: #000000;
-  --meta-gradient-soft: rgba(0, 0, 0, 0.04);
-
-  --is-meta: 1;
-  --color-scheme: light;
-}
-
-/* 旧的 [data-theme="meta"] 别名 - 兼容历史 localStorage 用户, 也指向 Threads 风 */
-[data-theme="meta"] {
-  --bg: #fafafa;
-  --bg-soft: #f3f3f3;
-  --paper: #ffffff;
-  --paper-elevated: #ffffff;
-  --surface: #f5f5f5;
-  --surface-hover: #ebebeb;
-  --ink: #0a0a0a;
-  --ink-strong: #000000;
-  --ink-soft: #4a4a4a;
-  --muted: #888888;
-  --muted-2: #b0b0b0;
-  --line: #e6e6e6;
-  --line-strong: #d0d0d0;
-  --divider: #efefef;
-  --accent: #000000;
-  --accent-strong: #000000;
-  --accent-soft: #f0f0f0;
-  --accent-fade: rgba(0, 0, 0, 0.04);
-  --accent-ring: rgba(0, 0, 0, 0.4);
-  --quote-bg: #f5f5f5;
-  --quote-bar: #000000;
-  --code-bg: #0a0a0a;
-  --code-ink: #f5f5f5;
-  --code-inline-bg: #f0f0f0;
-  --code-inline-ink: #000000;
-  --band-1: #000000;
-  --band-2: #000000;
-  --band-3: #000000;
-  --band-4: #000000;
-  --band-5: #000000;
-  --band-6: #000000;
-  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.08);
-  --meta-gradient: #000000;
-  --meta-gradient-soft: rgba(0, 0, 0, 0.04);
-  --is-meta: 1;
-  --color-scheme: light;
-}
-
-/* ============================================================
-   PAPER 主题（温润纸感 · 教材原默认）
-   ============================================================ */
-[data-theme="paper"] {
-  --bg: #f4ede0;
-  --bg-soft: #efe6d3;
-  --paper: #fffdf7;
-  --paper-elevated: #fffefa;
-  --surface: #fbf6ec;
-  --surface-hover: #f3ecdb;
-
-  --ink: #1f2937;
-  --ink-strong: #0f172a;
-  --ink-soft: #4b5563;
-  --muted: #6b7280;
-  --muted-2: #94a3b8;
-
-  --line: #e2dac7;
-  --line-strong: #cdc4ad;
-  --divider: #ece4d2;
-
-  --accent: #8b5e34;
-  --accent-strong: #6d4520;
-  --accent-soft: #efe2cc;
-  --accent-fade: rgba(139, 94, 52, 0.08);
-  --accent-ring: rgba(139, 94, 52, 0.35);
-
-  --quote-bg: #f5ecd9;
-  --quote-bar: var(--accent);
-  --code-bg: #2b2b2b;
-  --code-ink: #f5f3ee;
-  --code-inline-bg: #efe6d3;
-  --code-inline-ink: #6d4520;
-
-  --band-1: #c98a52;
-  --band-2: #8b5e34;
-  --band-3: #c5a05e;
-  --band-4: #6c8e75;
-  --band-5: #5b7fa3;
-  --band-6: #a25e6d;
-
-  --shadow-sm: 0 1px 2px rgba(20, 14, 0, 0.04), 0 1px 3px rgba(20, 14, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(20, 14, 0, 0.06), 0 2px 4px rgba(20, 14, 0, 0.04);
-  --shadow-lg: 0 12px 30px rgba(20, 14, 0, 0.08), 0 4px 10px rgba(20, 14, 0, 0.05);
-  --shadow-xl: 0 24px 60px rgba(20, 14, 0, 0.12);
-
+  /* 历史变量保留 (向后兼容现有组件引用) */
   --meta-gradient: linear-gradient(135deg, var(--band-2), var(--band-5), var(--band-6));
-  --meta-gradient-soft: linear-gradient(135deg, var(--accent-fade), color-mix(in srgb, var(--band-5) 12%, transparent));
-
+  --meta-gradient-soft: linear-gradient(135deg, var(--accent-fade), color-mix(in srgb, var(--band-5) 8%, transparent));
   --is-meta: 0;
   --color-scheme: light;
 }
 
 /* ============================================================
-   DARK 主题（深夜）—— Threads Dark Mode 风
-   纯黑底 + 白字, 0 彩色装饰
+   DARK — Apple developer.apple.com Dark Mode
    ============================================================ */
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-theme="studio"] {
+  /* 背景层级 — Apple 真实 dark 色板 */
   --bg: #000000;
   --bg-soft: #0a0a0a;
-  --paper: #161616;
-  --paper-elevated: #1c1c1c;
-  --surface: #1c1c1c;
-  --surface-hover: #2a2a2a;
+  --paper: #1d1d1f;                 /* Apple secondary system bg */
+  --paper-elevated: #2c2c2e;        /* Apple tertiary */
+  --surface: #2c2c2e;
+  --surface-hover: #3a3a3c;
 
-  --ink: #f5f5f5;
+  /* 文字 — Apple light gray on black */
+  --ink: #f5f5f7;
   --ink-strong: #ffffff;
-  --ink-soft: #b8b8b8;
-  --muted: #888888;
-  --muted-2: #5a5a5a;
+  --ink-soft: #a1a1a6;
+  --muted: #86868b;
+  --muted-2: #48484a;
 
-  --line: #2a2a2a;
-  --line-strong: #3a3a3a;
-  --divider: #1f1f1f;
+  /* 线条 — Apple separator dark */
+  --line: #38383a;
+  --line-strong: #48484a;
+  --divider: #2c2c2e;
 
-  --accent: #ffffff;
-  --accent-strong: #ffffff;
-  --accent-soft: #2a2a2a;
-  --accent-fade: rgba(255, 255, 255, 0.06);
-  --accent-ring: rgba(255, 255, 255, 0.4);
+  /* 主色 — Apple link blue dark */
+  --accent: #2997ff;
+  --accent-strong: #5fb3ff;
+  --accent-soft: rgba(41, 151, 255, 0.14);
+  --accent-fade: rgba(41, 151, 255, 0.06);
+  --accent-ring: rgba(41, 151, 255, 0.4);
 
-  --quote-bg: #1c1c1c;
-  --quote-bar: #ffffff;
-  --code-bg: #0a0a0a;
-  --code-ink: #f5f5f5;
-  --code-inline-bg: #2a2a2a;
-  --code-inline-ink: #ffffff;
-
-  --band-1: #ffffff;
-  --band-2: #ffffff;
-  --band-3: #ffffff;
-  --band-4: #ffffff;
-  --band-5: #ffffff;
-  --band-6: #ffffff;
-
-  --shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.6);
-
-  --meta-gradient: #ffffff;
-  --meta-gradient-soft: rgba(255, 255, 255, 0.06);
-
-  --is-meta: 1;
-  --color-scheme: dark;
-}
-
-/* ============================================================
-   SEPIA 主题（护眼）
-   ============================================================ */
-[data-theme="sepia"] {
-  --bg: #ebe1cc;
-  --bg-soft: #e2d6bb;
-  --paper: #f4ead2;
-  --paper-elevated: #f7eed8;
-  --surface: #ede2c5;
-  --surface-hover: #e3d6b6;
-
-  --ink: #4b3a22;
-  --ink-strong: #2f2410;
-  --ink-soft: #6b5638;
-  --muted: #8a7958;
-  --muted-2: #ad9b78;
-
-  --line: #d2c19a;
-  --line-strong: #b8a47a;
-  --divider: #d8c8a2;
-
-  --accent: #9c5a23;
-  --accent-strong: #7a4416;
-  --accent-soft: #e5d4a8;
-  --accent-fade: rgba(156, 90, 35, 0.08);
-  --accent-ring: rgba(156, 90, 35, 0.35);
-
-  --quote-bg: #ebdcb1;
+  /* 语义色 */
+  --quote-bg: #1d1d1f;
   --quote-bar: var(--accent);
-  --code-bg: #2b2419;
-  --code-ink: #f0e6cf;
-  --code-inline-bg: #ddca9d;
-  --code-inline-ink: #6b3f10;
+  --code-bg: #0a0a0a;
+  --code-ink: #f5f5f7;
+  --code-inline-bg: #2c2c2e;
+  --code-inline-ink: #ff7b9c;
 
-  --band-1: #b87635;
-  --band-2: #9c5a23;
-  --band-3: #b89048;
-  --band-4: #5e7c5e;
-  --band-5: #50739b;
-  --band-6: #91475a;
+  /* 6 章色带 — dark 下略提亮, 但仍低饱和 */
+  --band-1: oklch(72% 0.06 200);
+  --band-2: oklch(72% 0.06 245);
+  --band-3: oklch(72% 0.06 285);
+  --band-4: oklch(72% 0.06 325);
+  --band-5: oklch(72% 0.06 35);
+  --band-6: oklch(72% 0.06 80);
 
-  --shadow-sm: 0 1px 2px rgba(64, 40, 0, 0.06), 0 1px 3px rgba(64, 40, 0, 0.07);
-  --shadow-md: 0 4px 12px rgba(64, 40, 0, 0.09), 0 2px 4px rgba(64, 40, 0, 0.05);
-  --shadow-lg: 0 12px 30px rgba(64, 40, 0, 0.12);
-  --shadow-xl: 0 24px 60px rgba(64, 40, 0, 0.18);
+  /* 阴影 — dark 下几乎不可见, 主要靠层级抬升传达深度 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
 
   --meta-gradient: linear-gradient(135deg, var(--band-2), var(--band-5), var(--band-6));
-  --meta-gradient-soft: linear-gradient(135deg, var(--accent-fade), color-mix(in srgb, var(--band-5) 12%, transparent));
-
-  --is-meta: 0;
-  --color-scheme: light;
+  --meta-gradient-soft: linear-gradient(135deg, var(--accent-fade), color-mix(in srgb, var(--band-5) 8%, transparent));
+  --is-meta: 1;
+  --color-scheme: dark;
 }
 
 /* ------------------------------------------------------------
-   系统偏好优先：用户没显式选过，且系统是深色 → 用 Threads Dark
+   系统偏好 — 用户没显式选过且系统是 dark 时, 自动用 dark
    ------------------------------------------------------------ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --bg: #000000;
     --bg-soft: #0a0a0a;
-    --paper: #161616;
-    --paper-elevated: #1c1c1c;
-    --surface: #1c1c1c;
-    --surface-hover: #2a2a2a;
-    --ink: #f5f5f5;
+    --paper: #1d1d1f;
+    --paper-elevated: #2c2c2e;
+    --surface: #2c2c2e;
+    --surface-hover: #3a3a3c;
+    --ink: #f5f5f7;
     --ink-strong: #ffffff;
-    --ink-soft: #b8b8b8;
-    --muted: #888888;
-    --muted-2: #5a5a5a;
-    --line: #2a2a2a;
-    --line-strong: #3a3a3a;
-    --divider: #1f1f1f;
-    --accent: #ffffff;
-    --accent-strong: #ffffff;
-    --accent-soft: #2a2a2a;
-    --accent-fade: rgba(255, 255, 255, 0.06);
-    --accent-ring: rgba(255, 255, 255, 0.4);
-    --quote-bg: #1c1c1c;
-    --quote-bar: #ffffff;
+    --ink-soft: #a1a1a6;
+    --muted: #86868b;
+    --muted-2: #48484a;
+    --line: #38383a;
+    --line-strong: #48484a;
+    --divider: #2c2c2e;
+    --accent: #2997ff;
+    --accent-strong: #5fb3ff;
+    --accent-soft: rgba(41, 151, 255, 0.14);
+    --accent-fade: rgba(41, 151, 255, 0.06);
+    --accent-ring: rgba(41, 151, 255, 0.4);
+    --quote-bg: #1d1d1f;
     --code-bg: #0a0a0a;
-    --code-ink: #f5f5f5;
-    --code-inline-bg: #2a2a2a;
-    --code-inline-ink: #ffffff;
-    --band-1: #ffffff;
-    --band-2: #ffffff;
-    --band-3: #ffffff;
-    --band-4: #ffffff;
-    --band-5: #ffffff;
-    --band-6: #ffffff;
-    --meta-gradient: #ffffff;
-    --meta-gradient-soft: rgba(255, 255, 255, 0.06);
+    --code-inline-bg: #2c2c2e;
+    --code-inline-ink: #ff7b9c;
+    --band-1: oklch(72% 0.06 200);
+    --band-2: oklch(72% 0.06 245);
+    --band-3: oklch(72% 0.06 285);
+    --band-4: oklch(72% 0.06 325);
+    --band-5: oklch(72% 0.06 35);
+    --band-6: oklch(72% 0.06 80);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
     --is-meta: 1;
     --color-scheme: dark;
   }
 }
+
+/* 让浏览器知道主题模式 (滚动条/表单控件用对色) */
+:root { color-scheme: light; }
+:root:has([data-theme="dark"]),
+[data-theme="dark"],
+[data-theme="studio"] { color-scheme: dark; }

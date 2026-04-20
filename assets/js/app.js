@@ -20,16 +20,25 @@
      ---------------------------------------------------------- */
   const root = document.documentElement;
 
+  // 老 localStorage 值兼容: studio → dark, threads/meta/paper/sepia → light
+  // 这样老用户切回页面 UI 不会出现"全部 pill 都不亮"的尴尬
+  function normalizeTheme(theme) {
+    if (theme === "auto" || !theme) return "auto";
+    if (theme === "dark" || theme === "studio") return "dark";
+    return "light"; // light, paper, threads, meta, sepia, 任何未知值
+  }
+
   function applyTheme(theme) {
-    if (theme === "auto") {
+    const t = normalizeTheme(theme);
+    if (t === "auto") {
       root.removeAttribute("data-theme");
     } else {
-      root.setAttribute("data-theme", theme);
+      root.setAttribute("data-theme", t);
     }
     $$('[data-theme-pill]').forEach((btn) => {
       btn.setAttribute(
         "aria-pressed",
-        String(btn.dataset.themePill === theme)
+        String(btn.dataset.themePill === t)
       );
     });
   }
