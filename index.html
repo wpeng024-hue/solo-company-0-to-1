@@ -18,8 +18,8 @@
 
   <title>一人公司·从 0 到 1 · 软件架构 × 敏捷 × AI 原生开发 × 一人商业化</title>
 
-  <!-- Favicon (inline SVG, 任何设备无需额外文件) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' x2='1' y1='0' y2='1'><stop offset='0' stop-color='%238b5e34'/><stop offset='1' stop-color='%23a25e6d'/></linearGradient></defs><rect width='64' height='64' rx='14' fill='url(%23g)'/><text x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Inter,Helvetica,sans-serif' font-weight='800' font-size='28' fill='%23fffdf7'>1</text></svg>" />
+  <!-- Favicon (inline SVG, SOLO 四宫格, 任何设备无需额外文件) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><clipPath id='c'><rect width='64' height='64' rx='12'/></clipPath></defs><g clip-path='url(%23c)'><rect width='32' height='32' x='0' y='0' fill='%238b5e34'/><rect width='32' height='32' x='32' y='0' fill='%23c5a05e'/><rect width='32' height='32' x='0' y='32' fill='%235b7fa3'/><rect width='32' height='32' x='32' y='32' fill='%23a25e6d'/><g font-family='Inter,Helvetica,sans-serif' font-weight='800' font-size='22' fill='%23fffdf7' text-anchor='middle' dominant-baseline='central'><text x='16' y='17'>S</text><text x='48' y='17'>O</text><text x='16' y='49'>L</text><text x='48' y='49'>O</text></g></g></svg>" />
 
   <!-- Fonts (优雅降级，离线时回退到系统字体) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -59,8 +59,13 @@
   <!-- 顶部导航 -->
   <header class="topbar" role="banner">
     <div class="topbar__inner">
-      <a href="#top" class="topbar__brand" aria-label="一人公司·从 0 到 1">
-        <span class="topbar__logo" aria-hidden="true">人1</span>
+      <a href="#top" class="topbar__brand" aria-label="SOLO · 一人公司·从 0 到 1">
+        <span class="topbar__logo" aria-hidden="true">
+          <span class="topbar__logo-cell" data-l="S"></span>
+          <span class="topbar__logo-cell" data-l="O"></span>
+          <span class="topbar__logo-cell" data-l="L"></span>
+          <span class="topbar__logo-cell" data-l="O"></span>
+        </span>
         <span>一人公司·从 0 到 1</span>
       </a>
       <span class="topbar__divider" aria-hidden="true"></span>

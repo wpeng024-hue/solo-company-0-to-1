@@ -72,7 +72,10 @@ p > a[title] {
 .topbar__logo {
   width: 28px;
   height: 28px;
-  font-size: 0.78rem;
+  border-radius: 7px;
+}
+.topbar__logo-cell {
+  font-size: 9.5px;
 }
 
 /* 在 mobile 下只在 topbar 留 1 个"目录"按钮，
