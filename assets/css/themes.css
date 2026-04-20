@@ -1,12 +1,101 @@
 /* ============================================================
    一人公司·从 0 到 1 — 主题色板
-   三套主题：paper(默认温润纸感) / dark(深夜) / sepia(护眼)
+   四套主题：meta(默认 · Meta Style) / paper(温润纸感) / dark(深夜) / sepia(护眼)
    颜色统一通过 CSS Variables 暴露给 main.css
    ============================================================ */
 
+/* ------------------------------------------------------------
+   全局形状 / 字体变量（不随主题变）
+   ------------------------------------------------------------ */
+:root {
+  /* 圆角语言（Meta Style 一律大圆角 + Pill） */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* 字体家族 */
+  --font-display: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-body: "Inter", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "Times New Roman", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, monospace;
+}
+
+/* ============================================================
+   META 主题（默认）—— Facebook / Meta 现行品牌系
+   - Meta Blue #0866FF 主色
+   - 蓝紫粉橙四彩渐变色带
+   - 大圆角 + Pill 按钮
+   - 干净白底 + FB 浅灰背景
+   ============================================================ */
 :root,
-[data-theme="paper"] {
+[data-theme="meta"] {
   /* 背景与表面 */
+  --bg: #f0f2f5;            /* Meta 经典背景灰 */
+  --bg-soft: #e4e6eb;
+  --paper: #ffffff;         /* 卡片纯白 */
+  --paper-elevated: #ffffff;
+  --surface: #f0f2f5;
+  --surface-hover: #e4e6eb;
+
+  /* 文字 */
+  --ink: #1c1e21;           /* FB 文字深 */
+  --ink-strong: #050505;    /* FB 极深 */
+  --ink-soft: #4b4f56;
+  --muted: #65676b;         /* FB secondary */
+  --muted-2: #8a8d91;
+
+  /* 线条 */
+  --line: #dadde1;          /* FB divider */
+  --line-strong: #ccd0d5;
+  --divider: #e4e6eb;
+
+  /* 主色 / 强调 — Meta Blue */
+  --accent: #0866ff;
+  --accent-strong: #0653cc;
+  --accent-soft: #e7f0ff;
+  --accent-fade: rgba(8, 102, 255, 0.08);
+  --accent-ring: rgba(8, 102, 255, 0.4);
+
+  /* 语义色 */
+  --quote-bg: #e7f0ff;
+  --quote-bar: var(--accent);
+  --code-bg: #1c1e21;
+  --code-ink: #f5f6f7;
+  --code-inline-bg: #e7f0ff;
+  --code-inline-ink: #0653cc;
+
+  /* 章节色带 — 全部收敛到 Meta Blue 单色族
+     彩虹只允许出现在 SOLO Logo 与 Hero 焦点词 (--meta-gradient)
+     这里走 Facebook 主站的克制路线: 一种蓝统治一切 */
+  --band-1: #0866ff;
+  --band-2: #0866ff;
+  --band-3: #0866ff;
+  --band-4: #0866ff;
+  --band-5: #0866ff;
+  --band-6: #0866ff;
+
+  /* 阴影（Meta 风：柔和、低饱和、大范围） */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 24px 60px rgba(8, 102, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* Meta 标志渐变（蓝→紫→粉→橙） */
+  --meta-gradient: linear-gradient(135deg, #0866ff 0%, #8b5cf6 35%, #ec4899 65%, #f97316 100%);
+  --meta-gradient-soft: linear-gradient(135deg, rgba(8,102,255,0.10), rgba(139,92,246,0.10) 35%, rgba(236,72,153,0.10) 65%, rgba(249,115,22,0.10));
+
+  /* 标记当前是 meta 主题（供 main.css 写覆盖时使用） */
+  --is-meta: 1;
+  --color-scheme: light;
+}
+
+/* ============================================================
+   PAPER 主题（温润纸感 · 教材原默认）
+   ============================================================ */
+[data-theme="paper"] {
   --bg: #f4ede0;
   --bg-soft: #efe6d3;
   --paper: #fffdf7;
@@ -14,26 +103,22 @@
   --surface: #fbf6ec;
   --surface-hover: #f3ecdb;
 
-  /* 文字 */
   --ink: #1f2937;
   --ink-strong: #0f172a;
   --ink-soft: #4b5563;
   --muted: #6b7280;
   --muted-2: #94a3b8;
 
-  /* 线条 */
   --line: #e2dac7;
   --line-strong: #cdc4ad;
   --divider: #ece4d2;
 
-  /* 主色 / 强调 */
   --accent: #8b5e34;
   --accent-strong: #6d4520;
   --accent-soft: #efe2cc;
   --accent-fade: rgba(139, 94, 52, 0.08);
   --accent-ring: rgba(139, 94, 52, 0.35);
 
-  /* 语义色 */
   --quote-bg: #f5ecd9;
   --quote-bar: var(--accent);
   --code-bg: #2b2b2b;
@@ -41,69 +126,82 @@
   --code-inline-bg: #efe6d3;
   --code-inline-ink: #6d4520;
 
-  /* 章节色带 (6 学习阶段) */
-  --band-1: #c98a52;  /* 系统认知 */
-  --band-2: #8b5e34;  /* 架构本质 */
-  --band-3: #c5a05e;  /* 协调与平台 */
-  --band-4: #6c8e75;  /* 技术深描 */
-  --band-5: #5b7fa3;  /* AI 原生 */
-  --band-6: #a25e6d;  /* 一人公司 */
+  --band-1: #c98a52;
+  --band-2: #8b5e34;
+  --band-3: #c5a05e;
+  --band-4: #6c8e75;
+  --band-5: #5b7fa3;
+  --band-6: #a25e6d;
 
-  /* 阴影 */
   --shadow-sm: 0 1px 2px rgba(20, 14, 0, 0.04), 0 1px 3px rgba(20, 14, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(20, 14, 0, 0.06), 0 2px 4px rgba(20, 14, 0, 0.04);
   --shadow-lg: 0 12px 30px rgba(20, 14, 0, 0.08), 0 4px 10px rgba(20, 14, 0, 0.05);
   --shadow-xl: 0 24px 60px rgba(20, 14, 0, 0.12);
 
+  --meta-gradient: linear-gradient(135deg, var(--band-2), var(--band-5), var(--band-6));
+  --meta-gradient-soft: linear-gradient(135deg, var(--accent-fade), color-mix(in srgb, var(--band-5) 12%, transparent));
+
+  --is-meta: 0;
   --color-scheme: light;
 }
 
+/* ============================================================
+   DARK 主题（深夜）—— Meta Dark（FB Dark Mode 风格）
+   ============================================================ */
 [data-theme="dark"] {
-  --bg: #15130f;
-  --bg-soft: #1c1916;
-  --paper: #1f1c18;
-  --paper-elevated: #25221d;
-  --surface: #26221d;
-  --surface-hover: #2e2924;
+  --bg: #18191a;            /* FB Dark BG */
+  --bg-soft: #242526;
+  --paper: #242526;         /* FB Dark Card */
+  --paper-elevated: #3a3b3c;
+  --surface: #3a3b3c;
+  --surface-hover: #4e4f50;
 
-  --ink: #ece6d8;
-  --ink-strong: #fbf7ec;
-  --ink-soft: #c8c1b1;
-  --muted: #9b9382;
-  --muted-2: #6f6859;
+  --ink: #e4e6eb;
+  --ink-strong: #ffffff;
+  --ink-soft: #b0b3b8;
+  --muted: #8a8d91;
+  --muted-2: #65676b;
 
-  --line: #34302a;
-  --line-strong: #4a443c;
-  --divider: #2a2620;
+  --line: #3e4042;
+  --line-strong: #4e4f50;
+  --divider: #3a3b3c;
 
-  --accent: #d2a06a;
-  --accent-strong: #e6b884;
-  --accent-soft: #3a2f24;
-  --accent-fade: rgba(210, 160, 106, 0.12);
-  --accent-ring: rgba(210, 160, 106, 0.4);
+  --accent: #2e89ff;        /* Meta Blue 在深色上更亮 */
+  --accent-strong: #5599ff;
+  --accent-soft: #1a3a6e;
+  --accent-fade: rgba(46, 137, 255, 0.14);
+  --accent-ring: rgba(46, 137, 255, 0.45);
 
-  --quote-bg: #2a241d;
+  --quote-bg: #1a3a6e;
   --quote-bar: var(--accent);
-  --code-bg: #0f0e0c;
-  --code-ink: #e8e2d3;
-  --code-inline-bg: #2a241d;
-  --code-inline-ink: #e6b884;
+  --code-bg: #0c0c0d;
+  --code-ink: #e4e6eb;
+  --code-inline-bg: #1a3a6e;
+  --code-inline-ink: #5599ff;
 
-  --band-1: #d49765;
-  --band-2: #c4895a;
-  --band-3: #d8b574;
-  --band-4: #8db097;
-  --band-5: #7da6cc;
-  --band-6: #c98796;
+  /* 6 色带收敛到 FB Dark 蓝单色族 */
+  --band-1: #2e89ff;
+  --band-2: #2e89ff;
+  --band-3: #2e89ff;
+  --band-4: #2e89ff;
+  --band-5: #2e89ff;
+  --band-6: #2e89ff;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35);
-  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.7);
 
+  --meta-gradient: linear-gradient(135deg, #4a9aff 0%, #a78bfa 35%, #f472b6 65%, #fb923c 100%);
+  --meta-gradient-soft: linear-gradient(135deg, rgba(74,154,255,0.18), rgba(167,139,250,0.18) 35%, rgba(244,114,182,0.18) 65%, rgba(251,146,60,0.18));
+
+  --is-meta: 1;
   --color-scheme: dark;
 }
 
+/* ============================================================
+   SEPIA 主题（护眼）
+   ============================================================ */
 [data-theme="sepia"] {
   --bg: #ebe1cc;
   --bg-soft: #e2d6bb;
@@ -147,37 +245,53 @@
   --shadow-lg: 0 12px 30px rgba(64, 40, 0, 0.12);
   --shadow-xl: 0 24px 60px rgba(64, 40, 0, 0.18);
 
+  --meta-gradient: linear-gradient(135deg, var(--band-2), var(--band-5), var(--band-6));
+  --meta-gradient-soft: linear-gradient(135deg, var(--accent-fade), color-mix(in srgb, var(--band-5) 12%, transparent));
+
+  --is-meta: 0;
   --color-scheme: light;
 }
 
-/* 系统偏好优先：用户没显式选过则跟随系统 */
+/* ------------------------------------------------------------
+   系统偏好优先：用户没显式选过，且系统是深色 → 用 dark
+   （注意：默认主题已经是 meta，这里只在系统暗色时覆盖）
+   ------------------------------------------------------------ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg: #15130f;
-    --bg-soft: #1c1916;
-    --paper: #1f1c18;
-    --paper-elevated: #25221d;
-    --surface: #26221d;
-    --surface-hover: #2e2924;
-    --ink: #ece6d8;
-    --ink-strong: #fbf7ec;
-    --ink-soft: #c8c1b1;
-    --muted: #9b9382;
-    --muted-2: #6f6859;
-    --line: #34302a;
-    --line-strong: #4a443c;
-    --divider: #2a2620;
-    --accent: #d2a06a;
-    --accent-strong: #e6b884;
-    --accent-soft: #3a2f24;
-    --accent-fade: rgba(210, 160, 106, 0.12);
-    --accent-ring: rgba(210, 160, 106, 0.4);
-    --quote-bg: #2a241d;
+    --bg: #18191a;
+    --bg-soft: #242526;
+    --paper: #242526;
+    --paper-elevated: #3a3b3c;
+    --surface: #3a3b3c;
+    --surface-hover: #4e4f50;
+    --ink: #e4e6eb;
+    --ink-strong: #ffffff;
+    --ink-soft: #b0b3b8;
+    --muted: #8a8d91;
+    --muted-2: #65676b;
+    --line: #3e4042;
+    --line-strong: #4e4f50;
+    --divider: #3a3b3c;
+    --accent: #2e89ff;
+    --accent-strong: #5599ff;
+    --accent-soft: #1a3a6e;
+    --accent-fade: rgba(46, 137, 255, 0.14);
+    --accent-ring: rgba(46, 137, 255, 0.45);
+    --quote-bg: #1a3a6e;
     --quote-bar: var(--accent);
-    --code-bg: #0f0e0c;
-    --code-ink: #e8e2d3;
-    --code-inline-bg: #2a241d;
-    --code-inline-ink: #e6b884;
+    --code-bg: #0c0c0d;
+    --code-ink: #e4e6eb;
+    --code-inline-bg: #1a3a6e;
+    --code-inline-ink: #5599ff;
+    --band-1: #2e89ff;
+    --band-2: #2e89ff;
+    --band-3: #2e89ff;
+    --band-4: #2e89ff;
+    --band-5: #2e89ff;
+    --band-6: #2e89ff;
+    --meta-gradient: linear-gradient(135deg, #4a9aff 0%, #a78bfa 35%, #f472b6 65%, #fb923c 100%);
+    --meta-gradient-soft: linear-gradient(135deg, rgba(74,154,255,0.18), rgba(167,139,250,0.18) 35%, rgba(244,114,182,0.18) 65%, rgba(251,146,60,0.18));
+    --is-meta: 1;
     --color-scheme: dark;
   }
 }
