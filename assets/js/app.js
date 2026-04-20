@@ -533,7 +533,7 @@
           open();
         } else if (e.key.toLowerCase() === "t") {
           const cur = root.getAttribute("data-theme") || "auto";
-          const order = ["auto", "paper", "dark", "sepia"];
+          const order = ["auto", "meta", "paper", "dark", "sepia"];
           const next = order[(order.indexOf(cur) + 1) % order.length];
           applyTheme(next);
           localStorage.setItem(STORAGE_KEYS.theme, next);
@@ -545,7 +545,7 @@
     });
   }
   function nextLabel(t) {
-    return { auto: "跟随系统", paper: "纸感", dark: "深夜", sepia: "护眼" }[t] || t;
+    return { auto: "跟随系统", meta: "Meta", paper: "纸感", dark: "深夜", sepia: "护眼" }[t] || t;
   }
 
   /* ----------------------------------------------------------
@@ -890,15 +890,15 @@
           $("#searchTrigger")?.click();
           break;
         case "theme": {
-          // 轮换 4 个主题
+          // 轮换 5 个主题
           const cur = root.getAttribute("data-theme") || "auto";
-          const order = ["auto", "paper", "dark", "sepia"];
+          const order = ["auto", "meta", "paper", "dark", "sepia"];
           const next = order[(order.indexOf(cur) + 1) % order.length];
           applyTheme(next);
           localStorage.setItem(STORAGE_KEYS.theme, next);
           toast(
             "主题：" +
-              ({ auto: "跟随系统", paper: "纸感", dark: "深夜", sepia: "护眼" }[
+              ({ auto: "跟随系统", meta: "Meta", paper: "纸感", dark: "深夜", sepia: "护眼" }[
                 next
               ] || next)
           );
@@ -967,11 +967,17 @@
   }
 
   /* ----------------------------------------------------------
-     17. AI 划词解释 (Cloudflare Worker 代理, 支持 BYOK)
+     17. AI 划词解释 + 知识柜 (Cloudflare Worker 代理, 支持 BYOK)
      ----------------------------------------------------------
      工作流:
        划词 → 气泡按钮 → 点击 → 右侧面板打开 → SSE 流式输出
        支持: ⌘/Ctrl+J 触发 | localStorage 缓存最近 50 条 | 一键复制
+     知识柜 (Stash):
+       右边缘小尖头 → 点击展开 → 卡片列表
+       每张卡片 = 原文 + AI 答案 + 用户想法 (textarea, 自动保存)
+     缓存条目 schema:
+       { q: 原文, a: AI 答案, c: 章节标题, n: 用户笔记, u: 笔记更新时间, t: 最后查询时间 }
+       (老条目只有 {a, t}, 渲染时按缺省字段降级)
      ---------------------------------------------------------- */
 
   // 当前部署 URL (PENG 的 Cloudflare 账号)
@@ -985,6 +991,9 @@
   const explainState = {
     bubble: null,
     panel: null,
+    stash: null,
+    stashHandle: null,
+    stashOpen: false,
     selectionText: "",
     selectionRect: null,
     abortCtrl: null,
@@ -1125,7 +1134,7 @@
     });
     el.querySelector('[data-act="retry"]').addEventListener("click", () => {
       if (explainState.selectionText) {
-        delete explainState.cache[cacheKey(explainState.selectionText)];
+        // force=true 会跳过 cache 读取; 写回时保留旧的 n/u (笔记)
         runExplain(explainState.selectionText, true);
       }
     });
@@ -1138,6 +1147,7 @@
     hideBubble();
   }
   function openPanel() {
+    closeStash(); // 与笔记柜互斥, 避免两个抽屉叠在一起
     const p = ensurePanel();
     p.classList.add("is-open");
     document.body.style.overflowX = "hidden";
@@ -1277,8 +1287,18 @@
         if (body) body.innerHTML = renderMarkdown(incr);
       });
       if (answer) {
-        explainState.cache[k] = { a: answer, t: Date.now() };
+        const prev = explainState.cache[k] || {};
+        explainState.cache[k] = {
+          q: text,
+          a: answer,
+          c: ctxTitle || prev.c || "",
+          n: prev.n || "",
+          u: prev.u || 0,
+          t: Date.now(),
+        };
         saveExplainCache();
+        renderStashList();
+        updateStashHandleBadge();
       }
     } catch (e) {
       if (e.name === "AbortError") return;
@@ -1355,6 +1375,8 @@
         }
       } else if (e.key === "Escape" && explainState.panel?.classList.contains("is-open")) {
         closePanel();
+      } else if (e.key === "Escape" && explainState.stashOpen) {
+        closeStash();
       }
     });
 
@@ -1425,9 +1447,274 @@
     });
   }
 
+  /* ===== 知识柜 (Stash): 划过的词 + 自己的想法 ===== */
+
+  function ensureStashHandle() {
+    if (explainState.stashHandle) return explainState.stashHandle;
+    const btn = document.createElement("button");
+    btn.className = "ai-stash-handle";
+    btn.type = "button";
+    btn.dataset.empty = "true";
+    btn.dataset.open = "false";
+    btn.setAttribute("aria-label", "打开划词笔记柜");
+    btn.title = "划词笔记柜 (按 N 切换)";
+    btn.innerHTML = `
+      <svg class="ai-stash-handle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" aria-hidden="true">
+        <polyline points="15 6 9 12 15 18"/>
+      </svg>
+      <span class="ai-stash-handle__count" id="ai-stash-count" hidden>0</span>
+      <span class="ai-stash-handle__label">笔记</span>
+    `;
+    btn.addEventListener("click", () => {
+      explainState.stashOpen ? closeStash() : openStash();
+    });
+    document.body.appendChild(btn);
+    explainState.stashHandle = btn;
+    return btn;
+  }
+
+  function updateStashHandleBadge() {
+    ensureStashHandle();
+    const count = Object.keys(explainState.cache).length;
+    const el = $("#ai-stash-count");
+    if (el) {
+      if (count > 0) {
+        el.hidden = false;
+        el.textContent = count > 99 ? "99+" : String(count);
+      } else {
+        el.hidden = true;
+      }
+    }
+    explainState.stashHandle.dataset.empty = count === 0 ? "true" : "false";
+  }
+
+  function ensureStash() {
+    if (explainState.stash) return explainState.stash;
+    const el = document.createElement("aside");
+    el.className = "ai-stash";
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "false");
+    el.setAttribute("aria-labelledby", "ai-stash-title");
+    el.innerHTML = `
+      <header class="ai-stash__head">
+        <div class="ai-stash__title-wrap">
+          <span class="ai-stash__eyebrow">划词记录</span>
+          <h3 id="ai-stash-title" class="ai-stash__title">我的笔记柜</h3>
+        </div>
+        <button class="ai-stash__close icon-btn" type="button" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </header>
+      <div class="ai-stash__toolbar">
+        <input class="ai-stash__search" id="ai-stash-search" type="search" placeholder="搜原文 / 答案 / 我的笔记..." aria-label="搜索"/>
+        <button class="ai-stash__clear" id="ai-stash-clear" type="button" title="清空所有卡片">清空</button>
+      </div>
+      <div class="ai-stash__list" id="ai-stash-list" tabindex="0"></div>
+      <footer class="ai-stash__foot">
+        留在你的浏览器（localStorage，最多 50 张）。换设备不会同步。
+      </footer>
+    `;
+    document.body.appendChild(el);
+
+    el.querySelector(".ai-stash__close").addEventListener("click", closeStash);
+    el.querySelector("#ai-stash-clear").addEventListener("click", () => {
+      const n = Object.keys(explainState.cache).length;
+      if (!n) return;
+      if (!confirm(`清空全部 ${n} 张卡片？包含你写的笔记，无法撤销。`)) return;
+      explainState.cache = {};
+      saveExplainCache();
+      renderStashList();
+      updateStashHandleBadge();
+    });
+    el.querySelector("#ai-stash-search").addEventListener("input", (e) => {
+      renderStashList(e.target.value.trim());
+    });
+
+    explainState.stash = el;
+    return el;
+  }
+
+  function openStash() {
+    ensureStash();
+    closePanel(); // 与解释面板互斥
+    explainState.stash.classList.add("is-open");
+    explainState.stashOpen = true;
+    if (explainState.stashHandle) explainState.stashHandle.dataset.open = "true";
+    renderStashList();
+  }
+
+  function closeStash() {
+    // 关闭前 flush 所有 pending 的笔记保存定时器
+    for (const t of Object.values(stashSaveTimers)) clearTimeout(t);
+    stashSaveTimers = {};
+    saveExplainCache();
+    if (explainState.stash) explainState.stash.classList.remove("is-open");
+    explainState.stashOpen = false;
+    if (explainState.stashHandle) explainState.stashHandle.dataset.open = "false";
+  }
+
+  function relativeTime(ts) {
+    if (!ts) return "未知时间";
+    const diff = Date.now() - ts;
+    const m = 60 * 1000, h = 60 * m, d = 24 * h;
+    if (diff < m) return "刚刚";
+    if (diff < h) return Math.floor(diff / m) + " 分钟前";
+    if (diff < d) return Math.floor(diff / h) + " 小时前";
+    if (diff < 30 * d) return Math.floor(diff / d) + " 天前";
+    const date = new Date(ts);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  // 笔记的"in-memory 立即更新, localStorage 延迟写"机制
+  let stashSaveTimers = {};
+  function scheduleSaveCardNote(key, value) {
+    if (!explainState.cache[key]) return;
+    explainState.cache[key].n = value;
+    explainState.cache[key].u = Date.now();
+    clearTimeout(stashSaveTimers[key]);
+    stashSaveTimers[key] = setTimeout(() => {
+      saveExplainCache();
+      delete stashSaveTimers[key];
+    }, 600);
+  }
+
+  function renderStashList(filter = "") {
+    if (!explainState.stash) return; // 还没构建过抽屉
+    const list = $("#ai-stash-list");
+    if (!list) return;
+
+    const f = filter.toLowerCase();
+    const entries = Object.entries(explainState.cache)
+      .filter(([, v]) => {
+        if (!f) return true;
+        return (
+          (v.q || "").toLowerCase().includes(f) ||
+          (v.a || "").toLowerCase().includes(f) ||
+          (v.n || "").toLowerCase().includes(f) ||
+          (v.c || "").toLowerCase().includes(f)
+        );
+      })
+      .sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+
+    if (!entries.length) {
+      list.innerHTML = `
+        <div class="ai-stash__empty">
+          ${
+            filter
+              ? `<p>没有匹配 "<strong>${escHtml(filter)}</strong>" 的卡片。</p>`
+              : `<p><strong>笔记柜还是空的。</strong></p>
+                 <p>选中正文里任意一段（≥2 个字），点出来的紫色 <em>AI 解释</em> 气泡，回答会自动收进这里。每张卡片下方都能写下你自己的判断、追问、案例。</p>`
+          }
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = entries
+      .map(([k, v]) => {
+        const quote = v.q || "（早期会话，原文未记录）";
+        const answer = v.a || "";
+        const note = v.n || "";
+        const ctx = v.c || "";
+        const time = relativeTime(v.t);
+        const fullTime = v.t ? new Date(v.t).toLocaleString() : "";
+        const hasAnswer = !!answer;
+        return `
+          <article class="ai-stash-card" data-key="${k}">
+            <header class="ai-stash-card__head">
+              <span class="ai-stash-card__time" title="${escHtml(fullTime)}">${escHtml(time)}</span>
+              ${ctx ? `<span class="ai-stash-card__ctx" title="${escHtml(ctx)}">${escHtml(ctx)}</span>` : '<span class="ai-stash-card__ctx ai-stash-card__ctx--empty"></span>'}
+              <button class="ai-stash-card__del icon-btn" type="button" data-act="del" aria-label="删除这张卡片" title="删除">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="14" height="14">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                </svg>
+              </button>
+            </header>
+            <blockquote class="ai-stash-card__quote">${escHtml(quote)}</blockquote>
+            ${
+              hasAnswer
+                ? `<details class="ai-stash-card__answer-wrap">
+                     <summary>AI 答案</summary>
+                     <div class="ai-stash-card__answer">${renderMarkdown(answer)}</div>
+                   </details>`
+                : ""
+            }
+            <label class="ai-stash-card__note-label" for="note-${k}">我的想法</label>
+            <textarea
+              id="note-${k}"
+              class="ai-stash-card__note"
+              rows="2"
+              placeholder="写下你看到这段话时的判断、追问、自己的例子……"
+              data-act="note"
+            >${escHtml(note)}</textarea>
+            <div class="ai-stash-card__foot">
+              <button class="ai-stash-card__btn" type="button" data-act="copy">复制全部</button>
+              ${v.q ? `<button class="ai-stash-card__btn" type="button" data-act="reask">重新问</button>` : ""}
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+
+    // 绑定卡片内的所有交互
+    list.querySelectorAll(".ai-stash-card").forEach((card) => {
+      const key = card.dataset.key;
+      const entry = explainState.cache[key];
+      if (!entry) return;
+
+      card.querySelector('[data-act="note"]')?.addEventListener("input", (e) => {
+        scheduleSaveCardNote(key, e.target.value);
+      });
+
+      card.querySelector('[data-act="copy"]')?.addEventListener("click", () => {
+        const parts = [`【原文】${entry.q || "(未记录)"}`];
+        if (entry.a) parts.push(`【AI 答案】${entry.a}`);
+        if (entry.n) parts.push(`【我的想法】${entry.n}`);
+        if (entry.c) parts.push(`【出处】${entry.c}`);
+        navigator.clipboard
+          .writeText(parts.join("\n\n"))
+          .then(() => toast("已复制原文 + 答案 + 想法"))
+          .catch(() => toast("复制失败"));
+      });
+
+      card.querySelector('[data-act="reask"]')?.addEventListener("click", () => {
+        if (!entry.q) {
+          toast("这张卡片没记录原文，没法重新问");
+          return;
+        }
+        runExplain(entry.q, true); // openPanel 内部会关掉笔记柜
+      });
+
+      card.querySelector('[data-act="del"]')?.addEventListener("click", () => {
+        delete explainState.cache[key];
+        saveExplainCache();
+        renderStashList(filter);
+        updateStashHandleBadge();
+      });
+    });
+  }
+
   function bindAiExplain() {
     bindSelectionTrigger();
     injectByokForm();
+    ensureStashHandle();
+    updateStashHandleBadge();
+
+    // N 键快捷打开笔记柜 (在没有输入框聚焦时)
+    document.addEventListener("keydown", (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        explainState.stashOpen ? closeStash() : openStash();
+      }
+    });
   }
 
   /* ----------------------------------------------------------
