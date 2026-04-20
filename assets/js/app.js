@@ -228,7 +228,10 @@
     document.body.appendChild(scrim);
     return scrim;
   }
+  // 抽屉式 sidebar 仅在 ≤1024px 生效 (与 main.css 的断点保持一致)
+  const SIDEBAR_DRAWER_MQ = window.matchMedia("(max-width: 1024px)");
   function openSidebar() {
+    if (!SIDEBAR_DRAWER_MQ.matches) return; // 桌面端 sidebar 永远显示, 不需要"打开"
     const sb = $("#sidebar");
     if (!sb) return;
     sb.dataset.open = "true";
@@ -244,7 +247,24 @@
   }
   function bindSidebarToggle() {
     const btn = $("#tocToggle");
-    if (btn) btn.addEventListener("click", openSidebar);
+    if (!btn) return;
+    btn.addEventListener("click", openSidebar);
+    // 桌面端隐藏整个按钮 (避免误点 + 视觉冗余, 桌面 sidebar 已永远在左侧显示)
+    function syncBtnVisibility() {
+      btn.style.display = SIDEBAR_DRAWER_MQ.matches ? "" : "none";
+    }
+    syncBtnVisibility();
+    if (SIDEBAR_DRAWER_MQ.addEventListener) {
+      SIDEBAR_DRAWER_MQ.addEventListener("change", syncBtnVisibility);
+    } else if (SIDEBAR_DRAWER_MQ.addListener) {
+      SIDEBAR_DRAWER_MQ.addListener(syncBtnVisibility);
+    }
+    // 切回桌面时, 自动关掉可能残留的抽屉状态
+    if (SIDEBAR_DRAWER_MQ.addEventListener) {
+      SIDEBAR_DRAWER_MQ.addEventListener("change", (e) => {
+        if (!e.matches) closeSidebar();
+      });
+    }
   }
 
   /* ----------------------------------------------------------

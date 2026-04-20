@@ -264,6 +264,11 @@ html[data-fontsize="xl"] body { font-size: 20px; line-height: 1.95; }
   padding: 0 12px;
 }
 
+/* 桌面端隐藏 ☰ 目录按钮 (sidebar 永远在左侧显示, 不需要"打开"操作) */
+@media (min-width: 1025px) {
+  #tocToggle { display: none !important; }
+}
+
 /* 设置弹层 */
 .menu {
   position: absolute;
