@@ -61,6 +61,8 @@
       );
     });
     document.body.classList.toggle("is-focus-mode", val === "focus");
+    // 通知 sidebar ScrollSpy 重算 (learning-deck 显隐变化)
+    document.dispatchEvent(new Event("readmodechange"));
   }
 
   const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || "auto";
@@ -153,37 +155,122 @@
   }
 
   /* ----------------------------------------------------------
-     4. 自动构建侧边目录 + ScrollSpy
+     4. 侧边目录 (Apple Docs 风) + ScrollSpy
+     ----------------------------------------------------------
+     设计:
+       - 只采集 H2 (一级目录), 不再扁平展开 H3 (~70 条太密)
+       - 按语义分 3 组: 开篇 (导读/前言/术语) / 正文 (16 章) / 结语 (小结/作者/参考)
+       - 章号作为前置 chip (01..16), 主标题取章名后半段
+       - ScrollSpy: 用 scroll 事件 + 直接位置计算, 不用 IO
+         (IO 的 fallback 会在 hidden 元素上误判为 dist=100, 造成跳回 ADHD)
      ---------------------------------------------------------- */
+
+  // 把 "第N章 章名: 副标题" 拆成 { num: "01", title: "章名" }
+  function parseChapter(text) {
+    const m = text.match(/^第([一二三四五六七八九十百零]+)章\s*([^：:—]+)/);
+    if (!m) return null;
+    const cn = m[1];
+    const map = { 一:1, 二:2, 三:3, 四:4, 五:5, 六:6, 七:7, 八:8, 九:9, 十:10 };
+    let num = 0;
+    if (cn === "十") num = 10;
+    else if (cn.startsWith("十")) num = 10 + (map[cn[1]] || 0);
+    else if (cn.endsWith("十")) num = (map[cn[0]] || 0) * 10;
+    else if (cn.length === 3 && cn[1] === "十") num = (map[cn[0]] || 0) * 10 + (map[cn[2]] || 0);
+    else num = map[cn] || 0;
+    return {
+      num: String(num).padStart(2, "0"),
+      title: m[2].trim().replace(/[，,].*$/, ""),
+    };
+  }
+
   function buildSidebarTOC() {
     const list = $("#sidebarList");
     const main = $(".main");
     if (!list || !main) return [];
 
-    // 仅采集 main 内、且不是 hero 区里的标题
-    const headings = $$('h2[id], h3[id]', main).filter(
-      (h) => !h.closest(".hero") && !h.closest(".chapter-map")
+    // 仅采集 main 内的 H2, 排除 hero / chapter-map / learning-deck (后者默认 display:none)
+    const headings = $$('h2[id]', main).filter(
+      (h) =>
+        !h.closest(".hero") &&
+        !h.closest(".chapter-map") &&
+        !h.closest(".learning-deck") &&
+        !h.classList.contains("sidebar__title") &&
+        !h.classList.contains("section-summary__title") &&
+        !h.classList.contains("tldr-card__title")
     );
 
     const items = [];
     list.innerHTML = "";
 
+    // 分组
+    const groups = {
+      intro: { label: "开篇", items: [] },
+      chapters: { label: "正文", items: [] },
+      outro: { label: "结语 / 附录", items: [] },
+    };
+    let seenChapter = false;
+    let seenOutro = false;
+
     headings.forEach((h) => {
       const id = h.id;
       const text = h.textContent.replace(/¶/g, "").trim();
       if (!id || !text) return;
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = "#" + id;
-      a.textContent = text;
-      a.className = h.tagName === "H3" ? "lvl-3" : "lvl-2";
-      a.dataset.target = id;
-      li.appendChild(a);
-      list.appendChild(li);
-      items.push({ id, link: a, el: h });
+      const ch = parseChapter(text);
+      if (ch) {
+        seenChapter = true;
+        groups.chapters.items.push({ id, el: h, num: ch.num, title: ch.title });
+      } else if (
+        seenChapter &&
+        (text.startsWith("本卷小结") ||
+          text.startsWith("结语") ||
+          text.startsWith("关于作者") ||
+          text.startsWith("参考文献"))
+      ) {
+        seenOutro = true;
+        groups.outro.items.push({ id, el: h, title: text.replace(/[：:].*$/, "") });
+      } else if (!seenChapter) {
+        groups.intro.items.push({ id, el: h, title: text.replace(/[，,：:].*$/, "") });
+      } else {
+        groups.outro.items.push({ id, el: h, title: text.replace(/[：:].*$/, "") });
+      }
     });
 
-    // ScrollSpy
+    // 渲染
+    Object.values(groups).forEach((group) => {
+      if (!group.items.length) return;
+      const groupEl = document.createElement("li");
+      groupEl.className = "sidebar__group";
+      const head = document.createElement("div");
+      head.className = "sidebar__group-head";
+      head.textContent = group.label;
+      groupEl.appendChild(head);
+      const sub = document.createElement("ul");
+      sub.className = "sidebar__sublist";
+      group.items.forEach((it) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = "#" + it.id;
+        a.dataset.target = it.id;
+        a.className = "sidebar__link";
+        if (it.num) {
+          const chip = document.createElement("span");
+          chip.className = "sidebar__chip";
+          chip.textContent = it.num;
+          a.appendChild(chip);
+        }
+        const label = document.createElement("span");
+        label.className = "sidebar__label";
+        label.textContent = it.title;
+        a.appendChild(label);
+        li.appendChild(a);
+        sub.appendChild(li);
+        items.push({ id: it.id, link: a, el: it.el });
+      });
+      groupEl.appendChild(sub);
+      list.appendChild(groupEl);
+    });
+
+    // ScrollSpy — 直接位置计算, 比 IO 更可控
     const linksByID = new Map(items.map((i) => [i.id, i.link]));
     let activeID = null;
     function setActive(id) {
@@ -192,7 +279,6 @@
       const link = linksByID.get(id);
       if (link) {
         link.classList.add("is-active");
-        // 把激活项滚到可视区
         const parent = link.closest(".sidebar__list");
         if (parent) {
           const linkRect = link.getBoundingClientRect();
@@ -208,34 +294,51 @@
       activeID = id;
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // 取最靠上但仍可见的元素作为 active
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length > 0) {
-          setActive(visible[0].target.id);
-        } else {
-          // 全部不在视口时，找最近的一个
-          let nearest = null;
-          let dist = Infinity;
-          items.forEach((item) => {
-            const top = item.el.getBoundingClientRect().top;
-            if (top < 100) {
-              const d = 100 - top;
-              if (d < dist) {
-                dist = d;
-                nearest = item.id;
-              }
-            }
-          });
-          if (nearest) setActive(nearest);
+    function isVisible(el) {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      // 排除 display:none / visibility:hidden 元素 (例: learning-deck)
+      return r.height > 0 || r.width > 0;
+    }
+
+    const ANCHOR = 100; // 视口顶部下 100px 处为"当前阅读线"
+    function updateActive() {
+      let candidate = null;
+      let candidateTop = -Infinity;
+      // 找出所有顶部已经过 ANCHOR 线的 H2 中 top 最大的 (即最深入页面的, 最近一个)
+      for (const item of items) {
+        if (!isVisible(item.el)) continue;
+        const top = item.el.getBoundingClientRect().top;
+        if (top <= ANCHOR && top > candidateTop) {
+          candidateTop = top;
+          candidate = item.id;
         }
-      },
-      { rootMargin: "-80px 0px -65% 0px", threshold: 0 }
-    );
-    items.forEach((i) => observer.observe(i.el));
+      }
+      // 如果还没滚到第一个 H2, 就高亮第一个可见的 H2
+      if (!candidate) {
+        for (const item of items) {
+          if (isVisible(item.el)) {
+            candidate = item.id;
+            break;
+          }
+        }
+      }
+      if (candidate) setActive(candidate);
+    }
+
+    let raf = 0;
+    function onScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        updateActive();
+        raf = 0;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    // 学习模式切换会改变 learning-deck 显隐 → 重算
+    document.addEventListener("readmodechange", onScroll);
+    updateActive();
 
     // 点击关闭移动端目录
     items.forEach(({ link }) => {

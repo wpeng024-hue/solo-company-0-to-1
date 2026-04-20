@@ -391,7 +391,7 @@ html[data-fontsize="xl"] body { font-size: 20px; line-height: 1.95; }
   display: flex;
   flex-direction: column;
 }
-/* sidebar: Apple Docs left-rail 风, 透明背景, 几乎无 chrome */
+/* sidebar: Apple Docs left-rail 风, 透明背景, 分组列表 */
 .sidebar__inner {
   background: transparent;
   border: none;
@@ -410,52 +410,103 @@ html[data-fontsize="xl"] body { font-size: 20px; line-height: 1.95; }
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--muted);
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
   display: block;
 }
-.sidebar__title::after { display: none; }  /* 删 hairline 装饰 */
+.sidebar__title::after { display: none; }
 .sidebar__list {
   list-style: none;
   margin: 0;
-  padding: 0 var(--space-2) var(--space-2) 0;
+  padding: 0 var(--space-2) var(--space-4) var(--space-3);  /* 左 padding 给 active rail 让位 */
   overflow-y: auto;
   flex: 1;
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
 }
-.sidebar__list a {
-  display: block;
-  padding: 6px var(--space-3);
-  margin: 1px 0;
+/* 分组: 开篇 / 正文 / 结语 */
+.sidebar__group {
+  margin: 0 0 var(--space-4);
+  list-style: none;
+}
+.sidebar__group:last-child { margin-bottom: 0; }
+.sidebar__group-head {
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted-2);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  margin-bottom: var(--space-1);
+}
+.sidebar__sublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* 链接: 章号 chip + 标题, hover 行有底色, active 用左侧 2px accent rail */
+.sidebar__link {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 7px var(--space-3) 7px var(--space-3);
   color: var(--ink-soft);
   font-family: var(--font-display);
   font-size: var(--text-callout);
-  border: none;
   border-radius: var(--radius-sm);
-  line-height: 1.4;
+  line-height: 1.35;
   transition: background var(--duration-fast) var(--ease-apple),
               color var(--duration-fast) var(--ease-apple);
   background: transparent;
   text-decoration: none;
+  position: relative;
 }
-.sidebar__list a:hover {
+.sidebar__chip {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  color: var(--muted-2);
+  letter-spacing: 0.04em;
+  min-width: 1.5em;
+  line-height: 1;
+}
+.sidebar__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar__link:hover {
   background: var(--surface);
   color: var(--ink-strong);
 }
-.sidebar__list a.is-active {
-  background: var(--accent-soft);
+.sidebar__link:hover .sidebar__chip { color: var(--ink-soft); }
+
+/* Active: Apple Docs 左侧 2px 蓝 rail + 文字加重, 不用底色块 */
+.sidebar__link.is-active {
   color: var(--accent);
   font-weight: 600;
-}
-.sidebar__list .lvl-3 {
-  padding-left: var(--space-6);
-  font-size: var(--text-footnote);
-  color: var(--muted);
-}
-.sidebar__list .lvl-3.is-active {
-  color: var(--accent);
   background: transparent;
-  font-weight: 500;
+}
+.sidebar__link.is-active::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+.sidebar__link.is-active .sidebar__chip {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 @media (max-width: 1024px) {
